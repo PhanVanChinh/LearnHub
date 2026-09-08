@@ -1,14 +1,31 @@
 # LearnHub — nền tảng khóa học online cho sinh viên
 
-Website học tập online (video, PDF, trắc nghiệm, source code, AI check đạo văn) xây bằng **Next.js 14 (App Router) + TypeScript + Tailwind CSS**. Dữ liệu khóa học hiện là mock, chưa có backend — sẵn sàng để nối API sau.
+Website học tập online (video, PDF, trắc nghiệm, source code, AI check đạo văn).
 
-## Chạy local
+- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS — thư mục gốc.
+- **Backend**: FastAPI + SQLAlchemy + SQLite, auth JWT — thư mục [`backend/`](backend/README.md).
+
+## Chạy local (2 terminal)
 
 ```bash
+# Terminal 1 — backend (http://localhost:8000, docs tại /docs)
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 — frontend (http://localhost:3000)
 npm install
-npm run dev        # http://localhost:3000
-npm run build && npm start   # bản production
+cp .env.local.example .env.local      # NEXT_PUBLIC_API_URL=http://localhost:8000
+npm run dev
 ```
+
+Tài khoản demo: `admin@example.com` / `admin123`. Đăng ký tài khoản mới ngay trên trang `/register`.
+
+## Đã nối FE ↔ BE
+
+Đăng ký / đăng nhập / đăng xuất (JWT lưu localStorage, `components/AuthProvider.tsx`), header hiển thị người dùng, nút **Bắt đầu học miễn phí** gọi API ghi danh, trang **/my-courses** liệt kê khóa đã ghi danh. Danh sách khóa học trên FE vẫn đọc từ `data/courses.ts` (static, SEO tốt); backend có sẵn `GET /api/courses` nếu muốn chuyển sang đọc động — đổi `data/courses.ts` bằng `fetch(\`${API_URL}/api/courses\`)` trong Server Component.
 
 ## Cấu trúc
 
@@ -24,6 +41,9 @@ app/
 components/                Header, Footer, CourseCard, CourseBrowser (filter + search + "xem thêm")…
 data/courses.ts            Danh sách khóa học (mock) — thêm/sửa khóa học ở đây
 lib/site.ts                Tên thương hiệu, menu, thông tin liên hệ — đổi brand ở đây
+lib/api.ts                 API client (fetch + Bearer token)
+backend/                   FastAPI (xem backend/README.md)
+scripts/export-courses.mts Xuất data/courses.ts -> backend/app/seed_data.json
 ```
 
 ## Tuỳ biến nhanh
@@ -31,8 +51,8 @@ lib/site.ts                Tên thương hiệu, menu, thông tin liên hệ —
 - **Đổi tên / logo / liên hệ**: sửa `lib/site.ts` và `components/Logo.tsx`.
 - **Thêm khóa học**: thêm một object vào mảng `courses` trong `data/courses.ts` (slug là URL).
 - **Màu chủ đạo**: bảng màu `brand` trong `tailwind.config.ts`.
-- **Nối backend**: thay `data/courses.ts` bằng fetch trong Server Component; thay `setTimeout` trong `components/AiCheckDemo.tsx` bằng gọi API thật.
+- **AI Check**: thay `setTimeout` trong `components/AiCheckDemo.tsx` bằng gọi API thật.
 
 ## Deploy
 
-Push lên GitHub rồi import vào [Vercel](https://vercel.com) — không cần cấu hình thêm.
+Frontend: push lên GitHub rồi import vào [Vercel](https://vercel.com), đặt biến `NEXT_PUBLIC_API_URL` trỏ tới backend. Backend: Railway / Render / Fly.io chạy `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, đặt `CORS_ORIGINS` là domain Vercel.

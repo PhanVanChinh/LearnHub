@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { site } from "@/lib/site";
 import Logo from "./Logo";
+import UserMenu from "./UserMenu";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
@@ -28,10 +29,7 @@ export default function Header() {
             );
           })}
         </nav>
-        <div className="hidden items-center gap-2 lg:flex">
-          <Link href="/login" className="btn-outline">Đăng nhập</Link>
-          <Link href="/register" className="btn-primary">Đăng ký</Link>
-        </div>
+        <div className="hidden lg:block"><UserMenu /></div>
         <button
           aria-label="Mở menu"
           onClick={() => setOpen(!open)}
@@ -50,10 +48,7 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <div className="mt-2 flex gap-2">
-              <Link href="/login" className="btn-outline flex-1">Đăng nhập</Link>
-              <Link href="/register" className="btn-primary flex-1">Đăng ký</Link>
-            </div>
+            <UserMenu mobile />
           </nav>
         </div>
       )}

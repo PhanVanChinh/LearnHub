@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CourseCard from "@/components/CourseCard";
+import EnrollButton from "@/components/EnrollButton";
 import { courses, getCourse } from "@/data/courses";
 import { formatVND } from "@/lib/site";
 
@@ -67,9 +68,7 @@ export default function CourseDetail({ params }: { params: { slug: string } }) {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} text-5xl`}>{course.emoji}</div>
             <p className={`mt-5 text-3xl font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</p>
-            <Link href={course.price === 0 ? "/login" : `/checkout?course=${course.slug}`} className="btn-primary mt-4 w-full !py-3">
-              {course.price === 0 ? "Bắt đầu học miễn phí" : "Mua ngay"}
-            </Link>
+            <EnrollButton slug={course.slug} price={course.price} />
             <ul className="mt-5 space-y-2 text-sm text-slate-600">
               {course.includes.map((x) => <li key={x}>✅ {x}</li>)}
             </ul>

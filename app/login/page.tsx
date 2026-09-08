@@ -1,3 +1,6 @@
+import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 export const metadata = { title: "Đăng nhập" };
-export default function LoginPage() { return <AuthForm mode="login" />; }
+export default function Page() {
+  return <Suspense><AuthForm mode="login" /></Suspense>;
+}
