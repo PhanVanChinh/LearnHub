@@ -1,0 +1,30 @@
+### Dùng với extension "REST Client" (humao.rest-client) — bấm "Send Request" phía trên mỗi khối
+@api = http://localhost:8000
+
+### Health
+GET {{api}}/api/health
+
+### Đăng ký
+# @name register
+POST {{api}}/api/auth/register
+Content-Type: application/json
+
+{ "email": "sv@st.phenikaa-uni.edu.vn", "full_name": "Sinh Viên", "password": "secret123" }
+
+### Đăng nhập
+# @name login
+POST {{api}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@example.com", "password": "admin123" }
+
+### Tài khoản hiện tại
+GET {{api}}/api/auth/me
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Danh sách khóa học trắc nghiệm
+GET {{api}}/api/courses?category=quiz
+
+### Ghi danh khóa miễn phí
+POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
+Authorization: Bearer {{login.response.body.access_token}}

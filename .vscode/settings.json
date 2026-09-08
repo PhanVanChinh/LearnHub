@@ -1,0 +1,11 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["backend/tests"],
+  "python.analysis.extraPaths": ["backend"],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[python]": { "editor.defaultFormatter": "ms-python.black-formatter" },
+  "tailwindCSS.experimental.classRegex": [["className=\"([^\"]*)", "([^\\s\"]*)"]],
+  "files.exclude": { "**/.next": true, "**/__pycache__": true, "**/.pytest_cache": true }
+}

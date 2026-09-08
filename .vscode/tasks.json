@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "▶ Chạy tất cả (FE + BE)",
+      "dependsOn": ["Backend: uvicorn", "Frontend: next dev"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "Backend: uvicorn",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "dev" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: next dev",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "presentation": { "panel": "dedicated", "group": "dev" },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚙ Cài đặt lần đầu (npm install + venv + pip)",
+      "type": "shell",
+      "command": "npm install && cp -n .env.local.example .env.local; cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt && cp -n .env.example .env; echo '✅ Xong! Giờ chạy task \"▶ Chạy tất cả\" (Cmd+Shift+B)'",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: pytest",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/python -m pytest -q",
+      "options": { "cwd": "${workspaceFolder}/backend" },
+      "problemMatcher": []
+    }
+  ]
+}
