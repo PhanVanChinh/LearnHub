@@ -6,6 +6,7 @@ seed_data.json được export từ frontend/data/courses.ts:
 import json
 from pathlib import Path
 
+from .config import settings
 from .database import SessionLocal
 from .models import Course, User
 from .security import hash_password
@@ -22,8 +23,8 @@ def seed_if_empty() -> None:
                     "slug", "title", "category", "tags", "price", "views", "sold", "color",
                     "emoji", "short", "description", "includes", "lessons", "featured")}))
         if db.query(User).count() == 0:
-            db.add(User(email="admin@example.com", full_name="Admin", role="admin",
-                        hashed_password=hash_password("admin123")))
+            db.add(User(email=settings.admin_email.lower(), full_name="Admin", role="admin",
+                        hashed_password=hash_password(settings.admin_password)))
         db.commit()
     finally:
         db.close()

@@ -28,3 +28,78 @@ GET {{api}}/api/courses?category=quiz
 ### Ghi danh khóa miễn phí
 POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
 Authorization: Bearer {{login.response.body.access_token}}
+
+### ===== ADMIN (cần đăng nhập bằng admin@example.com ở khối "Đăng nhập" phía trên) =====
+
+### Thống kê
+GET {{api}}/api/admin/stats
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Danh sách khóa học (admin, phân trang)
+GET {{api}}/api/admin/courses?q=python&limit=10
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Tạo khóa học
+# @name createCourse
+POST {{api}}/api/admin/courses
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{
+  "slug": "khoa-hoc-demo",
+  "title": "Khóa học demo",
+  "category": "video",
+  "price": 0,
+  "emoji": "🎬",
+  "color": "from-sky-500 to-indigo-600",
+  "short": "Mô tả ngắn hiển thị trên card",
+  "description": "Mô tả chi tiết",
+  "includes": ["Truy cập trọn đời", "Hỗ trợ qua nhóm"],
+  "lessons": [{ "title": "Bài 1", "duration": "10:00", "free": true }],
+  "featured": false
+}
+
+### Cập nhật khóa học (chỉ gửi trường cần đổi)
+PATCH {{api}}/api/admin/courses/{{createCourse.response.body.id}}
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "price": 99000, "featured": true }
+
+### Xoá khóa học
+DELETE {{api}}/api/admin/courses/{{createCourse.response.body.id}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Danh sách người dùng
+GET {{api}}/api/admin/users?limit=20
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Tạo người dùng
+# @name createUser
+POST {{api}}/api/admin/users
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "email": "gv@phenikaa-uni.edu.vn", "full_name": "Giảng viên", "password": "secret123", "role": "admin" }
+
+### Khoá tài khoản / đổi quyền
+PATCH {{api}}/api/admin/users/{{createUser.response.body.id}}
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "is_active": false, "role": "user" }
+
+### Xoá người dùng
+DELETE {{api}}/api/admin/users/{{createUser.response.body.id}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Danh sách ghi danh
+GET {{api}}/api/admin/enrollments
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Cấp quyền khóa học cho user (kể cả khóa trả phí)
+POST {{api}}/api/admin/enrollments
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "user_id": 2, "course_id": 1 }

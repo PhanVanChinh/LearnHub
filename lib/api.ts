@@ -46,3 +46,55 @@ export const coursesApi = {
   detail: (slug: string) => api<{ enrolled: boolean }>(`/api/courses/${slug}`),
   mine: () => api<{ slug: string; title: string }[]>("/api/courses/me/enrolled"),
 };
+
+// ---- Admin ----
+export type Lesson = { title: string; duration: string; free?: boolean };
+export type AdminCourse = {
+  id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
+  color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
+  enrollment_count: number;
+};
+export type CourseInput = Omit<AdminCourse, "id" | "tags" | "enrollment_count" | "views" | "sold"> & { tags?: string[] };
+export type AdminUser = User & { is_active: boolean; enrollment_count: number };
+export type AdminEnrollment = {
+  id: number; user_id: number; course_id: number; created_at: string; user_email: string; course_slug: string; course_title: string;
+};
+export type AdminStats = {
+  users: number; admins: number; courses: number; free_courses: number; paid_courses: number;
+  enrollments: number; total_views: number; total_sold: number; revenue: number;
+};
+export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
+
+const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
+  const s = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") s.set(k, String(v)); });
+  const str = s.toString();
+  return str ? `?${str}` : "";
+};
+const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
+
+export const adminApi = {
+  stats: () => api<AdminStats>("/api/admin/stats"),
+
+  courses: (params: { q?: string; category?: string; featured?: boolean; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminCourse>>(`/api/admin/courses${qs(params)}`),
+  course: (id: number) => api<AdminCourse>(`/api/admin/courses/${id}`),
+  createCourse: (body: CourseInput) => api<AdminCourse>("/api/admin/courses", json("POST", body)),
+  updateCourse: (id: number, body: Partial<CourseInput & { views: number; sold: number }>) =>
+    api<AdminCourse>(`/api/admin/courses/${id}`, json("PATCH", body)),
+  deleteCourse: (id: number) => api<void>(`/api/admin/courses/${id}`, { method: "DELETE" }),
+
+  users: (params: { q?: string; role?: "user" | "admin"; is_active?: boolean; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminUser>>(`/api/admin/users${qs(params)}`),
+  createUser: (body: { email: string; full_name: string; password: string; role?: "user" | "admin"; is_active?: boolean }) =>
+    api<AdminUser>("/api/admin/users", json("POST", body)),
+  updateUser: (id: number, body: Partial<{ full_name: string; email: string; password: string; role: "user" | "admin"; is_active: boolean }>) =>
+    api<AdminUser>(`/api/admin/users/${id}`, json("PATCH", body)),
+  deleteUser: (id: number) => api<void>(`/api/admin/users/${id}`, { method: "DELETE" }),
+
+  enrollments: (params: { user_id?: number; course_id?: number; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminEnrollment>>(`/api/admin/enrollments${qs(params)}`),
+  createEnrollment: (body: { user_id: number; course_id: number }) =>
+    api<AdminEnrollment>("/api/admin/enrollments", json("POST", body)),
+  deleteEnrollment: (id: number) => api<void>(`/api/admin/enrollments/${id}`, { method: "DELETE" }),
+};

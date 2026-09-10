@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24
     database_url: str = "sqlite:///./learnhub.db"
     cors_origins: str = "http://localhost:3000"
+    # Tài khoản admin được tạo lần chạy đầu (chỉ khi DB chưa có user nào)
+    admin_email: str = "admin@example.com"
+    admin_password: str = "admin123"
 
     @property
     def cors_origin_list(self) -> list[str]:

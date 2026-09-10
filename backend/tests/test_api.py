@@ -1,24 +1,3 @@
-import os
-
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
-
-from pathlib import Path
-
-import pytest
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-Path("test.db").unlink(missing_ok=True)
-
-
-@pytest.fixture(scope="module")
-def client():
-    with TestClient(app) as c:
-        yield c
-    Path("test.db").unlink(missing_ok=True)
-
-
 def test_health(client):
     assert client.get("/api/health").json() == {"status": "ok"}
 

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import Base, engine
-from .routers import auth, courses
+from .routers import admin, auth, courses
 from .seed import seed_if_empty
 
 
@@ -18,8 +18,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="LearnHub API",
-    version="0.1.0",
-    description="Backend cho nền tảng khóa học LearnHub — auth JWT + khóa học.",
+    version="0.2.0",
+    description="Backend cho nền tảng khóa học LearnHub — auth JWT, khóa học, CRUD admin.",
     lifespan=lifespan,
 )
 
@@ -33,6 +33,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(courses.router)
+app.include_router(admin.router)
 
 
 @app.get("/api/health", tags=["meta"])

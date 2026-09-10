@@ -26,6 +26,28 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | GET | /api/courses/me/enrolled | Bearer | Khóa học của tôi |
 | GET | /api/health | – | Health check |
 
+### Admin (yêu cầu role `admin`, tài khoản mặc định `admin@example.com / admin123`)
+
+| Method | Path | Mô tả |
+|---|---|---|
+| GET | /api/admin/stats | Thống kê: số user, khóa học, ghi danh, lượt xem, doanh thu |
+| GET | /api/admin/courses?q=&category=&featured=&limit=&offset= | Danh sách khóa học (phân trang, kèm `enrollment_count`) |
+| POST | /api/admin/courses | Tạo khóa học (slug phải duy nhất, dạng `a-b-c`) |
+| GET | /api/admin/courses/{id} | Chi tiết khóa học |
+| PATCH | /api/admin/courses/{id} | Cập nhật từng phần (chỉ gửi trường cần đổi) |
+| DELETE | /api/admin/courses/{id} | Xoá khóa học (xoá luôn ghi danh liên quan) |
+| GET | /api/admin/users?q=&role=&is_active=&limit=&offset= | Danh sách người dùng |
+| POST | /api/admin/users | Tạo người dùng (có thể đặt `role`, `is_active`) |
+| GET | /api/admin/users/{id} | Chi tiết người dùng |
+| PATCH | /api/admin/users/{id} | Sửa tên/email/mật khẩu/role/khoá tài khoản |
+| DELETE | /api/admin/users/{id} | Xoá người dùng |
+| GET | /api/admin/enrollments?user_id=&course_id= | Danh sách ghi danh |
+| POST | /api/admin/enrollments | Cấp quyền khóa học cho user (kể cả khóa trả phí) |
+| DELETE | /api/admin/enrollments/{id} | Thu hồi ghi danh |
+
+Quy tắc: `tags` tự động chứa `category`, thêm `free` khi `price = 0` và gỡ `free` khi `price > 0`.
+Admin không thể tự hạ quyền, tự khoá hoặc tự xoá tài khoản của chính mình.
+
 ## Cấu trúc
 
 ```
@@ -37,8 +59,8 @@ app/
   schemas.py     Pydantic request/response
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
   seed.py        Nạp seed_data.json + admin
-  routers/       auth.py, courses.py
-tests/test_api.py  pytest (chạy: python -m pytest)
+  routers/       auth.py, courses.py, admin.py
+tests/           conftest.py, test_api.py, test_admin.py (chạy: python -m pytest)
 ```
 
 ## Đổi sang PostgreSQL
@@ -47,4 +69,4 @@ tests/test_api.py  pytest (chạy: python -m pytest)
 
 ## Việc chưa làm (để mở rộng)
 
-Đơn hàng/thanh toán cho khóa trả phí, CRUD khóa học cho admin (đã có `require_admin` sẵn), endpoint AI check, refresh token / đăng nhập Google.
+Đơn hàng/thanh toán cho khóa trả phí, endpoint AI check, refresh token / đăng nhập Google.
