@@ -8,7 +8,7 @@ const labels: Record<string, string> = {
 
 export default function CourseCard({ course }: { course: Course }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={`/courses/${course.slug}`} className={`relative grid aspect-[16/9] place-items-center bg-gradient-to-br ${course.color}`}>
         <span className="text-6xl drop-shadow-md transition group-hover:scale-110">{course.emoji}</span>
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800">
