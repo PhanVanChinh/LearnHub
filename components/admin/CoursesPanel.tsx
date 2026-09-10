@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { AdminCourse, adminApi, CourseInput } from "@/lib/api";
 import { formatVND } from "@/lib/site";
@@ -58,7 +59,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
                     <span className={`grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br text-xl ${c.color}`}>{c.emoji}</span>
                     <div className="min-w-0">
                       <div className="max-w-[22rem] truncate font-medium text-slate-900">{c.title}</div>
-                      <a href={`/courses/${c.slug}`} target="_blank" className="font-mono text-xs text-slate-500 hover:text-brand-700">/{c.slug}</a>
+                      <Link href={`/courses/${c.slug}`} target="_blank" className="font-mono text-xs text-slate-500 hover:text-brand-700">/{c.slug}</Link>
                     </div>
                   </div>
                 </td>
