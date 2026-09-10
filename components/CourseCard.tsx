@@ -19,15 +19,15 @@ export default function CourseCard({ course }: { course: Course }) {
         )}
       </Link>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 text-base font-semibold leading-snug text-slate-900">
+        <h3 className="line-clamp-2 min-h-[2.75rem] text-base font-semibold leading-snug text-slate-900">
           <Link href={`/courses/${course.slug}`}>{course.title}</Link>
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-sm text-slate-600">{course.short}</p>
+        <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm text-slate-600">{course.short}</p>
         <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
           <span>👁 {course.views.toLocaleString("vi-VN")} lượt xem</span>
           <span>🛍 {course.sold} đã mua</span>
         </div>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-auto flex items-center justify-between pt-4">
           <span className={`text-lg font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</span>
           <Link href={`/courses/${course.slug}`} className="btn-primary !px-3 !py-1.5">
             {course.price === 0 ? "Bắt đầu học" : "Xem chi tiết"}
