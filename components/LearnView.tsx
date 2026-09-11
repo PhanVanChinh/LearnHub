@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Course } from "@/data/courses";
-import { ApiError, CourseDetail, coursesApi } from "@/lib/api";
+import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 
@@ -45,6 +45,24 @@ export default function LearnView({ course }: { course: Course }) {
   const { access, video } = state;
   const enrolled = detail?.enrolled ?? false;
   const hasVideo = (i: number) => detail?.lessons[i]?.has_video ?? !!lessons[i].video;
+
+  // Tiến độ học (chỉ khi đã ghi danh)
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (!enrolled) return setProgress(null);
+    coursesApi.progress(course.slug).then(setProgress).catch(() => setProgress(null));
+  }, [enrolled, course.slug]);
+  const isDone = (i: number) => progress?.completed.includes(i) ?? false;
+  const toggleDone = async () => {
+    if (!enrolled || saving) return;
+    setSaving(true);
+    try {
+      const p = isDone(index) ? await coursesApi.uncomplete(course.slug, index) : await coursesApi.complete(course.slug, index);
+      setProgress(p);
+      if (!isDone(index) && index < lessons.length - 1) go(index + 1); // vừa hoàn thành → sang bài tiếp
+    } catch { /* giữ trạng thái cũ */ } finally { setSaving(false); }
+  };
 
   const go = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
@@ -118,7 +136,13 @@ export default function LearnView({ course }: { course: Course }) {
               <h1 className="mt-1 text-xl font-bold text-white sm:text-2xl">{lesson.title}</h1>
               <p className="mt-1 text-sm text-slate-400">⏱ {lesson.duration}{lesson.free && " · Xem thử miễn phí"}</p>
             </div>
-            <div className="flex shrink-0 gap-2">
+            <div className="flex shrink-0 flex-wrap gap-2">
+              {enrolled && (
+                <button onClick={toggleDone} disabled={saving}
+                  className={`btn disabled:opacity-60 ${isDone(index) ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
+                  {isDone(index) ? "✓ Đã hoàn thành · Bỏ đánh dấu" : "✓ Hoàn thành bài này"}
+                </button>
+              )}
               <button onClick={() => go(index - 1)} disabled={index === 0} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-40">← Bài trước</button>
               <button onClick={() => go(index + 1)} disabled={index === lessons.length - 1} className="btn-primary disabled:opacity-40">Bài tiếp →</button>
             </div>
@@ -136,6 +160,17 @@ export default function LearnView({ course }: { course: Course }) {
             <div className="border-b border-white/10 px-4 py-3">
               <p className="font-semibold text-white">Nội dung khóa học</p>
               <p className="text-xs text-slate-400">{lessons.length} bài · {lessons.filter((_, i) => hasVideo(i)).length} video</p>
+              {progress && (
+                <div className="mt-2">
+                  <div className="flex justify-between text-xs text-slate-300">
+                    <span>{progress.percent === 100 ? "🎉 Đã hoàn thành khóa học" : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
+                    <span className="font-semibold">{progress.percent}%</span>
+                  </div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
+                  </div>
+                </div>
+              )}
             </div>
             <ol className="max-h-[70vh] divide-y divide-white/10 overflow-y-auto">
               {lessons.map((l, i) => {
@@ -145,8 +180,8 @@ export default function LearnView({ course }: { course: Course }) {
                   <li key={`${i}-${l.title}`}>
                     <button onClick={() => go(i)}
                       className={`flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/10 ${isActive ? "bg-brand-600/30" : ""}`}>
-                      <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${isActive ? "bg-brand-500 text-white" : "bg-white/10 text-slate-300"}`}>
-                        {isActive ? "▶" : i + 1}
+                      <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${isActive ? "bg-brand-500 text-white" : isDone(i) ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
+                        {isActive ? "▶" : isDone(i) ? "✓" : i + 1}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>

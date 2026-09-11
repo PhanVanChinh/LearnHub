@@ -45,10 +45,16 @@ export type LessonOut = { title: string; duration: string; free: boolean; video:
 export type CourseDetail = { slug: string; title: string; price: number; enrolled: boolean; lessons: LessonOut[] };
 export type LessonVideo = { index: number; title: string; video: string | null };
 
+export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null };
+export type EnrolledCourse = { slug: string; title: string; progress: Progress };
+
 export const coursesApi = {
   enroll: (slug: string) => api<CourseDetail>(`/api/courses/${slug}/enroll`, { method: "POST" }),
   detail: (slug: string) => api<CourseDetail>(`/api/courses/${slug}`),
-  mine: () => api<{ slug: string; title: string }[]>("/api/courses/me/enrolled"),
+  mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),
+  progress: (slug: string) => api<Progress>(`/api/courses/${slug}/progress`),
+  complete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "PUT" }),
+  uncomplete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "DELETE" }),
   /** Video của một bài: bài free → công khai; bài khác → 401 chưa đăng nhập, 403 chưa ghi danh */
   lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
 };

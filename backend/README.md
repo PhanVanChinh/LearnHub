@@ -24,7 +24,10 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | GET | /api/courses/{slug} | tuỳ chọn | Chi tiết (kèm `enrolled`). Bài không free chỉ trả `has_video`, ẩn `video` nếu chưa ghi danh |
 | GET | /api/courses/{slug}/lessons/{index}/video | tuỳ chọn | YouTube ID của bài học. Bài free: công khai. Bài khác: 401 chưa đăng nhập, 403 chưa ghi danh |
 | POST | /api/courses/{slug}/enroll | Bearer | Ghi danh khóa miễn phí (khóa trả phí → 402) |
-| GET | /api/courses/me/enrolled | Bearer | Khóa học của tôi |
+| GET | /api/courses/me/enrolled | Bearer | Khóa học của tôi, kèm `progress` (bài đã xong, %, bài kế tiếp) |
+| GET | /api/courses/{slug}/progress | Bearer, đã ghi danh | Tiến độ học của tôi trong khóa |
+| PUT | /api/courses/{slug}/lessons/{index}/complete | Bearer, đã ghi danh | Đánh dấu bài đã hoàn thành (idempotent) |
+| DELETE | /api/courses/{slug}/lessons/{index}/complete | Bearer, đã ghi danh | Bỏ đánh dấu hoàn thành |
 | GET | /api/health | – | Health check |
 
 ### Admin (yêu cầu role `admin`, tài khoản mặc định `admin@example.com / admin123`)
@@ -58,7 +61,7 @@ app/
   main.py        FastAPI app, CORS, lifespan (tạo bảng + seed)
   config.py      Settings đọc từ .env
   database.py    SQLAlchemy engine/session
-  models.py      User, Course, Enrollment
+  models.py      User, Course, Enrollment, LessonProgress
   schemas.py     Pydantic request/response
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
   seed.py        Nạp seed_data.json + admin

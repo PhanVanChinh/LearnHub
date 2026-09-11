@@ -18,6 +18,7 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -40,6 +41,7 @@ class Course(Base):
     featured: Mapped[bool] = mapped_column(Boolean, default=False)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):
@@ -55,3 +57,19 @@ class Enrollment(Base):
 
     user: Mapped[User] = relationship(back_populates="enrollments")
     course: Mapped[Course] = relationship(back_populates="enrollments")
+
+
+class LessonProgress(Base):
+    """Bài học (theo chỉ số trong course.lessons) mà người dùng đã đánh dấu hoàn thành."""
+
+    __tablename__ = "lesson_progress"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", "lesson_index"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    lesson_index: Mapped[int] = mapped_column(Integer)
+    completed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="progress")
+    course: Mapped[Course] = relationship(back_populates="progress")

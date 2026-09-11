@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas
 from ..database import get_db
-from ..models import Course, Enrollment, User
+from ..models import Course, Enrollment, LessonProgress, User
 from ..security import get_current_user, get_current_user_optional
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
@@ -105,6 +105,57 @@ def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(get_cu
     return _course_detail(course, db, user)
 
 
-@router.get("/me/enrolled", response_model=list[schemas.CourseOut], include_in_schema=True)
+def _progress(db: Session, user: User, course: Course) -> schemas.Progress:
+    total = len(course.lessons or [])
+    done = sorted(
+        r.lesson_index for r in db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id).all()
+        if r.lesson_index < total
+    )
+    next_index = next((i for i in range(total) if i not in done), None)
+    return schemas.Progress(completed=done, total=total, percent=round(len(done) * 100 / total) if total else 0, next_index=next_index)
+
+
+def _require_enrolled(db: Session, user: User, slug: str) -> Course:
+    course = db.query(Course).filter(Course.slug == slug).first()
+    if not course:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
+    if not _is_enrolled(db, user, course):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
+    return course
+
+
+@router.get("/me/enrolled", response_model=list[schemas.EnrolledCourseOut])
 def my_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return [e.course for e in user.enrollments]
+    out = []
+    for e in user.enrollments:
+        out.append(schemas.EnrolledCourseOut(**schemas.CourseOut.model_validate(e.course).model_dump(),
+                                             progress=_progress(db, user, e.course)))
+    return out
+
+
+@router.get("/{slug}/progress", response_model=schemas.Progress)
+def get_progress(slug: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return _progress(db, user, _require_enrolled(db, user, slug))
+
+
+@router.put("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
+def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Đánh dấu bài đã hoàn thành (idempotent)."""
+    course = _require_enrolled(db, user, slug)
+    if index < 0 or index >= len(course.lessons or []):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy bài học")
+    if not db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first():
+        db.add(LessonProgress(user_id=user.id, course_id=course.id, lesson_index=index))
+        db.commit()
+    return _progress(db, user, course)
+
+
+@router.delete("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
+def uncomplete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Bỏ đánh dấu hoàn thành."""
+    course = _require_enrolled(db, user, slug)
+    row = db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first()
+    if row:
+        db.delete(row)
+        db.commit()
+    return _progress(db, user, course)

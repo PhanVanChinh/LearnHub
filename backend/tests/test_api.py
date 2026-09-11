@@ -98,3 +98,38 @@ def test_lesson_video_access(client):
     assert d["enrolled"] is True and d["lessons"][1]["video"] == "IHZwWFHWa-w"
 
     client.delete(f"/api/admin/courses/{cid}", headers=admin)
+
+
+def test_progress_flow(client):
+    """Đánh dấu hoàn thành bài học, tính phần trăm, chỉ cho người đã ghi danh."""
+    token = client.post("/api/auth/login", json={"email": "sv@phenikaa.edu.vn", "password": "secret123"}).json()["access_token"]
+    h = {"Authorization": f"Bearer {token}"}
+    free = client.get("/api/courses", params={"category": "free"}).json()[0]["slug"]  # đã ghi danh ở test_enroll_flow
+    paid = next(c for c in client.get("/api/courses").json() if c["price"] > 0)["slug"]
+    total = len(client.get(f"/api/courses/{free}").json()["lessons"])
+
+    assert client.get(f"/api/courses/{free}/progress").status_code == 401
+    assert client.get(f"/api/courses/{paid}/progress", headers=h).status_code == 403  # chưa ghi danh
+    assert client.put(f"/api/courses/{paid}/lessons/0/complete", headers=h).status_code == 403
+
+    p = client.get(f"/api/courses/{free}/progress", headers=h).json()
+    assert p == {"completed": [], "total": total, "percent": 0, "next_index": 0}
+
+    p = client.put(f"/api/courses/{free}/lessons/0/complete", headers=h).json()
+    assert p["completed"] == [0] and p["next_index"] == 1
+    p = client.put(f"/api/courses/{free}/lessons/0/complete", headers=h).json()  # idempotent
+    assert p["completed"] == [0]
+    p = client.put(f"/api/courses/{free}/lessons/2/complete", headers=h).json()
+    assert p["completed"] == [0, 2] and p["percent"] == round(2 * 100 / total) and p["next_index"] == 1
+    assert client.put(f"/api/courses/{free}/lessons/99/complete", headers=h).status_code == 404
+
+    mine = client.get("/api/courses/me/enrolled", headers=h).json()
+    assert mine[0]["slug"] == free and mine[0]["progress"]["completed"] == [0, 2]
+
+    p = client.delete(f"/api/courses/{free}/lessons/2/complete", headers=h).json()
+    assert p["completed"] == [0]
+
+    # hoàn thành hết → next_index None, 100%
+    for i in range(total):
+        p = client.put(f"/api/courses/{free}/lessons/{i}/complete", headers=h).json()
+    assert p["percent"] == 100 and p["next_index"] is None

@@ -80,6 +80,17 @@ class LessonVideo(BaseModel):
     video: str | None = Field(None, description="YouTube ID; None nếu bài chưa có video")
 
 
+class Progress(BaseModel):
+    completed: list[int] = Field(default_factory=list, description="Chỉ số các bài đã hoàn thành")
+    total: int
+    percent: int
+    next_index: int | None = Field(None, description="Bài chưa học đầu tiên; None nếu đã xong hết")
+
+
+class EnrolledCourseOut(CourseOut):
+    progress: Progress
+
+
 class CategoryCount(BaseModel):
     key: str
     label: str
