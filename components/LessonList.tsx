@@ -1,10 +1,11 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import type { Lesson } from "@/data/courses";
 import VideoPlayer from "./VideoPlayer";
 
 /** Danh sách bài học trên trang chi tiết. Bài `free` có video thì bấm để xem thử ngay tại đây. */
-export default function LessonList({ lessons }: { lessons: Lesson[] }) {
+export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug: string }) {
   const previewable = lessons.map((l, i) => (l.free && l.video ? i : -1)).filter((i) => i >= 0);
   const [active, setActive] = useState<number | null>(null);
   const current = active !== null ? lessons[active] : null;
@@ -23,7 +24,10 @@ export default function LessonList({ lessons }: { lessons: Lesson[] }) {
           <VideoPlayer videoId={current.video} title={current.title} autoplay />
           <div className="mt-3 flex items-center justify-between gap-3">
             <p className="font-semibold text-slate-900">Đang xem thử: {current.title}</p>
-            <button onClick={() => setActive(null)} className="text-sm text-slate-500 hover:text-slate-800">Đóng ✕</button>
+            <div className="flex shrink-0 items-center gap-3 text-sm">
+              <Link href={`/learn/${slug}?lesson=${active}`} className="font-semibold text-brand-700 hover:underline">Mở trang học →</Link>
+              <button onClick={() => setActive(null)} className="text-slate-500 hover:text-slate-800">Đóng ✕</button>
+            </div>
           </div>
         </div>
       )}

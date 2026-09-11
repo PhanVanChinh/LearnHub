@@ -34,7 +34,7 @@ export default function MyCoursesPage() {
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {mine.map((c) => <CourseCard key={c.slug} course={c} />)}
+            {mine.map((c) => <CourseCard key={c.slug} course={c} action={{ href: `/learn/${c.slug}`, label: "▶ Vào học" }} />)}
           </div>
         )}
       </div>

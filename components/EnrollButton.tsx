@@ -23,7 +23,7 @@ export default function EnrollButton({ slug, price }: { slug: string; price: num
     return <Link href={`/login?next=/courses/${slug}`} className="btn-primary mt-4 w-full !py-3">Đăng nhập để học miễn phí</Link>;
   }
   if (enrolled) {
-    return <Link href="/my-courses" className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">✓ Đã ghi danh — Vào học</Link>;
+    return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;
   }
   const enroll = async () => {
     setBusy(true); setMsg("");

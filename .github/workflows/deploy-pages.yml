@@ -32,6 +32,7 @@ jobs:
       - name: Build static site
         run: npm run build
         env:
+          STATIC_EXPORT: "1"
           # Repo tên LearnHub → site ở https://phanvanchinh.github.io/LearnHub/
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
           # Đổi thành URL backend công khai khi bạn deploy FastAPI (Render, Railway, ...)

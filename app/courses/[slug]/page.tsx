@@ -52,7 +52,7 @@ export default function CourseDetail({ params }: { params: { slug: string } }) {
           </section>
           <section>
             <h2 className="text-xl font-bold text-slate-900">Nội dung</h2>
-            <LessonList lessons={course.lessons} />
+            <LessonList lessons={course.lessons} slug={course.slug} />
           </section>
         </div>
 

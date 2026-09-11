@@ -6,7 +6,10 @@ const labels: Record<string, string> = {
   "ai-check": "AI Check", pdf: "PDF", quiz: "Trắc nghiệm", free: "Miễn phí", source: "Source code", video: "Video",
 };
 
-export default function CourseCard({ course }: { course: Course }) {
+type Action = { href: string; label: string };
+
+export default function CourseCard({ course, action }: { course: Course; action?: Action }) {
+  const cta: Action = action ?? { href: `/courses/${course.slug}`, label: course.price === 0 ? "Bắt đầu học" : "Xem chi tiết" };
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={`/courses/${course.slug}`} className={`relative grid aspect-[16/9] place-items-center bg-gradient-to-br ${course.color}`}>
@@ -29,9 +32,7 @@ export default function CourseCard({ course }: { course: Course }) {
         </div>
         <div className="mt-auto flex items-center justify-between pt-4">
           <span className={`text-lg font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</span>
-          <Link href={`/courses/${course.slug}`} className="btn-primary !px-3 !py-1.5">
-            {course.price === 0 ? "Bắt đầu học" : "Xem chi tiết"}
-          </Link>
+          <Link href={cta.href} className="btn-primary !px-3 !py-1.5">{cta.label}</Link>
         </div>
       </div>
     </article>
