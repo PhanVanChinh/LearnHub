@@ -57,3 +57,44 @@ def test_enroll_flow(client):
     assert client.get(f"/api/courses/{free}", headers=h).json()["enrolled"] is True
     mine = client.get("/api/courses/me/enrolled", headers=h).json()
     assert [c["slug"] for c in mine] == [free]
+
+
+def test_lesson_video_access(client):
+    """Video bài free: công khai. Bài khác: ẩn ID với người chưa ghi danh, endpoint trả 401/403."""
+    admin = {"Authorization": f"Bearer {client.post('/api/auth/login', json={'email': 'admin@example.com', 'password': 'admin123'}).json()['access_token']}"}
+    # tạo khóa trả phí có video ở cả bài free và bài khoá
+    r = client.post("/api/admin/courses", json={
+        "slug": "khoa-video-khoa", "title": "Khóa video", "category": "video", "price": 50000,
+        "lessons": [{"title": "Xem thử", "duration": "1:00", "free": True, "video": "aircAruvnKk"},
+                    {"title": "Bài khoá", "duration": "2:00", "video": "IHZwWFHWa-w"},
+                    {"title": "Chưa có video", "duration": "3:00"}],
+    }, headers=admin)
+    assert r.status_code == 201, r.text
+    cid = r.json()["id"]
+
+    # public detail: bài free giữ video, bài khoá chỉ còn has_video
+    d = client.get("/api/courses/khoa-video-khoa").json()
+    assert d["lessons"][0]["video"] == "aircAruvnKk"
+    assert d["lessons"][1]["video"] is None and d["lessons"][1]["has_video"] is True
+    assert d["lessons"][2]["video"] is None and d["lessons"][2]["has_video"] is False
+
+    # endpoint video
+    assert client.get("/api/courses/khoa-video-khoa/lessons/0/video").json()["video"] == "aircAruvnKk"
+    assert client.get("/api/courses/khoa-video-khoa/lessons/1/video").status_code == 401
+    assert client.get("/api/courses/khoa-video-khoa/lessons/9/video").status_code == 404
+    assert client.get("/api/courses/khong-ton-tai/lessons/0/video").status_code == 404
+
+    token = client.post("/api/auth/login", json={"email": "sv@phenikaa.edu.vn", "password": "secret123"}).json()["access_token"]
+    h = {"Authorization": f"Bearer {token}"}
+    assert client.get("/api/courses/khoa-video-khoa/lessons/1/video", headers=h).status_code == 403
+
+    # admin cấp quyền → xem được, detail cũng trả đầy đủ video
+    uid = client.get("/api/auth/me", headers=h).json()["id"]
+    assert client.post("/api/admin/enrollments", json={"user_id": uid, "course_id": cid}, headers=admin).status_code == 201
+    r = client.get("/api/courses/khoa-video-khoa/lessons/1/video", headers=h)
+    assert r.status_code == 200 and r.json()["video"] == "IHZwWFHWa-w"
+    assert client.get("/api/courses/khoa-video-khoa/lessons/2/video", headers=h).json()["video"] is None
+    d = client.get("/api/courses/khoa-video-khoa", headers=h).json()
+    assert d["enrolled"] is True and d["lessons"][1]["video"] == "IHZwWFHWa-w"
+
+    client.delete(f"/api/admin/courses/{cid}", headers=admin)

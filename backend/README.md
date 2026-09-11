@@ -21,7 +21,8 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | POST | /api/auth/change-password | Bearer | Đổi mật khẩu |
 | GET | /api/courses?category=&q=&featured=&limit=&offset= | – | Danh sách khóa học (lọc, tìm) |
 | GET | /api/courses/categories | – | Số khóa học theo danh mục |
-| GET | /api/courses/{slug} | tuỳ chọn | Chi tiết (kèm `enrolled` nếu đã đăng nhập) |
+| GET | /api/courses/{slug} | tuỳ chọn | Chi tiết (kèm `enrolled`). Bài không free chỉ trả `has_video`, ẩn `video` nếu chưa ghi danh |
+| GET | /api/courses/{slug}/lessons/{index}/video | tuỳ chọn | YouTube ID của bài học. Bài free: công khai. Bài khác: 401 chưa đăng nhập, 403 chưa ghi danh |
 | POST | /api/courses/{slug}/enroll | Bearer | Ghi danh khóa miễn phí (khóa trả phí → 402) |
 | GET | /api/courses/me/enrolled | Bearer | Khóa học của tôi |
 | GET | /api/health | – | Health check |

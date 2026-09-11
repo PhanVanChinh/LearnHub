@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Lesson } from "@/data/courses";
+import { coursesApi } from "@/lib/api";
 import VideoPlayer from "./VideoPlayer";
 
 /** Danh sách bài học trên trang chi tiết. Bài `free` có video thì bấm để xem thử ngay tại đây. */
@@ -9,7 +10,13 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
   const previewable = lessons.map((l, i) => (l.free && l.video ? i : -1)).filter((i) => i >= 0);
   const [active, setActive] = useState<number | null>(null);
   const current = active !== null ? lessons[active] : null;
-  const videoCount = lessons.filter((l) => l.video).length;
+  // Video bài trả phí không nằm trong dữ liệu tĩnh → hỏi API cờ has_video để hiện icon đúng
+  const [hasVideoApi, setHasVideoApi] = useState<boolean[] | null>(null);
+  useEffect(() => {
+    coursesApi.detail(slug).then((d) => setHasVideoApi(d.lessons.map((l) => l.has_video))).catch(() => {});
+  }, [slug]);
+  const hasVideo = (i: number) => hasVideoApi?.[i] ?? !!lessons[i].video;
+  const videoCount = lessons.filter((_, i) => hasVideo(i)).length;
 
   return (
     <div>
@@ -46,7 +53,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
                 {l.free && <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Xem thử</span>}
               </div>
               <div className="flex shrink-0 items-center gap-3 text-sm text-slate-500">
-                {l.video ? <span title="Bài giảng video">🎬</span> : <span title="Tài liệu đọc">📄</span>}
+                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : <span title="Tài liệu đọc">📄</span>}
                 {!l.free && <span title="Cần ghi danh">🔒</span>}
                 <span>{l.duration}</span>
               </div>

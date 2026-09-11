@@ -14,7 +14,7 @@ export type Lesson = {
   title: string;
   duration: string;
   free?: boolean; // xem thử không cần ghi danh
-  video?: string; // YouTube video ID (11 ký tự), vd "aircAruvnKk"
+  video?: string; // YouTube ID (11 ký tự). CHỈ đặt cho bài free — video bài trả phí nằm ở data/videos.seed.ts
 };
 
 export type Course = {
@@ -252,9 +252,9 @@ export const courses: Course[] = [
       lessons: [
         { title: "Machine Learning là gì?", duration: "07:52", free: true, video: "ukzFI9rgwfU" },
         { title: "Mạng neural hoạt động thế nào?", duration: "18:40", free: true, video: "aircAruvnKk" },
-        { title: "Gradient descent — cách mô hình học", duration: "20:33", video: "IHZwWFHWa-w" },
-        { title: "Backpropagation — trực giác", duration: "12:47", video: "Ilg3gGewQ5U" },
-        { title: "Backpropagation — phần tính toán", duration: "10:18", video: "tIeHLnjs5U8" },
+        { title: "Gradient descent — cách mô hình học", duration: "20:33" },
+        { title: "Backpropagation — trực giác", duration: "12:47" },
+        { title: "Backpropagation — phần tính toán", duration: "10:18" },
       ],
     },
   ),

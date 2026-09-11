@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Course } from "@/data/courses";
-import { coursesApi } from "@/lib/api";
+import { ApiError, CourseDetail, coursesApi } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 
-type Access = "checking" | "granted" | "login" | "enroll";
+type Access = "checking" | "granted" | "login" | "enroll" | "offline";
 
 export default function LearnView({ course }: { course: Course }) {
   const { user, loading } = useAuth();
@@ -19,20 +19,32 @@ export default function LearnView({ course }: { course: Course }) {
   const index = Number.isInteger(fromUrl) && fromUrl >= 0 && fromUrl < lessons.length ? fromUrl : 0;
   const lesson = lessons[index];
 
-  // Quyền xem: bài free → ai cũng xem; còn lại cần đăng nhập + đã ghi danh
-  const [enrolled, setEnrolled] = useState<boolean | null>(null);
+  // Chi tiết từ API: biết bài nào có video (has_video) và đã ghi danh chưa
+  const [detail, setDetail] = useState<CourseDetail | null>(null);
   useEffect(() => {
     if (loading) return;
-    if (!user) return setEnrolled(false);
-    coursesApi.detail(course.slug).then((d) => setEnrolled(d.enrolled)).catch(() => setEnrolled(false));
-  }, [user, loading, course.slug]);
+    coursesApi.detail(course.slug).then(setDetail).catch(() => setDetail(null));
+  }, [course.slug, user, loading]);
 
-  const access: Access = useMemo(() => {
-    if (lesson.free) return "granted";
-    if (loading || (user && enrolled === null)) return "checking";
-    if (!user) return "login";
-    return enrolled ? "granted" : "enroll";
-  }, [lesson.free, loading, user, enrolled]);
+  // Video của bài đang xem. Bài free lấy từ dữ liệu tĩnh; bài khác phải hỏi API (kiểm tra ghi danh ở server).
+  const [state, setState] = useState<{ access: Access; video: string | null }>({ access: "checking", video: null });
+  useEffect(() => {
+    if (lesson.free) return setState({ access: "granted", video: lesson.video ?? null });
+    if (loading) return setState({ access: "checking", video: null });
+    if (!user) return setState({ access: "login", video: null });
+    let cancelled = false;
+    setState({ access: "checking", video: null });
+    coursesApi.lessonVideo(course.slug, index)
+      .then((v) => !cancelled && setState({ access: "granted", video: v.video }))
+      .catch((e: ApiError) => {
+        if (cancelled) return;
+        setState({ access: e.status === 403 ? "enroll" : e.status === 401 ? "login" : "offline", video: null });
+      });
+    return () => { cancelled = true; };
+  }, [course.slug, index, lesson.free, lesson.video, user, loading]);
+  const { access, video } = state;
+  const enrolled = detail?.enrolled ?? false;
+  const hasVideo = (i: number) => detail?.lessons[i]?.has_video ?? !!lessons[i].video;
 
   const go = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
@@ -65,8 +77,8 @@ export default function LearnView({ course }: { course: Course }) {
       <div className="container-x grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* Khu vực nội dung */}
         <div className="min-w-0">
-          {access === "granted" && lesson.video && <VideoPlayer videoId={lesson.video} title={lesson.title} autoplay className="!rounded-xl" />}
-          {access === "granted" && !lesson.video && (
+          {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
+          {access === "granted" && !video && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
                 <p className="text-5xl">📄</p>
@@ -76,6 +88,15 @@ export default function LearnView({ course }: { course: Course }) {
             </div>
           )}
           {access === "checking" && <div className="aspect-video animate-pulse rounded-xl bg-white/10" />}
+          {access === "offline" && (
+            <div className="grid aspect-video place-items-center rounded-xl border border-rose-500/30 bg-rose-500/10 p-8 text-center">
+              <div>
+                <p className="text-5xl">⚠️</p>
+                <p className="mt-3 text-lg font-semibold">Không kết nối được máy chủ</p>
+                <p className="mt-1 text-sm text-slate-300">Video bài trả phí được lấy từ backend. Hãy kiểm tra backend đã chạy chưa.</p>
+              </div>
+            </div>
+          )}
           {(access === "login" || access === "enroll") && (
             <div className="grid aspect-video place-items-center rounded-xl border border-white/10 bg-white/5 p-8 text-center">
               <div>
@@ -114,11 +135,11 @@ export default function LearnView({ course }: { course: Course }) {
           <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <div className="border-b border-white/10 px-4 py-3">
               <p className="font-semibold text-white">Nội dung khóa học</p>
-              <p className="text-xs text-slate-400">{lessons.length} bài · {lessons.filter((l) => l.video).length} video</p>
+              <p className="text-xs text-slate-400">{lessons.length} bài · {lessons.filter((_, i) => hasVideo(i)).length} video</p>
             </div>
             <ol className="max-h-[70vh] divide-y divide-white/10 overflow-y-auto">
               {lessons.map((l, i) => {
-                const locked = !l.free && access !== "granted" && !(user && enrolled);
+                const locked = !l.free && !enrolled;
                 const isActive = i === index;
                 return (
                   <li key={`${i}-${l.title}`}>
@@ -130,7 +151,7 @@ export default function LearnView({ course }: { course: Course }) {
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{l.video ? "🎬" : "📄"} {l.duration}</span>
+                          <span>{hasVideo(i) ? "🎬" : "📄"} {l.duration}</span>
                           {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
                           {locked && <span>🔒</span>}
                         </span>

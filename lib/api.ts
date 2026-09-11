@@ -41,10 +41,16 @@ export const authApi = {
   me: () => api<User>("/api/auth/me"),
 };
 
+export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };
+export type CourseDetail = { slug: string; title: string; price: number; enrolled: boolean; lessons: LessonOut[] };
+export type LessonVideo = { index: number; title: string; video: string | null };
+
 export const coursesApi = {
-  enroll: (slug: string) => api<{ enrolled: boolean }>(`/api/courses/${slug}/enroll`, { method: "POST" }),
-  detail: (slug: string) => api<{ enrolled: boolean }>(`/api/courses/${slug}`),
+  enroll: (slug: string) => api<CourseDetail>(`/api/courses/${slug}/enroll`, { method: "POST" }),
+  detail: (slug: string) => api<CourseDetail>(`/api/courses/${slug}`),
   mine: () => api<{ slug: string; title: string }[]>("/api/courses/me/enrolled"),
+  /** Video của một bài: bài free → công khai; bài khác → 401 chưa đăng nhập, 403 chưa ghi danh */
+  lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
 };
 
 // ---- Admin ----

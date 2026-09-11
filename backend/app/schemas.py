@@ -61,11 +61,23 @@ class CourseOut(BaseModel):
     featured: bool
 
 
+class LessonOut(Lesson):
+    """Bài học trả cho public: `video` chỉ có khi bài free hoặc người xem đã ghi danh; `has_video` luôn có."""
+
+    has_video: bool = False
+
+
 class CourseDetail(CourseOut):
     description: str
     includes: list[str]
-    lessons: list[Lesson]
+    lessons: list[LessonOut]
     enrolled: bool = False
+
+
+class LessonVideo(BaseModel):
+    index: int
+    title: str
+    video: str | None = Field(None, description="YouTube ID; None nếu bài chưa có video")
 
 
 class CategoryCount(BaseModel):

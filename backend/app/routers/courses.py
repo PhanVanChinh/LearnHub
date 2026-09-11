@@ -55,10 +55,39 @@ def get_course(slug: str, db: Session = Depends(get_db), user: User | None = Dep
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
     course.views += 1
     db.commit()
+    return _course_detail(course, db, user)
+
+
+def _is_enrolled(db: Session, user: User | None, course: Course) -> bool:
+    return bool(user) and db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first() is not None
+
+
+def _course_detail(course: Course, db: Session, user: User | None) -> schemas.CourseDetail:
+    """Ẩn video ID của bài không free với người chưa ghi danh (chỉ để lại cờ has_video)."""
     out = schemas.CourseDetail.model_validate(course)
-    if user:
-        out.enrolled = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first() is not None
+    out.enrolled = _is_enrolled(db, user, course)
+    for lesson in out.lessons:
+        lesson.has_video = bool(lesson.video)
+        if not lesson.free and not out.enrolled:
+            lesson.video = None
     return out
+
+
+@router.get("/{slug}/lessons/{index}/video", response_model=schemas.LessonVideo)
+def lesson_video(slug: str, index: int, db: Session = Depends(get_db), user: User | None = Depends(get_current_user_optional)):
+    """Trả YouTube ID của một bài học. Bài free: ai cũng lấy được. Bài khác: cần đăng nhập (401) và đã ghi danh (403)."""
+    course = db.query(Course).filter(Course.slug == slug).first()
+    if not course:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
+    if index < 0 or index >= len(course.lessons or []):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy bài học")
+    lesson = course.lessons[index]
+    if not lesson.get("free"):
+        if user is None:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bạn cần đăng nhập để xem bài này", headers={"WWW-Authenticate": "Bearer"})
+        if not _is_enrolled(db, user, course):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
+    return schemas.LessonVideo(index=index, title=lesson["title"], video=lesson.get("video"))
 
 
 @router.post("/{slug}/enroll", response_model=schemas.CourseDetail, status_code=status.HTTP_201_CREATED)
@@ -73,9 +102,7 @@ def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(get_cu
         db.add(Enrollment(user_id=user.id, course_id=course.id))
         course.sold += 1
         db.commit()
-    out = schemas.CourseDetail.model_validate(course)
-    out.enrolled = True
-    return out
+    return _course_detail(course, db, user)
 
 
 @router.get("/me/enrolled", response_model=list[schemas.CourseOut], include_in_schema=True)
