@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import CourseCard from "@/components/CourseCard";
 import EnrollButton from "@/components/EnrollButton";
+import LessonList from "@/components/LessonList";
+import { youtubeThumb } from "@/components/VideoPlayer";
 import { courses, getCourse } from "@/data/courses";
 import { formatVND } from "@/lib/site";
 
@@ -17,6 +19,7 @@ export function generateMetadata({ params }: { params: { slug: string } }) {
 export default function CourseDetail({ params }: { params: { slug: string } }) {
   const course = getCourse(params.slug);
   if (!course) notFound();
+  const previewVideo = course.lessons.find((l) => l.free && l.video)?.video;
   const related = courses.filter((c) => c.category === course.category && c.slug !== course.slug).slice(0, 4);
 
   return (
@@ -49,24 +52,24 @@ export default function CourseDetail({ params }: { params: { slug: string } }) {
           </section>
           <section>
             <h2 className="text-xl font-bold text-slate-900">Nội dung</h2>
-            <ol className="mt-4 divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              {course.lessons.map((l, i) => (
-                <li key={l.title} className="flex items-center justify-between gap-4 px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700">{i + 1}</span>
-                    <span className="font-medium text-slate-800">{l.title}</span>
-                    {l.free && <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Xem thử</span>}
-                  </div>
-                  <span className="text-sm text-slate-500">{l.duration}</span>
-                </li>
-              ))}
-            </ol>
+            <LessonList lessons={course.lessons} />
           </section>
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
-            <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} text-5xl`}>{course.emoji}</div>
+            {previewVideo ? (
+              <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-900">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={youtubeThumb(previewVideo)} alt="" className="h-full w-full object-cover opacity-90" />
+                <span className="absolute inset-0 grid place-items-center">
+                  <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-2xl text-brand-700 shadow-lg">▶</span>
+                </span>
+                <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">Có bài xem thử</span>
+              </div>
+            ) : (
+              <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} text-5xl`}>{course.emoji}</div>
+            )}
             <p className={`mt-5 text-3xl font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</p>
             <EnrollButton slug={course.slug} price={course.price} />
             <ul className="mt-5 space-y-2 text-sm text-slate-600">
