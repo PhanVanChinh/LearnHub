@@ -45,6 +45,8 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | POST | /api/admin/enrollments | Cấp quyền khóa học cho user (kể cả khóa trả phí) |
 | DELETE | /api/admin/enrollments/{id} | Thu hồi ghi danh |
 
+Mỗi phần tử `lessons` có dạng `{title, duration, free?, video?}`; `video` là YouTube video ID 11 ký tự (chỉ lưu ID, không lưu link).
+
 Quy tắc: `tags` tự động chứa `category`, thêm `free` khi `price = 0` và gỡ `free` khi `price > 0`.
 Admin không thể tự hạ quyền, tự khoá hoặc tự xoá tài khoản của chính mình.
 

@@ -41,6 +41,7 @@ class Lesson(BaseModel):
     title: str
     duration: str
     free: bool = False
+    video: str | None = Field(None, pattern=r"^[A-Za-z0-9_-]{11}$", description="YouTube video ID")
 
 
 class CourseOut(BaseModel):

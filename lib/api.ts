@@ -48,7 +48,7 @@ export const coursesApi = {
 };
 
 // ---- Admin ----
-export type Lesson = { title: string; duration: string; free?: boolean };
+export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null };
 export type AdminCourse = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
   color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];

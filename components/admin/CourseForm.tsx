@@ -13,11 +13,30 @@ const slugify = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
-const lessonsToText = (l: Lesson[]) => l.map((x) => `${x.title} | ${x.duration}${x.free ? " | free" : ""}`).join("\n");
+// Mỗi dòng: "Tiêu đề | Thời lượng | free | <YouTube ID hoặc link>" — hai token cuối tuỳ chọn, thứ tự tự do.
+const lessonsToText = (l: Lesson[]) =>
+  l.map((x) => [x.title, x.duration, x.free ? "free" : null, x.video ?? null].filter(Boolean).join(" | ")).join("\n");
+
+/** Chấp nhận ID 11 ký tự hoặc link youtube.com/watch?v=..., youtu.be/..., /shorts/..., /embed/... */
+export const parseYouTubeId = (input: string): string | null => {
+  const s = input.trim();
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s;
+  const m = s.match(/(?:v=|youtu\.be\/|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+};
+
 const textToLessons = (t: string): Lesson[] =>
   t.split("\n").map((line) => line.trim()).filter(Boolean).map((line) => {
-    const [title = "", duration = "", flag = ""] = line.split("|").map((p) => p.trim());
-    return { title, duration, free: flag.toLowerCase() === "free" };
+    const [title = "", duration = "", ...rest] = line.split("|").map((p) => p.trim());
+    const lesson: Lesson = { title, duration, free: false };
+    for (const tok of rest) {
+      if (!tok) continue;
+      if (tok.toLowerCase() === "free") { lesson.free = true; continue; }
+      const id = parseYouTubeId(tok);
+      if (!id) throw new Error(`Không nhận ra video "${tok}" ở bài "${title}". Dán YouTube ID (11 ký tự) hoặc link video.`);
+      lesson.video = id;
+    }
+    return lesson;
   });
 
 type Props = { initial?: AdminCourse; onSubmit: (body: CourseInput) => Promise<void>; onCancel: () => void };
@@ -93,9 +112,9 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         <Field label="Khóa học bao gồm" hint="Mỗi dòng một mục">
           <textarea className="input font-mono text-xs" rows={5} value={f.includes} onChange={(e) => set("includes", e.target.value)} />
         </Field>
-        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (nếu học thử)">
+        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link">
           <textarea className="input font-mono text-xs" rows={5} value={f.lessons} onChange={(e) => set("lessons", e.target.value)}
-            placeholder={"Giới thiệu | 05:20 | free\nChương 1 | 18:45"} />
+            placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/IHZwWFHWa-w"} />
         </Field>
       </div>
       <label className="flex items-center gap-2 text-sm">

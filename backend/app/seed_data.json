@@ -498,24 +498,25 @@
     ],
     "lessons": [
       {
-        "title": "Giới thiệu & cách sử dụng",
+        "title": "Giới thiệu & cài đặt môi trường",
         "duration": "05:20",
-        "free": true
+        "free": true,
+        "video": "KJgsSFOSQv0"
       },
       {
-        "title": "Chương 1 — Kiến thức nền tảng",
+        "title": "Chương 1 — Biến, kiểu dữ liệu, toán tử",
         "duration": "18:45"
       },
       {
-        "title": "Chương 2 — Nội dung trọng tâm",
+        "title": "Chương 2 — Cấu trúc điều khiển & vòng lặp",
         "duration": "24:10"
       },
       {
-        "title": "Chương 3 — Bài tập & đề mẫu",
+        "title": "Chương 3 — Hàm, mảng, con trỏ",
         "duration": "21:30"
       },
       {
-        "title": "Ôn tập tổng hợp trước kỳ thi",
+        "title": "Bài tập tổng hợp có lời giải",
         "duration": "15:00"
       }
     ]
@@ -759,25 +760,31 @@
     ],
     "lessons": [
       {
-        "title": "Giới thiệu & cách sử dụng",
-        "duration": "05:20",
-        "free": true
+        "title": "Machine Learning là gì?",
+        "duration": "07:52",
+        "free": true,
+        "video": "ukzFI9rgwfU"
       },
       {
-        "title": "Chương 1 — Kiến thức nền tảng",
-        "duration": "18:45"
+        "title": "Mạng neural hoạt động thế nào?",
+        "duration": "18:40",
+        "free": true,
+        "video": "aircAruvnKk"
       },
       {
-        "title": "Chương 2 — Nội dung trọng tâm",
-        "duration": "24:10"
+        "title": "Gradient descent — cách mô hình học",
+        "duration": "20:33",
+        "video": "IHZwWFHWa-w"
       },
       {
-        "title": "Chương 3 — Bài tập & đề mẫu",
-        "duration": "21:30"
+        "title": "Backpropagation — trực giác",
+        "duration": "12:47",
+        "video": "Ilg3gGewQ5U"
       },
       {
-        "title": "Ôn tập tổng hợp trước kỳ thi",
-        "duration": "15:00"
+        "title": "Backpropagation — phần tính toán",
+        "duration": "10:18",
+        "video": "tIeHLnjs5U8"
       }
     ]
   },

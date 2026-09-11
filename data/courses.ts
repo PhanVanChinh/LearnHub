@@ -10,6 +10,13 @@ export const categories: { key: Category | "all"; label: string }[] = [
   { key: "video", label: "Video" },
 ];
 
+export type Lesson = {
+  title: string;
+  duration: string;
+  free?: boolean; // xem thử không cần ghi danh
+  video?: string; // YouTube video ID (11 ký tự), vd "aircAruvnKk"
+};
+
 export type Course = {
   slug: string;
   title: string;
@@ -23,7 +30,7 @@ export type Course = {
   short: string;
   description: string;
   includes: string[];
-  lessons: { title: string; duration: string; free?: boolean }[];
+  lessons: Lesson[];
   featured?: boolean;
 };
 
@@ -176,6 +183,15 @@ export const courses: Course[] = [
     "💻",
     "from-slate-600 to-slate-800",
     "Slide bài giảng và bộ bài tập có lời giải cho người mới bắt đầu.",
+    {
+      lessons: [
+        { title: "Giới thiệu & cài đặt môi trường", duration: "05:20", free: true, video: "KJgsSFOSQv0" },
+        { title: "Chương 1 — Biến, kiểu dữ liệu, toán tử", duration: "18:45" },
+        { title: "Chương 2 — Cấu trúc điều khiển & vòng lặp", duration: "24:10" },
+        { title: "Chương 3 — Hàm, mảng, con trỏ", duration: "21:30" },
+        { title: "Bài tập tổng hợp có lời giải", duration: "15:00" },
+      ],
+    },
   ),
   base(
     "source-web-ban-hang-nodejs",
@@ -232,6 +248,15 @@ export const courses: Course[] = [
     "📈",
     "from-brand-500 to-brand-700",
     "Hồi quy, phân loại, đánh giá mô hình — thực hành với scikit-learn.",
+    {
+      lessons: [
+        { title: "Machine Learning là gì?", duration: "07:52", free: true, video: "ukzFI9rgwfU" },
+        { title: "Mạng neural hoạt động thế nào?", duration: "18:40", free: true, video: "aircAruvnKk" },
+        { title: "Gradient descent — cách mô hình học", duration: "20:33", video: "IHZwWFHWa-w" },
+        { title: "Backpropagation — trực giác", duration: "12:47", video: "Ilg3gGewQ5U" },
+        { title: "Backpropagation — phần tính toán", duration: "10:18", video: "tIeHLnjs5U8" },
+      ],
+    },
   ),
   base(
     "pdf-de-cuong-vat-ly-dai-cuong",

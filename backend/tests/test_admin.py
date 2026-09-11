@@ -134,3 +134,19 @@ def test_enrollment_admin(client, admin, user):
     assert client.delete(f"/api/admin/enrollments/{eid}", headers=admin).status_code == 404
     assert client.get("/api/courses/me/enrolled", headers=headers).json() == []
     assert client.get(f"/api/admin/courses/{paid['id']}", headers=admin).json()["sold"] == sold_before
+
+
+def test_lesson_video_field(client, admin):
+    body = {**NEW_COURSE, "slug": "khoa-co-video",
+            "lessons": [{"title": "Bài 1", "duration": "10:00", "free": True, "video": "aircAruvnKk"},
+                        {"title": "Bài 2", "duration": "12:00"}]}
+    r = client.post("/api/admin/courses", json=body, headers=admin)
+    assert r.status_code == 201, r.text
+    lessons = r.json()["lessons"]
+    assert lessons[0]["video"] == "aircAruvnKk" and lessons[1]["video"] is None
+    # public detail cũng trả video
+    assert client.get("/api/courses/khoa-co-video").json()["lessons"][0]["video"] == "aircAruvnKk"
+    # ID sai định dạng (link đầy đủ / quá ngắn) → 422
+    bad = {**body, "slug": "khoa-video-sai", "lessons": [{"title": "x", "duration": "1:00", "video": "https://youtu.be/aircAruvnKk"}]}
+    assert client.post("/api/admin/courses", json=bad, headers=admin).status_code == 422
+    client.delete(f"/api/admin/courses/{r.json()['id']}", headers=admin)
