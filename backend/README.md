@@ -11,13 +11,24 @@ uvicorn app.main:app --reload --port 8000
 Swagger UI: http://localhost:8000/docs — nút **Authorize** dùng email/mật khẩu.
 Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ `app/seed_data.json` và tài khoản admin `admin@example.com / admin123`.
 
+## Xác thực email
+
+Đăng ký xong, backend gửi mã OTP 6 số. Chưa xác thực vẫn đăng nhập và xem bài miễn phí được, nhưng **không** ghi danh, xem bài trả phí hay lưu tiến độ (403).
+
+- Chưa đặt `RESEND_API_KEY` → chế độ dev: mã in ra terminal backend, không gửi mail thật.
+- Gửi thật: tạo key tại https://resend.com, đặt `RESEND_API_KEY=re_...` trong `.env`. Khi chưa xác minh domain, Resend chỉ cho gửi từ `onboarding@resend.dev` tới email đăng ký tài khoản Resend; có domain riêng thì đổi `MAIL_FROM`.
+- Tài khoản tạo trước tính năng này được tự đánh dấu đã xác thực khi migrate (`database.migrate()`).
+
 ## Endpoints
 
 | Method | Path | Auth | Mô tả |
 |---|---|---|---|
 | POST | /api/auth/register | – | Đăng ký → trả JWT + user. Mật khẩu ≥ 8 ký tự, có chữ và số, không phổ biến, không chứa tên email (xem `app/passwords.py`). Lỗi 422 trả `{detail, errors:[{field,msg}]}` |
 | POST | /api/auth/login | – | Đăng nhập → JWT + user |
-| GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại |
+| GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại (kèm `email_verified`) |
+| GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
+| POST | /api/auth/verification/resend | Bearer | Gửi lại mã OTP (cooldown 60s → 429) |
+| POST | /api/auth/verification/confirm | Bearer | Xác nhận mã 6 số (hết hạn 10 phút, tối đa 5 lần sai) |
 | POST | /api/auth/change-password | Bearer | Đổi mật khẩu |
 | GET | /api/courses?category=&q=&featured=&limit=&offset= | – | Danh sách khóa học (lọc, tìm) |
 | GET | /api/courses/categories | – | Số khóa học theo danh mục |
@@ -61,10 +72,11 @@ app/
   main.py        FastAPI app, CORS, lifespan (tạo bảng + seed)
   config.py      Settings đọc từ .env
   database.py    SQLAlchemy engine/session
-  models.py      User, Course, Enrollment, LessonProgress
+  models.py      User, Course, Enrollment, LessonProgress, EmailVerification
   schemas.py     Pydantic request/response
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
   passwords.py   Quy tắc mật khẩu (dùng chung đăng ký / đổi mật khẩu / admin)
+  mailer.py      Gửi email qua Resend hoặc in ra log (dev)
   seed.py        Nạp seed_data.json + admin
   routers/       auth.py, courses.py, admin.py
 tests/           conftest.py, test_api.py, test_admin.py (chạy: python -m pytest)

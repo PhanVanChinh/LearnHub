@@ -28,8 +28,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
-        if (user) router.replace(next);
-    }, [user, next, router]);
+        if (user && login) router.replace(next);
+    }, [user, login, next, router]);
 
     // ---- kiểm tra phía client (chỉ dùng cho đăng ký) ----
     const rules = useMemo(() => passwordRules(form.password, form.email), [form.password, form.email]);
@@ -55,9 +55,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         setServerErrors({});
         setBusy(true);
         try {
-            if (login) await doLogin(form.email.trim(), form.password);
-            else await doRegister(form.full_name.trim(), form.email.trim(), form.password);
-            router.replace(next);
+            if (login) {
+                await doLogin(form.email.trim(), form.password);
+                router.replace(next);
+            } else {
+                await doRegister(form.full_name.trim(), form.email.trim(), form.password);
+                router.replace(`/verify?next=${encodeURIComponent(next)}`);
+            }
         } catch (err) {
             const ae = err as ApiError;
             if (ae.errors && Object.keys(ae.errors).length) setServerErrors(ae.errors);

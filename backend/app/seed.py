@@ -4,6 +4,7 @@ seed_data.json được export từ frontend/data/courses.ts:
     node --experimental-strip-types scripts/export-courses.mts
 """
 import json
+from datetime import datetime
 from pathlib import Path
 
 from .config import settings
@@ -24,7 +25,7 @@ def seed_if_empty() -> None:
                     "emoji", "short", "description", "includes", "lessons", "featured")}))
         if db.query(User).count() == 0:
             db.add(User(email=settings.admin_email.lower(), full_name="Admin", role="admin",
-                        hashed_password=hash_password(settings.admin_password)))
+                        hashed_password=hash_password(settings.admin_password), email_verified_at=datetime.utcnow()))
         db.commit()
     finally:
         db.close()

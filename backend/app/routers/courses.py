@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .. import schemas
 from ..database import get_db
 from ..models import Course, Enrollment, LessonProgress, User
-from ..security import get_current_user, get_current_user_optional
+from ..security import get_current_user, get_current_user_optional, require_verified
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
 
@@ -85,13 +85,15 @@ def lesson_video(slug: str, index: int, db: Session = Depends(get_db), user: Use
     if not lesson.get("free"):
         if user is None:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bạn cần đăng nhập để xem bài này", headers={"WWW-Authenticate": "Bearer"})
+        if not user.email_verified:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn cần xác thực email trước khi xem bài này")
         if not _is_enrolled(db, user, course):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
     return schemas.LessonVideo(index=index, title=lesson["title"], video=lesson.get("video"))
 
 
 @router.post("/{slug}/enroll", response_model=schemas.CourseDetail, status_code=status.HTTP_201_CREATED)
-def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Ghi danh khóa học miễn phí. Khóa học trả phí sẽ đi qua luồng đơn hàng (chưa làm)."""
     course = db.query(Course).filter(Course.slug == slug).first()
     if not course:
@@ -139,7 +141,7 @@ def get_progress(slug: str, db: Session = Depends(get_db), user: User = Depends(
 
 
 @router.put("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
-def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Đánh dấu bài đã hoàn thành (idempotent)."""
     course = _require_enrolled(db, user, slug)
     if index < 0 or index >= len(course.lessons or []):
@@ -151,7 +153,7 @@ def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: 
 
 
 @router.delete("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
-def uncomplete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def uncomplete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Bỏ đánh dấu hoàn thành."""
     course = _require_enrolled(db, user, slug)
     row = db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first()

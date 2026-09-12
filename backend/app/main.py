@@ -6,13 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .database import Base, engine
+from .database import Base, engine, migrate
 from .routers import admin, auth, courses
 from .seed import seed_if_empty
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    migrate()
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
     yield

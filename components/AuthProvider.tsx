@@ -8,6 +8,9 @@ type Ctx = {
   login: (email: string, password: string) => Promise<void>;
   register: (full_name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  /** Tải lại thông tin user từ server (sau khi xác thực email...) */
+  refresh: () => Promise<void>;
+  setUser: (u: User) => void;
 };
 
 const AuthContext = createContext<Ctx | null>(null);
@@ -27,8 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(
     async (full_name: string, email: string, password: string) => accept(await authApi.register({ full_name, email, password, accept_terms: true })), []);
   const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
+  const refresh = useCallback(async () => { if (tokenStore.get()) setUser(await authApi.me()); }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

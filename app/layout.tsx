@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { site } from "@/lib/site";
 import { AuthProvider } from "@/components/AuthProvider";
+import VerifyBanner from "@/components/VerifyBanner";
 
 export const metadata: Metadata = {
   title: { default: `${site.name} — Học tập online cho sinh viên`, template: `%s | ${site.name}` },
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <AuthProvider>
           <Header />
+          <VerifyBanner />
           <main className="flex-1">{children}</main>
           <Footer />
         </AuthProvider>

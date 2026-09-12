@@ -51,3 +51,10 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Chỉ admin mới có quyền này")
     return user
+
+
+def require_verified(user: User = Depends(get_current_user)) -> User:
+    """Chặn hành động quan trọng (ghi danh, xem bài trả phí, lưu tiến độ) khi chưa xác thực email."""
+    if not user.email_verified:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn cần xác thực email trước khi thực hiện thao tác này")
+    return user

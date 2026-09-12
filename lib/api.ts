@@ -1,7 +1,8 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const TOKEN_KEY = "learnhub_token";
 
-export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; created_at: string };
+export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; created_at: string };
+export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
 export type Token = { access_token: string; token_type: string; user: User };
 
 export const tokenStore = {
@@ -43,6 +44,9 @@ export const authApi = {
   login: (body: { email: string; password: string }) =>
     api<Token>("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),
   me: () => api<User>("/api/auth/me"),
+  verification: () => api<VerificationStatus>("/api/auth/verification"),
+  resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
+  confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),
 };
 
 export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };

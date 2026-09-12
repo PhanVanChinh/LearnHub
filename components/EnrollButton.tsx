@@ -22,6 +22,13 @@ export default function EnrollButton({ slug, price }: { slug: string; price: num
   if (!user) {
     return <Link href={`/login?next=/courses/${slug}`} className="btn-primary mt-4 w-full !py-3">Đăng nhập để học miễn phí</Link>;
   }
+  if (!user.email_verified) {
+    return (
+      <Link href={`/verify?next=/courses/${slug}`} className="btn mt-4 w-full !py-3 bg-amber-500 text-white hover:bg-amber-600">
+        ✉️ Xác thực email để ghi danh
+      </Link>
+    );
+  }
   if (enrolled) {
     return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;
   }

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["MAIL_PROVIDER"] = "console"  # không gửi mail thật khi test, kể cả khi .env có RESEND_API_KEY
 
 import pytest
 from fastapi.testclient import TestClient

@@ -1,3 +1,19 @@
+import re
+
+from app import mailer
+
+
+def last_otp(to: str) -> str:
+    """Lấy mã 6 số trong email cuối cùng gửi tới `to` (chế độ console)."""
+    mail = next(m for m in reversed(mailer.console_outbox) if m["to"] == to)
+    return re.search(r">(\d{6})<", mail["html"]).group(1)
+
+
+def verify(client, token: str, email: str) -> None:
+    r = client.post("/api/auth/verification/confirm", json={"code": last_otp(email)}, headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200 and r.json()["email_verified"] is True, r.text
+
+
 def test_health(client):
     assert client.get("/api/health").json() == {"status": "ok"}
 
@@ -51,6 +67,8 @@ def test_enroll_flow(client):
     paid = next(c for c in client.get("/api/courses").json() if c["price"] > 0)["slug"]
 
     assert client.post(f"/api/courses/{free}/enroll").status_code == 401
+    assert client.post(f"/api/courses/{free}/enroll", headers=h).status_code == 403  # chưa xác thực email
+    verify(client, token, "sv@phenikaa.edu.vn")
     assert client.post(f"/api/courses/{paid}/enroll", headers=h).status_code == 402
     r = client.post(f"/api/courses/{free}/enroll", headers=h)
     assert r.status_code == 201 and r.json()["enrolled"] is True
@@ -170,3 +188,41 @@ def test_password_policy(client):
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
     assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "short1"}, headers=h).status_code == 422
     assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "MoiHopLe2025"}, headers=h).status_code == 204
+
+
+
+def test_email_verification_flow(client):
+    email = "verify-me@example.com"
+    r = client.post("/api/auth/register", json={"email": email, "full_name": "Verify", "password": "HopLe2024"})
+    assert r.status_code == 201 and r.json()["user"]["email_verified"] is False
+    token = r.json()["access_token"]
+    h = {"Authorization": f"Bearer {token}"}
+
+    # đã gửi mail có mã 6 số
+    code = last_otp(email)
+    assert re.fullmatch(r"\d{6}", code)
+    st = client.get("/api/auth/verification", headers=h).json()
+    assert st["email_verified"] is False and st["mail_provider"] == "console" and st["cooldown_seconds"] > 0
+
+    # gửi lại ngay → 429 (cooldown)
+    assert client.post("/api/auth/verification/resend", headers=h).status_code == 429
+
+    # sai mã → 400 kèm số lần còn lại; sai định dạng → 422
+    wrong = "000000" if code != "000000" else "111111"
+    r = client.post("/api/auth/verification/confirm", json={"code": wrong}, headers=h)
+    assert r.status_code == 400 and "còn 4 lần" in r.json()["detail"]
+    assert client.post("/api/auth/verification/confirm", json={"code": "12ab"}, headers=h).status_code == 422
+
+    # chưa xác thực → không ghi danh được
+    free = client.get("/api/courses", params={"category": "free"}).json()[1]["slug"]
+    assert client.post(f"/api/courses/{free}/enroll", headers=h).status_code == 403
+
+    # đúng mã → xác thực; /me phản ánh; resend sau đó bị từ chối; ghi danh được
+    verify(client, token, email)
+    assert client.get("/api/auth/me", headers=h).json()["email_verified"] is True
+    assert client.post("/api/auth/verification/resend", headers=h).status_code == 400
+    assert client.post(f"/api/courses/{free}/enroll", headers=h).status_code == 201
+
+    # admin seed đã xác thực sẵn
+    admin = client.post("/api/auth/login", json={"email": "admin@example.com", "password": "admin123"}).json()["user"]
+    assert admin["email_verified"] is True

@@ -58,7 +58,19 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: str
     role: str
+    email_verified: bool = False
     created_at: datetime
+
+
+class VerifyEmailIn(BaseModel):
+    code: str = Field(pattern=r"^\d{6}$", description="Mã OTP 6 chữ số")
+
+
+class VerificationStatus(BaseModel):
+    email_verified: bool
+    sent: bool = Field(False, description="Đã gửi mã mới trong lần gọi này")
+    cooldown_seconds: int = Field(0, description="Số giây còn phải chờ trước khi gửi lại")
+    mail_provider: str
 
 
 class Token(BaseModel):

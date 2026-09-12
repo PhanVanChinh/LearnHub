@@ -9,7 +9,7 @@ GET {{api}}/api/health
 POST {{api}}/api/auth/register
 Content-Type: application/json
 
-{ "email": "sv@st.phenikaa-uni.edu.vn", "full_name": "Sinh Viên", "password": "secret123" }
+{ "email": "sv@st.phenikaa-uni.edu.vn", "full_name": "Sinh Viên", "password": "SinhVien2024" }
 
 ### Đăng nhập
 # @name login
@@ -17,6 +17,21 @@ POST {{api}}/api/auth/login
 Content-Type: application/json
 
 { "email": "admin@example.com", "password": "admin123" }
+
+### Trạng thái xác thực email
+GET {{api}}/api/auth/verification
+Authorization: Bearer {{register.response.body.access_token}}
+
+### Gửi lại mã OTP (chờ 60s giữa 2 lần)
+POST {{api}}/api/auth/verification/resend
+Authorization: Bearer {{register.response.body.access_token}}
+
+### Xác nhận mã OTP (lấy mã trong email hoặc terminal backend ở chế độ dev)
+POST {{api}}/api/auth/verification/confirm
+Authorization: Bearer {{register.response.body.access_token}}
+Content-Type: application/json
+
+{ "code": "123456" }
 
 ### Tài khoản hiện tại
 GET {{api}}/api/auth/me

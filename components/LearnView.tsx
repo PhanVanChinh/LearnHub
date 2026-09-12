@@ -7,7 +7,7 @@ import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 
-type Access = "checking" | "granted" | "login" | "enroll" | "offline";
+type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
 export default function LearnView({ course }: { course: Course }) {
   const { user, loading } = useAuth();
@@ -32,6 +32,7 @@ export default function LearnView({ course }: { course: Course }) {
     if (lesson.free) return setState({ access: "granted", video: lesson.video ?? null });
     if (loading) return setState({ access: "checking", video: null });
     if (!user) return setState({ access: "login", video: null });
+    if (!user.email_verified) return setState({ access: "verify", video: null });
     let cancelled = false;
     setState({ access: "checking", video: null });
     coursesApi.lessonVideo(course.slug, index)
@@ -112,6 +113,16 @@ export default function LearnView({ course }: { course: Course }) {
                 <p className="text-5xl">⚠️</p>
                 <p className="mt-3 text-lg font-semibold">Không kết nối được máy chủ</p>
                 <p className="mt-1 text-sm text-slate-300">Video bài trả phí được lấy từ backend. Hãy kiểm tra backend đã chạy chưa.</p>
+              </div>
+            </div>
+          )}
+          {access === "verify" && (
+            <div className="grid aspect-video place-items-center rounded-xl border border-amber-500/30 bg-amber-500/10 p-8 text-center">
+              <div>
+                <p className="text-5xl">✉️</p>
+                <p className="mt-3 text-lg font-semibold">Xác thực email để tiếp tục học</p>
+                <p className="mt-1 text-sm text-slate-300">Chúng tôi đã gửi mã 6 số tới {user?.email}.</p>
+                <Link href={`/verify?next=/learn/${course.slug}?lesson=${index}`} className="btn-primary mt-4">Nhập mã xác thực</Link>
               </div>
             </div>
           )}

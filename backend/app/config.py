@@ -13,6 +13,14 @@ class Settings(BaseSettings):
     admin_email: str = "admin@example.com"
     admin_password: str = "admin123"
 
+    # Gửi email: có RESEND_API_KEY → gửi thật qua Resend; không có → in mã ra log (dev)
+    mail_provider: str = "auto"  # auto | resend | console
+    resend_api_key: str = ""
+    mail_from: str = "LearnHub <onboarding@resend.dev>"  # đổi sang domain riêng khi đã xác minh trên Resend
+    otp_expire_minutes: int = 10
+    otp_max_attempts: int = 5
+    otp_resend_cooldown_seconds: int = 60
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
