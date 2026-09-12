@@ -3,21 +3,26 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { authApi } from "@/lib/api";
 import Logo from "./Logo";
+import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    if (TURNSTILE_SITE_KEY && !captcha) return setError("Vui lòng hoàn thành xác minh robot");
     setBusy(true); setError("");
     try {
-      const r = await authApi.forgotPassword(email.trim());
+      const r = await authApi.forgotPassword(email.trim(), captcha);
       setSent(r.detail);
     } catch (err) {
       setError((err as Error).message);
+      setCaptcha(null); setCaptchaKey((k) => k + 1);
     } finally {
       setBusy(false);
     }
@@ -37,6 +42,7 @@ export default function ForgotPasswordForm() {
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoFocus />
+            <Turnstile onToken={setCaptcha} resetKey={captchaKey} />
             {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary w-full !py-2.5 disabled:opacity-60">{busy ? "Đang gửi…" : "Gửi link đặt lại"}</button>
           </form>

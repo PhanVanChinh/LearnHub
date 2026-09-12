@@ -6,7 +6,8 @@ class Settings(BaseSettings):
 
     secret_key: str = "dev-secret-change-me"
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 60 * 24
+    access_token_expire_minutes: int = 60  # access token ngắn; gia hạn bằng refresh token
+    refresh_token_expire_days: int = 30
     database_url: str = "sqlite:///./learnhub.db"
     cors_origins: str = "http://localhost:3000"
     # Tài khoản admin được tạo lần chạy đầu (chỉ khi DB chưa có user nào)
@@ -23,6 +24,13 @@ class Settings(BaseSettings):
     # Link đặt lại mật khẩu trỏ về frontend: {frontend_url}/reset-password?token=...
     frontend_url: str = "http://localhost:3000"
     reset_token_expire_minutes: int = 30
+
+    # Chống lạm dụng
+    rate_limit_enabled: bool = True
+    trust_proxy_headers: bool = False  # True khi deploy sau proxy (Render/Railway) để đọc X-Forwarded-For
+    login_max_failures: int = 5
+    login_lockout_minutes: int = 15
+    turnstile_secret_key: str = ""  # bỏ trống → không yêu cầu captcha
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,14 +1,21 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const TOKEN_KEY = "learnhub_token";
+const REFRESH_KEY = "learnhub_refresh";
 
 export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; created_at: string };
 export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
-export type Token = { access_token: string; token_type: string; user: User };
+export type Token = { access_token: string; refresh_token?: string | null; token_type: string; user: User };
+export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number };
 
+const ls = (fn: () => string | null | void) => { try { return fn() ?? null; } catch { return null; } };
 export const tokenStore = {
-  get: () => (typeof window === "undefined" ? null : localStorage.getItem(TOKEN_KEY)),
-  set: (t: string) => localStorage.setItem(TOKEN_KEY, t),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
+  get: () => (typeof window === "undefined" ? null : ls(() => localStorage.getItem(TOKEN_KEY))),
+  getRefresh: () => (typeof window === "undefined" ? null : ls(() => localStorage.getItem(REFRESH_KEY))),
+  set: (t: string, refresh?: string | null) => {
+    ls(() => localStorage.setItem(TOKEN_KEY, t));
+    if (refresh) ls(() => localStorage.setItem(REFRESH_KEY, refresh));
+  },
+  clear: () => { ls(() => localStorage.removeItem(TOKEN_KEY)); ls(() => localStorage.removeItem(REFRESH_KEY)); },
 };
 
 export type FieldErrors = Record<string, string>;
@@ -16,7 +23,26 @@ export class ApiError extends Error {
   constructor(public status: number, message: string, public errors: FieldErrors = {}) { super(message); }
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+let refreshing: Promise<boolean> | null = null;
+/** Đổi refresh token lấy access token mới. Gộp các lần gọi đồng thời thành một. */
+async function tryRefresh(): Promise<boolean> {
+  const rt = tokenStore.getRefresh();
+  if (!rt) return false;
+  refreshing ??= (async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: rt }),
+      });
+      if (!res.ok) { tokenStore.clear(); return false; }
+      const t = (await res.json()) as Token;
+      tokenStore.set(t.access_token, t.refresh_token);
+      return true;
+    } catch { return false; } finally { refreshing = null; }
+  })();
+  return refreshing;
+}
+
+export async function api<T>(path: string, init: RequestInit = {}, _retried = false): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json", ...(init.headers as Record<string, string>) };
   const token = tokenStore.get();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -25,6 +51,10 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     res = await fetch(`${API_URL}${path}`, { ...init, headers });
   } catch {
     throw new ApiError(0, "Không kết nối được máy chủ. Backend đã chạy chưa?");
+  }
+  // Access token hết hạn → gia hạn bằng refresh token rồi gọi lại đúng 1 lần
+  if (res.status === 401 && token && !_retried && !path.startsWith("/api/auth/refresh") && (await tryRefresh())) {
+    return api<T>(path, init, true);
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
@@ -39,7 +69,9 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const authApi = {
-  register: (body: { email: string; full_name: string; password: string; accept_terms: boolean }) =>
+  config: () => api<AuthConfig>("/api/auth/config"),
+  logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
+  register: (body: { email: string; full_name: string; password: string; accept_terms: boolean; captcha_token?: string | null }) =>
     api<Token>("/api/auth/register", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) =>
     api<Token>("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),
@@ -47,7 +79,8 @@ export const authApi = {
   verification: () => api<VerificationStatus>("/api/auth/verification"),
   resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
   confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),
-  forgotPassword: (email: string) => api<{ detail: string }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  forgotPassword: (email: string, captcha_token?: string | null) =>
+    api<{ detail: string }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email, captcha_token }) }),
   resetPassword: (token: string, new_password: string) =>
     api<void>("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, new_password }) }),
   changePassword: (current_password: string, new_password: string) =>

@@ -19,6 +19,13 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 - Gửi thật: tạo key tại https://resend.com, đặt `RESEND_API_KEY=re_...` trong `.env`. Khi chưa xác minh domain, Resend chỉ cho gửi từ `onboarding@resend.dev` tới email đăng ký tài khoản Resend; có domain riêng thì đổi `MAIL_FROM`.
 - Tài khoản tạo trước tính năng này được tự đánh dấu đã xác thực khi migrate (`database.migrate()`).
 
+## Chống lạm dụng
+
+- **Rate limit theo IP** (`app/ratelimit.py`, bộ nhớ tiến trình): đăng ký 5/giờ, đăng nhập 10/phút, gửi lại OTP 5/10 phút, quên mật khẩu 5/10 phút... Vượt → 429 kèm `Retry-After`. Deploy sau proxy đặt `TRUST_PROXY_HEADERS=true` để đọc IP từ `X-Forwarded-For`. Tắt khi test bằng `RATE_LIMIT_ENABLED=false`.
+- **Khoá tạm**: sai mật khẩu 5 lần liên tiếp → khoá 15 phút (423). Đăng nhập đúng reset bộ đếm và ghi `last_login_at`.
+- **Captcha Cloudflare Turnstile** ở đăng ký và quên mật khẩu: đặt `TURNSTILE_SECRET_KEY` (backend) và `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (frontend). Thiếu key → tự bỏ qua, tiện cho dev.
+- **Token**: access token 60 phút, refresh token 30 ngày (`POST /api/auth/refresh`). Frontend tự gia hạn khi gặp 401. Đổi mật khẩu hoặc `logout-all` làm mọi token cũ hết hiệu lực (claim `pv`).
+
 ## Quên mật khẩu
 
 `POST /api/auth/forgot-password` gửi email chứa link `{FRONTEND_URL}/reset-password?token=...` (đặt `FRONTEND_URL` trong `.env` khi deploy).
@@ -29,7 +36,10 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | Method | Path | Auth | Mô tả |
 |---|---|---|---|
 | POST | /api/auth/register | – | Đăng ký → trả JWT + user. Mật khẩu ≥ 8 ký tự, có chữ và số, không phổ biến, không chứa tên email (xem `app/passwords.py`). Lỗi 422 trả `{detail, errors:[{field,msg}]}` |
-| POST | /api/auth/login | – | Đăng nhập → JWT + user |
+| GET | /api/auth/config | – | Cấu hình auth cho frontend: `captcha_enabled`, `mail_provider`, hạn access token |
+| POST | /api/auth/login | – | Đăng nhập → access token (60 phút) + refresh token (30 ngày) + user. Sai 5 lần → khoá 15 phút (423) |
+| POST | /api/auth/refresh | – | Đổi refresh token lấy access token mới |
+| POST | /api/auth/logout-all | Bearer | Thu hồi mọi token trên mọi thiết bị, trả token mới cho thiết bị hiện tại |
 | GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại (kèm `email_verified`) |
 | GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
 | POST | /api/auth/verification/resend | Bearer | Gửi lại mã OTP (cooldown 60s → 429) |
@@ -84,9 +94,11 @@ app/
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
   passwords.py   Quy tắc mật khẩu (dùng chung đăng ký / đổi mật khẩu / admin)
   mailer.py      Gửi email qua Resend hoặc in ra log (dev)
+  ratelimit.py   Giới hạn tần suất theo IP
+  captcha.py     Xác minh Cloudflare Turnstile
   seed.py        Nạp seed_data.json + admin
   routers/       auth.py, courses.py, admin.py
-tests/           conftest.py, test_api.py, test_admin.py (chạy: python -m pytest)
+tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py (chạy: python -m pytest)
 ```
 
 ## Đổi sang PostgreSQL

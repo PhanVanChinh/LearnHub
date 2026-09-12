@@ -21,6 +21,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     password: str = Field(max_length=MAX_LENGTH)
     accept_terms: bool = Field(True, description="Đồng ý điều khoản & chính sách bảo mật")
+    captcha_token: str | None = Field(None, description="Token Cloudflare Turnstile (bắt buộc khi server bật captcha)")
 
     @field_validator("email")
     @classmethod
@@ -64,6 +65,7 @@ class UserOut(BaseModel):
 
 class ForgotPasswordIn(BaseModel):
     email: EmailStr
+    captcha_token: str | None = None
 
 
 class ResetPasswordIn(BaseModel):
@@ -93,8 +95,19 @@ class VerificationStatus(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str | None = None
     token_type: str = "bearer"
     user: UserOut
+
+
+class RefreshIn(BaseModel):
+    refresh_token: str
+
+
+class AuthConfig(BaseModel):
+    captcha_enabled: bool
+    mail_provider: str
+    access_token_minutes: int
 
 
 class PasswordChange(BaseModel):

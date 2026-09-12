@@ -34,3 +34,11 @@ def migrate() -> None:
                 conn.execute(text("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL"))
             if "password_changed_at" not in cols:
                 conn.execute(text("ALTER TABLE users ADD COLUMN password_changed_at DATETIME"))
+            if "sessions_revoked_at" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN sessions_revoked_at DATETIME"))
+            if "failed_login_attempts" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN failed_login_attempts INTEGER NOT NULL DEFAULT 0"))
+            if "locked_until" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
+            if "last_login_at" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))

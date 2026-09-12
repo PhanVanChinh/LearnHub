@@ -24,33 +24,44 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
-def _pwd_version(user: User) -> int:
-    """Phiên bản mật khẩu = mốc đổi mật khẩu gần nhất (ms). Đổi mật khẩu → mọi token mang phiên bản cũ bị từ chối."""
-    return int(user.password_changed_at.replace(tzinfo=timezone.utc).timestamp() * 1000) if user.password_changed_at else 0
+def _token_version(user: User) -> int:
+    """Phiên bản token (ms). Đổi mật khẩu / đăng xuất mọi thiết bị → phiên bản đổi → token cũ bị từ chối."""
+    mark = user.token_invalid_before
+    return int(mark.replace(tzinfo=timezone.utc).timestamp() * 1000) if mark else 0
 
 
-def create_access_token(user: User) -> str:
+def _encode(user: User, kind: str, lifetime: timedelta) -> str:
     now = datetime.now(timezone.utc)
-    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": str(user.id), "pv": _pwd_version(user), "iat": int(now.timestamp()), "exp": expire}
+    payload = {"sub": str(user.id), "typ": kind, "pv": _token_version(user), "iat": int(now.timestamp()), "exp": now + lifetime}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def get_current_user_optional(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
-    if not token:
-        return None
+def create_access_token(user: User) -> str:
+    return _encode(user, "access", timedelta(minutes=settings.access_token_expire_minutes))
+
+
+def create_refresh_token(user: User) -> str:
+    return _encode(user, "refresh", timedelta(days=settings.refresh_token_expire_days))
+
+
+def user_from_token(token: str, db: Session, kind: str = "access") -> User | None:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         user_id = int(payload.get("sub"))
         pwd_version = int(payload.get("pv", 0))
+        typ = payload.get("typ", "access")  # token cũ không có typ → coi là access
     except (JWTError, TypeError, ValueError):
         return None
-    user = db.get(User, user_id)
-    if not user or not user.is_active:
+    if typ != kind:
         return None
-    if pwd_version != _pwd_version(user):  # token phát hành trước lần đổi mật khẩu gần nhất
+    user = db.get(User, user_id)
+    if not user or not user.is_active or pwd_version != _token_version(user):
         return None
     return user
+
+
+def get_current_user_optional(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
+    return user_from_token(token, db) if token else None
 
 
 def get_current_user(user: User | None = Depends(get_current_user_optional)) -> User:

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Logo from "./Logo";
 import PasswordInput from "./PasswordInput";
+import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
 import { useAuth } from "./AuthProvider";
 import { ApiError, FieldErrors } from "@/lib/api";
 import { passwordRules, passwordStrength, passwordValid } from "@/lib/password";
@@ -26,6 +27,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const [serverErrors, setServerErrors] = useState<FieldErrors>({});
     const [error, setError] = useState("");
     const [busy, setBusy] = useState(false);
+    const [captcha, setCaptcha] = useState<string | null>(null);
+    const [captchaKey, setCaptchaKey] = useState(0);
+    const needCaptcha = !login && !!TURNSTILE_SITE_KEY;
 
     useEffect(() => {
         if (user && login) router.replace(next);
@@ -42,8 +46,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
         if (!passwordValid(form.password, form.email)) e.password = "Mật khẩu chưa đạt yêu cầu bên dưới";
         if (form.confirm !== form.password) e.confirm = "Mật khẩu nhập lại không khớp";
         if (!form.terms) e.terms = "Bạn cần đồng ý điều khoản để tiếp tục";
+        if (needCaptcha && !captcha) e.captcha = "Vui lòng hoàn thành xác minh robot";
         return e;
-    }, [login, form]);
+    }, [login, form, needCaptcha, captcha]);
     const fieldError = (k: string) => serverErrors[k] || (touched[k] ? clientErrors[k] : "");
     const canSubmit = login ? form.email && form.password : Object.keys(clientErrors).length === 0;
 
@@ -59,13 +64,14 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 await doLogin(form.email.trim(), form.password);
                 router.replace(next);
             } else {
-                await doRegister(form.full_name.trim(), form.email.trim(), form.password);
+                await doRegister(form.full_name.trim(), form.email.trim(), form.password, captcha);
                 router.replace(`/verify?next=${encodeURIComponent(next)}`);
             }
         } catch (err) {
             const ae = err as ApiError;
             if (ae.errors && Object.keys(ae.errors).length) setServerErrors(ae.errors);
             else setError(ae.message);
+            if (needCaptcha) { setCaptcha(null); setCaptchaKey((k) => k + 1); } // token captcha chỉ dùng 1 lần
         } finally {
             setBusy(false);
         }
@@ -195,6 +201,12 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                                 </span>
                             </label>
                             <Err k="terms" />
+                        </div>
+                    )}
+                    {needCaptcha && (
+                        <div>
+                            <Turnstile onToken={setCaptcha} resetKey={captchaKey} />
+                            <Err k="captcha" />
                         </div>
                     )}
                     {login && (

@@ -4,6 +4,8 @@ from pathlib import Path
 
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ["MAIL_PROVIDER"] = "console"  # không gửi mail thật khi test, kể cả khi .env có RESEND_API_KEY
+os.environ["RATE_LIMIT_ENABLED"] = "false"  # test rate limit tự bật riêng trong test_abuse.py
+os.environ["TURNSTILE_SECRET_KEY"] = ""
 
 import pytest
 from fastapi.testclient import TestClient

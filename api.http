@@ -45,6 +45,16 @@ Content-Type: application/json
 
 { "token": "DAN_TOKEN_O_DAY", "new_password": "MatKhauMoi2025" }
 
+### Gia hạn access token bằng refresh token
+POST {{api}}/api/auth/refresh
+Content-Type: application/json
+
+{ "refresh_token": "{{login.response.body.refresh_token}}" }
+
+### Đăng xuất mọi thiết bị (trả token mới cho thiết bị này)
+POST {{api}}/api/auth/logout-all
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Tài khoản hiện tại
 GET {{api}}/api/auth/me
 Authorization: Bearer {{login.response.body.access_token}}

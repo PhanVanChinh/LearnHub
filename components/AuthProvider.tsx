@@ -6,8 +6,10 @@ type Ctx = {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (full_name: string, email: string, password: string) => Promise<void>;
+  register: (full_name: string, email: string, password: string, captcha_token?: string | null) => Promise<void>;
   logout: () => void;
+  /** Thu hồi mọi phiên trên mọi thiết bị, giữ lại phiên hiện tại */
+  logoutAll: () => Promise<void>;
   /** Tải lại thông tin user từ server (sau khi xác thực email...) */
   refresh: () => Promise<void>;
   setUser: (u: User) => void;
@@ -24,15 +26,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     authApi.me().then(setUser).catch(() => tokenStore.clear()).finally(() => setLoading(false));
   }, []);
 
-  const accept = (t: Token) => { tokenStore.set(t.access_token); setUser(t.user); };
+  const accept = (t: Token) => { tokenStore.set(t.access_token, t.refresh_token); setUser(t.user); };
 
   const login = useCallback(async (email: string, password: string) => accept(await authApi.login({ email, password })), []);
   const register = useCallback(
-    async (full_name: string, email: string, password: string) => accept(await authApi.register({ full_name, email, password, accept_terms: true })), []);
+    async (full_name: string, email: string, password: string, captcha_token?: string | null) =>
+      accept(await authApi.register({ full_name, email, password, accept_terms: true, captcha_token })), []);
   const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
+  const logoutAll = useCallback(async () => accept(await authApi.logoutAll()), []);
   const refresh = useCallback(async () => { if (tokenStore.get()) setUser(await authApi.me()); }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout, refresh, setUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, logout, logoutAll, refresh, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

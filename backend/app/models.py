@@ -18,6 +18,10 @@ class User(Base):
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     # Token JWT phát hành trước thời điểm này bị coi là hết hạn (đăng xuất mọi thiết bị sau khi đổi/đặt lại mật khẩu)
     password_changed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    sessions_revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # "đăng xuất mọi thiết bị"
+    failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -27,6 +31,12 @@ class User(Base):
     @property
     def email_verified(self) -> bool:
         return self.email_verified_at is not None
+
+    @property
+    def token_invalid_before(self) -> datetime | None:
+        """Token phát hành trước mốc này không còn hiệu lực (đổi mật khẩu hoặc thu hồi phiên)."""
+        marks = [d for d in (self.password_changed_at, self.sessions_revoked_at) if d]
+        return max(marks) if marks else None
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
