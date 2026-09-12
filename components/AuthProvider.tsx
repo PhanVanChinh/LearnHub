@@ -7,6 +7,7 @@ type Ctx = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (full_name: string, email: string, password: string, captcha_token?: string | null) => Promise<void>;
+  loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   /** Thu hồi mọi phiên trên mọi thiết bị, giữ lại phiên hiện tại */
   logoutAll: () => Promise<void>;
@@ -32,11 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(
     async (full_name: string, email: string, password: string, captcha_token?: string | null) =>
       accept(await authApi.register({ full_name, email, password, accept_terms: true, captcha_token })), []);
+  const loginWithGoogle = useCallback(async (credential: string) => accept(await authApi.google(credential)), []);
   const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
   const logoutAll = useCallback(async () => accept(await authApi.logoutAll()), []);
   const refresh = useCallback(async () => { if (tokenStore.get()) setUser(await authApi.me()); }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, register, logout, logoutAll, refresh, setUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, logoutAll, refresh, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

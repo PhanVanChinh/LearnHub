@@ -45,6 +45,12 @@ Content-Type: application/json
 
 { "token": "DAN_TOKEN_O_DAY", "new_password": "MatKhauMoi2025" }
 
+### Đăng nhập Google (credential lấy từ nút Google trên frontend)
+POST {{api}}/api/auth/google
+Content-Type: application/json
+
+{ "credential": "DAN_ID_TOKEN_GOOGLE_O_DAY" }
+
 ### Gia hạn access token bằng refresh token
 POST {{api}}/api/auth/refresh
 Content-Type: application/json

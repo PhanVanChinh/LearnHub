@@ -22,6 +22,8 @@ class User(Base):
     failed_login_attempts: Mapped[int] = mapped_column(Integer, default=0)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    google_sub: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)  # id tài khoản Google đã liên kết
+    avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -31,6 +33,10 @@ class User(Base):
     @property
     def email_verified(self) -> bool:
         return self.email_verified_at is not None
+
+    @property
+    def has_google(self) -> bool:
+        return self.google_sub is not None
 
     @property
     def token_invalid_before(self) -> datetime | None:

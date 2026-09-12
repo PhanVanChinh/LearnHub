@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from .. import captcha, mailer, schemas
+from .. import captcha, google_auth, mailer, schemas
 from ..config import settings
 from ..database import get_db
 from ..models import EmailVerification, PasswordReset, User
@@ -25,7 +25,35 @@ def _issue(user: User) -> schemas.Token:
 def auth_config():
     """Frontend đọc để biết có cần hiện captcha, chế độ mail..."""
     return schemas.AuthConfig(captcha_enabled=captcha.enabled(), mail_provider=mailer.provider(),
-                              access_token_minutes=settings.access_token_expire_minutes)
+                              access_token_minutes=settings.access_token_expire_minutes,
+                              google_client_id=settings.google_client_id)
+
+
+@router.post("/google", response_model=schemas.Token, dependencies=[rate_limit("google", 20, 60)])
+def google_login(payload: schemas.GoogleLoginIn, db: Session = Depends(get_db)):
+    """Đăng nhập / đăng ký bằng Google. Email Google đã xác minh nên bỏ qua OTP."""
+    claims = google_auth.verify_id_token(payload.credential)
+    email = claims["email"].strip().lower()
+    now = datetime.utcnow()
+    user = db.query(User).filter(User.google_sub == claims["sub"]).first() or db.query(User).filter(User.email == email).first()
+    if user:
+        if not user.is_active:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khoá")
+        if user.google_sub and user.google_sub != claims["sub"]:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Email này đã liên kết với một tài khoản Google khác")
+        user.google_sub = claims["sub"]  # liên kết (hoặc giữ nguyên)
+        user.email_verified_at = user.email_verified_at or now
+        user.avatar_url = claims.get("picture") or user.avatar_url
+        user.failed_login_attempts, user.locked_until = 0, None
+    else:
+        user = User(email=email, full_name=(claims.get("name") or email.split("@")[0]).strip()[:255],
+                    hashed_password=hash_password(secrets.token_urlsafe(32)),  # không dùng được; đặt mật khẩu qua Quên mật khẩu
+                    email_verified_at=now, google_sub=claims["sub"], avatar_url=claims.get("picture"))
+        db.add(user)
+    user.last_login_at = now
+    db.commit()
+    db.refresh(user)
+    return _issue(user)
 
 
 @router.post("/register", response_model=schemas.Token, status_code=status.HTTP_201_CREATED,

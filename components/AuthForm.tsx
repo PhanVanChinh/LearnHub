@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Logo from "./Logo";
 import PasswordInput from "./PasswordInput";
 import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
+import GoogleButton, { GOOGLE_CLIENT_ID } from "./GoogleButton";
 import { useAuth } from "./AuthProvider";
 import { ApiError, FieldErrors } from "@/lib/api";
 import { passwordRules, passwordStrength, passwordValid } from "@/lib/password";
@@ -97,7 +98,21 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 <p className="mt-1 text-center text-sm text-slate-500">
                     {login ? "Chào mừng bạn quay lại!" : "Miễn phí, chỉ mất 30 giây."}
                 </p>
-                <form onSubmit={onSubmit} noValidate className="mt-6 space-y-4">
+                {GOOGLE_CLIENT_ID && (
+                    <div className="mt-6">
+                        <GoogleButton
+                            text={login ? "signin_with" : "signup_with"}
+                            onSuccess={() => router.replace(next)}
+                            onError={setError}
+                        />
+                        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-slate-400">
+                            <span className="h-px flex-1 bg-slate-200" />
+                            hoặc dùng email
+                            <span className="h-px flex-1 bg-slate-200" />
+                        </div>
+                    </div>
+                )}
+                <form onSubmit={onSubmit} noValidate className={`${GOOGLE_CLIENT_ID ? "" : "mt-6"} space-y-4`}>
                     {!login && (
                         <div>
                             <input

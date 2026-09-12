@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     login_lockout_minutes: int = 15
     turnstile_secret_key: str = ""  # bỏ trống → không yêu cầu captcha
 
+    # Đăng nhập Google (Google Identity Services): chỉ cần Client ID, bỏ trống → ẩn nút Google
+    google_client_id: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

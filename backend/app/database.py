@@ -42,3 +42,8 @@ def migrate() -> None:
                 conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
             if "last_login_at" not in cols:
                 conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+            if "google_sub" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN google_sub VARCHAR(64)"))
+                conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_google_sub ON users (google_sub)"))
+            if "avatar_url" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)"))

@@ -2,10 +2,10 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 const TOKEN_KEY = "learnhub_token";
 const REFRESH_KEY = "learnhub_refresh";
 
-export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; created_at: string };
+export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; created_at: string };
 export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
 export type Token = { access_token: string; refresh_token?: string | null; token_type: string; user: User };
-export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number };
+export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number; google_client_id: string };
 
 const ls = (fn: () => string | null | void) => { try { return fn() ?? null; } catch { return null; } };
 export const tokenStore = {
@@ -71,6 +71,7 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
 export const authApi = {
   config: () => api<AuthConfig>("/api/auth/config"),
   logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
+  google: (credential: string) => api<Token>("/api/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
   register: (body: { email: string; full_name: string; password: string; accept_terms: boolean; captcha_token?: string | null }) =>
     api<Token>("/api/auth/register", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) =>

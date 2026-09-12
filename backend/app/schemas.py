@@ -60,6 +60,8 @@ class UserOut(BaseModel):
     full_name: str
     role: str
     email_verified: bool = False
+    avatar_url: str | None = None
+    has_google: bool = Field(False, description="Đã liên kết tài khoản Google")
     created_at: datetime
 
 
@@ -108,6 +110,11 @@ class AuthConfig(BaseModel):
     captcha_enabled: bool
     mail_provider: str
     access_token_minutes: int
+    google_client_id: str = Field("", description="Rỗng → ẩn nút Google")
+
+
+class GoogleLoginIn(BaseModel):
+    credential: str = Field(min_length=20, description="ID token từ Google Identity Services")
 
 
 class PasswordChange(BaseModel):

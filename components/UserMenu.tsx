@@ -23,11 +23,18 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
   }
 
   const initial = user.full_name.trim().charAt(0).toUpperCase() || "U";
+  const Avatar = ({ cls }: { cls: string }) =>
+    user.avatar_url ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={user.avatar_url} alt="" referrerPolicy="no-referrer" className={`${cls} rounded-full object-cover`} />
+    ) : (
+      <span className={`${cls} grid place-items-center rounded-full bg-brand-600 font-semibold text-white`}>{initial}</span>
+    );
   if (mobile) {
     return (
       <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 font-semibold text-white">{initial}</span>
+          <Avatar cls="h-8 w-8" />
           <span className="font-medium">{user.full_name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm font-medium">
@@ -41,7 +48,7 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
   return (
     <div className="relative">
       <button onClick={() => setOpen(!open)} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-slate-100">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand-600 font-semibold text-white">{initial}</span>
+        <Avatar cls="h-8 w-8" />
         <span className="max-w-[10rem] truncate">{user.full_name}</span>
         {user.role === "admin" && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">admin</span>}
       </button>

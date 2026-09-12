@@ -26,6 +26,14 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 - **Captcha Cloudflare Turnstile** ở đăng ký và quên mật khẩu: đặt `TURNSTILE_SECRET_KEY` (backend) và `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (frontend). Thiếu key → tự bỏ qua, tiện cho dev.
 - **Token**: access token 60 phút, refresh token 30 ngày (`POST /api/auth/refresh`). Frontend tự gia hạn khi gặp 401. Đổi mật khẩu hoặc `logout-all` làm mọi token cũ hết hiệu lực (claim `pv`).
 
+## Đăng nhập Google
+
+Dùng Google Identity Services: nút Google trên frontend trả `credential` (ID token), backend xác minh chữ ký bằng khoá công khai của Google (`app/google_auth.py`), kiểm tra `aud` = `GOOGLE_CLIENT_ID`. Không cần Client Secret.
+
+Tạo Client ID tại Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web application), thêm Authorized JavaScript origins `http://localhost:3000` và domain thật. Đặt `GOOGLE_CLIENT_ID` (backend) và `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (frontend). Thiếu → nút Google ẩn, endpoint trả 503.
+
+Tài khoản tạo qua Google có mật khẩu ngẫu nhiên không dùng được; muốn đăng nhập bằng mật khẩu thì dùng Quên mật khẩu để đặt.
+
 ## Quên mật khẩu
 
 `POST /api/auth/forgot-password` gửi email chứa link `{FRONTEND_URL}/reset-password?token=...` (đặt `FRONTEND_URL` trong `.env` khi deploy).
@@ -39,6 +47,7 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | GET | /api/auth/config | – | Cấu hình auth cho frontend: `captcha_enabled`, `mail_provider`, hạn access token |
 | POST | /api/auth/login | – | Đăng nhập → access token (60 phút) + refresh token (30 ngày) + user. Sai 5 lần → khoá 15 phút (423) |
 | POST | /api/auth/refresh | – | Đổi refresh token lấy access token mới |
+| POST | /api/auth/google | – | Đăng nhập/đăng ký bằng Google ID token (Google Identity Services). Email Google đã xác minh → bỏ qua OTP; tự liên kết với tài khoản cùng email |
 | POST | /api/auth/logout-all | Bearer | Thu hồi mọi token trên mọi thiết bị, trả token mới cho thiết bị hiện tại |
 | GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại (kèm `email_verified`) |
 | GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
@@ -96,9 +105,10 @@ app/
   mailer.py      Gửi email qua Resend hoặc in ra log (dev)
   ratelimit.py   Giới hạn tần suất theo IP
   captcha.py     Xác minh Cloudflare Turnstile
+  google_auth.py Xác minh Google ID token
   seed.py        Nạp seed_data.json + admin
   routers/       auth.py, courses.py, admin.py
-tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py (chạy: python -m pytest)
+tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py, test_google.py (chạy: python -m pytest)
 ```
 
 ## Đổi sang PostgreSQL
@@ -107,4 +117,4 @@ tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py (chạy:
 
 ## Việc chưa làm (để mở rộng)
 
-Đơn hàng/thanh toán cho khóa trả phí, endpoint AI check, refresh token / đăng nhập Google.
+Đơn hàng/thanh toán cho khóa trả phí, endpoint AI check, tài liệu PDF đính kèm bài học.
