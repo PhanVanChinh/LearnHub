@@ -67,3 +67,12 @@ def verification_email(name: str, code: str, minutes: int) -> tuple[str, str]:
 <p>Nhập mã sau để xác thực email. Mã có hiệu lực trong <b>{minutes} phút</b>.</p>
 <div style="font-size:36px;letter-spacing:10px;font-weight:800;text-align:center;background:#eff6ff;color:#1d4ed8;border-radius:12px;padding:16px;margin:20px 0">{code}</div>"""
     return subject, _layout("Xác thực email", body)
+
+
+def reset_password_email(name: str, link: str, minutes: int) -> tuple[str, str]:
+    subject = "Đặt lại mật khẩu LearnHub"
+    body = f"""<p>Chào {name},</p>
+<p>Bấm nút dưới để đặt lại mật khẩu. Link có hiệu lực trong <b>{minutes} phút</b> và chỉ dùng được một lần.</p>
+<p style="text-align:center;margin:24px 0"><a href="{link}" style="background:#1d4ed8;color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;display:inline-block">Đặt lại mật khẩu</a></p>
+<p style="color:#64748b;font-size:13px">Hoặc dán link này vào trình duyệt:<br><a href="{link}" style="color:#1d4ed8;word-break:break-all">{link}</a></p>"""
+    return subject, _layout("Đặt lại mật khẩu", body)

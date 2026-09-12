@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     otp_expire_minutes: int = 10
     otp_max_attempts: int = 5
     otp_resend_cooldown_seconds: int = 60
+    # Link đặt lại mật khẩu trỏ về frontend: {frontend_url}/reset-password?token=...
+    frontend_url: str = "http://localhost:3000"
+    reset_token_expire_minutes: int = 30
 
     @property
     def cors_origin_list(self) -> list[str]:

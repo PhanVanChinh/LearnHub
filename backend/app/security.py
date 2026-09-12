@@ -24,9 +24,16 @@ def verify_password(plain: str, hashed: str) -> bool:
         return False
 
 
-def create_access_token(user_id: int) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    return jwt.encode({"sub": str(user_id), "exp": expire}, settings.secret_key, algorithm=settings.algorithm)
+def _pwd_version(user: User) -> int:
+    """Phiên bản mật khẩu = mốc đổi mật khẩu gần nhất (ms). Đổi mật khẩu → mọi token mang phiên bản cũ bị từ chối."""
+    return int(user.password_changed_at.replace(tzinfo=timezone.utc).timestamp() * 1000) if user.password_changed_at else 0
+
+
+def create_access_token(user: User) -> str:
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
+    payload = {"sub": str(user.id), "pv": _pwd_version(user), "iat": int(now.timestamp()), "exp": expire}
+    return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
 def get_current_user_optional(token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User | None:
@@ -35,10 +42,15 @@ def get_current_user_optional(token: str | None = Depends(oauth2_scheme), db: Se
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         user_id = int(payload.get("sub"))
+        pwd_version = int(payload.get("pv", 0))
     except (JWTError, TypeError, ValueError):
         return None
     user = db.get(User, user_id)
-    return user if user and user.is_active else None
+    if not user or not user.is_active:
+        return None
+    if pwd_version != _pwd_version(user):  # token phát hành trước lần đổi mật khẩu gần nhất
+        return None
+    return user
 
 
 def get_current_user(user: User | None = Depends(get_current_user_optional)) -> User:

@@ -19,6 +19,11 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 - Gửi thật: tạo key tại https://resend.com, đặt `RESEND_API_KEY=re_...` trong `.env`. Khi chưa xác minh domain, Resend chỉ cho gửi từ `onboarding@resend.dev` tới email đăng ký tài khoản Resend; có domain riêng thì đổi `MAIL_FROM`.
 - Tài khoản tạo trước tính năng này được tự đánh dấu đã xác thực khi migrate (`database.migrate()`).
 
+## Quên mật khẩu
+
+`POST /api/auth/forgot-password` gửi email chứa link `{FRONTEND_URL}/reset-password?token=...` (đặt `FRONTEND_URL` trong `.env` khi deploy).
+Đặt lại xong, `password_changed_at` được cập nhật nên mọi JWT phát hành trước đó bị từ chối (đăng xuất mọi thiết bị).
+
 ## Endpoints
 
 | Method | Path | Auth | Mô tả |
@@ -29,7 +34,9 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 | GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
 | POST | /api/auth/verification/resend | Bearer | Gửi lại mã OTP (cooldown 60s → 429) |
 | POST | /api/auth/verification/confirm | Bearer | Xác nhận mã 6 số (hết hạn 10 phút, tối đa 5 lần sai) |
-| POST | /api/auth/change-password | Bearer | Đổi mật khẩu |
+| POST | /api/auth/change-password | Bearer | Đổi mật khẩu → trả token mới; mọi token cũ hết hiệu lực |
+| POST | /api/auth/forgot-password | – | Gửi link đặt lại mật khẩu (luôn 200, không lộ email tồn tại; cooldown 60s) |
+| POST | /api/auth/reset-password | – | Đặt mật khẩu mới bằng token trong link (30 phút, dùng 1 lần) → 204 |
 | GET | /api/courses?category=&q=&featured=&limit=&offset= | – | Danh sách khóa học (lọc, tìm) |
 | GET | /api/courses/categories | – | Số khóa học theo danh mục |
 | GET | /api/courses/{slug} | tuỳ chọn | Chi tiết (kèm `enrolled`). Bài không free chỉ trả `has_video`, ẩn `video` nếu chưa ghi danh |
@@ -72,7 +79,7 @@ app/
   main.py        FastAPI app, CORS, lifespan (tạo bảng + seed)
   config.py      Settings đọc từ .env
   database.py    SQLAlchemy engine/session
-  models.py      User, Course, Enrollment, LessonProgress, EmailVerification
+  models.py      User, Course, Enrollment, LessonProgress, EmailVerification, PasswordReset
   schemas.py     Pydantic request/response
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
   passwords.py   Quy tắc mật khẩu (dùng chung đăng ký / đổi mật khẩu / admin)

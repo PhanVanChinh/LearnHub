@@ -32,3 +32,5 @@ def migrate() -> None:
                 conn.execute(text("ALTER TABLE users ADD COLUMN email_verified_at DATETIME"))
                 # Tài khoản có từ trước quy tắc xác thực → coi như đã xác thực để không bị khoá đột ngột
                 conn.execute(text("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL"))
+            if "password_changed_at" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN password_changed_at DATETIME"))

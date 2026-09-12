@@ -197,6 +197,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                             <Err k="terms" />
                         </div>
                     )}
+                    {login && (
+                        <div className="-mt-1 text-right">
+                            <Link href="/forgot-password" className="text-sm font-medium text-brand-700 hover:underline">
+                                Quên mật khẩu?
+                            </Link>
+                        </div>
+                    )}
                     {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
                     <button
                         type="submit"

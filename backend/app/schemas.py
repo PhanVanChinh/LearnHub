@@ -62,6 +62,24 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordIn(BaseModel):
+    token: str = Field(min_length=20, max_length=200)
+    new_password: str = Field(max_length=MAX_LENGTH)
+
+    @field_validator("new_password")
+    @classmethod
+    def _check(cls, v: str) -> str:
+        return validate_password(v)
+
+
+class Message(BaseModel):
+    detail: str
+
+
 class VerifyEmailIn(BaseModel):
     code: str = Field(pattern=r"^\d{6}$", description="Mã OTP 6 chữ số")
 

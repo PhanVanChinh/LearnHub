@@ -187,7 +187,11 @@ def test_password_policy(client):
     # đổi mật khẩu cũng áp quy tắc
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
     assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "short1"}, headers=h).status_code == 422
-    assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "MoiHopLe2025"}, headers=h).status_code == 204
+    r2 = client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "MoiHopLe2025"}, headers=h)
+    assert r2.status_code == 200 and "access_token" in r2.json()
+    # token cũ hết hiệu lực, token mới dùng được
+    assert client.get("/api/auth/me", headers=h).status_code == 401
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {r2.json()['access_token']}"}).status_code == 200
 
 
 
@@ -226,3 +230,37 @@ def test_email_verification_flow(client):
     # admin seed đã xác thực sẵn
     admin = client.post("/api/auth/login", json={"email": "admin@example.com", "password": "admin123"}).json()["user"]
     assert admin["email_verified"] is True
+
+
+
+def test_forgot_reset_password_flow(client):
+    email = "reset-me@example.com"
+    r = client.post("/api/auth/register", json={"email": email, "full_name": "Reset", "password": "CuHopLe2024"})
+    old_token = r.json()["access_token"]
+    n_mails = len(mailer.console_outbox)
+
+    # email lạ → vẫn 200, cùng thông báo, không gửi mail
+    r = client.post("/api/auth/forgot-password", json={"email": "khong-co@example.com"})
+    assert r.status_code == 200 and "Nếu email tồn tại" in r.json()["detail"]
+    assert len(mailer.console_outbox) == n_mails
+
+    # email đúng → gửi mail chứa link có token
+    assert client.post("/api/auth/forgot-password", json={"email": email.upper()}).status_code == 200
+    mail = mailer.console_outbox[-1]
+    assert mail["to"] == email and "Đặt lại mật khẩu" in mail["subject"]
+    token = re.search(r"reset-password\?token=([A-Za-z0-9_-]+)", mail["html"]).group(1)
+    # gửi lại ngay → không tạo mail mới (cooldown) nhưng vẫn 200
+    client.post("/api/auth/forgot-password", json={"email": email})
+    assert len(mailer.console_outbox) == n_mails + 1
+
+    # token sai / mật khẩu yếu
+    assert client.post("/api/auth/reset-password", json={"token": "x" * 40, "new_password": "MoiHopLe2025"}).status_code == 400
+    assert client.post("/api/auth/reset-password", json={"token": token, "new_password": "yeu"}).status_code == 422
+
+    # đặt lại thành công → mật khẩu cũ sai, mới đúng, token dùng 1 lần, phiên cũ bị đăng xuất, email coi như đã xác thực
+    assert client.post("/api/auth/reset-password", json={"token": token, "new_password": "MoiHopLe2025"}).status_code == 204
+    assert client.post("/api/auth/reset-password", json={"token": token, "new_password": "KhacNua2026"}).status_code == 400
+    assert client.post("/api/auth/login", json={"email": email, "password": "CuHopLe2024"}).status_code == 401
+    r = client.post("/api/auth/login", json={"email": email, "password": "MoiHopLe2025"})
+    assert r.status_code == 200 and r.json()["user"]["email_verified"] is True
+    assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {old_token}"}).status_code == 401

@@ -33,6 +33,18 @@ Content-Type: application/json
 
 { "code": "123456" }
 
+### Quên mật khẩu (luôn 200; link nằm trong email hoặc terminal backend ở chế độ dev)
+POST {{api}}/api/auth/forgot-password
+Content-Type: application/json
+
+{ "email": "sv@st.phenikaa-uni.edu.vn" }
+
+### Đặt lại mật khẩu bằng token trong link
+POST {{api}}/api/auth/reset-password
+Content-Type: application/json
+
+{ "token": "DAN_TOKEN_O_DAY", "new_password": "MatKhauMoi2025" }
+
 ### Tài khoản hiện tại
 GET {{api}}/api/auth/me
 Authorization: Bearer {{login.response.body.access_token}}

@@ -47,6 +47,11 @@ export const authApi = {
   verification: () => api<VerificationStatus>("/api/auth/verification"),
   resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
   confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),
+  forgotPassword: (email: string) => api<{ detail: string }>("/api/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+  resetPassword: (token: string, new_password: string) =>
+    api<void>("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, new_password }) }),
+  changePassword: (current_password: string, new_password: string) =>
+    api<Token>("/api/auth/change-password", { method: "POST", body: JSON.stringify({ current_password, new_password }) }),
 };
 
 export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };
