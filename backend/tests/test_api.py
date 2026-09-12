@@ -133,3 +133,40 @@ def test_progress_flow(client):
     for i in range(total):
         p = client.put(f"/api/courses/{free}/lessons/{i}/complete", headers=h).json()
     assert p["percent"] == 100 and p["next_index"] is None
+
+
+def test_password_policy(client):
+    def reg(pw, email="pw-test@example.com", **extra):
+        return client.post("/api/auth/register", json={"email": email, "full_name": "Test", "password": pw, **extra})
+
+    weak = {
+        "abc123": "ít nhất 8",           # ngắn
+        "abcdefgh": "chữ số",            # không số
+        "12345678": "chữ cái",           # không chữ  (cũng nằm trong danh sách phổ biến, nhưng lỗi chữ cái báo trước)
+        "password1": "phổ biến",
+        " abcd1234": "khoảng trắng",
+        "pw-test2024": "tên đăng nhập",  # chứa local-part của email
+    }
+    for pw, expect in weak.items():
+        r = reg(pw)
+        assert r.status_code == 422, (pw, r.text)
+        body = r.json()
+        assert expect in body["detail"], (pw, body["detail"])
+        assert body["errors"][0]["field"] == "password"
+
+    # thiếu đồng ý điều khoản
+    r = reg("HopLe2024", accept_terms=False)
+    assert r.status_code == 422 and r.json()["errors"][0]["field"] == "accept_terms"
+    # email sai định dạng → thông báo tiếng Việt
+    r = reg("HopLe2024", email="khong-phai-email")
+    assert r.status_code == 422 and r.json()["detail"] == "Email không hợp lệ"
+
+    # hợp lệ + chuẩn hoá email/họ tên
+    r = client.post("/api/auth/register", json={"email": "  PW-Test@Example.com ", "full_name": "  Nguyễn   Văn  A ", "password": "HopLe2024"})
+    assert r.status_code == 201, r.text
+    assert r.json()["user"]["email"] == "pw-test@example.com" and r.json()["user"]["full_name"] == "Nguyễn Văn A"
+
+    # đổi mật khẩu cũng áp quy tắc
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "short1"}, headers=h).status_code == 422
+    assert client.post("/api/auth/change-password", json={"current_password": "HopLe2024", "new_password": "MoiHopLe2025"}, headers=h).status_code == 204

@@ -1,13 +1,49 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
+
+from .passwords import MAX_LENGTH, validate_password
 
 
 # ---- Auth ----
+def _clean_name(v: str) -> str:
+    """Bỏ khoảng trắng thừa: '  Nguyễn   Văn  A ' → 'Nguyễn Văn A'."""
+    v = re.sub(r"\s+", " ", v).strip()
+    if not v:
+        raise ValueError("Họ và tên không được để trống")
+    return v
+
+
 class UserCreate(BaseModel):
     email: EmailStr
     full_name: str = Field(min_length=1, max_length=255)
-    password: str = Field(min_length=6, max_length=128)
+    password: str = Field(max_length=MAX_LENGTH)
+    accept_terms: bool = Field(True, description="Đồng ý điều khoản & chính sách bảo mật")
+
+    @field_validator("email")
+    @classmethod
+    def _norm_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+    @field_validator("full_name")
+    @classmethod
+    def _norm_name(cls, v: str) -> str:
+        return _clean_name(v)
+
+    @field_validator("accept_terms")
+    @classmethod
+    def _must_accept(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("Bạn cần đồng ý điều khoản sử dụng")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def _check_password(cls, v: str, info: ValidationInfo) -> str:
+        # email được khai báo trước nên đã có trong info.data (nếu hợp lệ) → lỗi gắn đúng trường "password"
+        return validate_password(v, info.data.get("email"))
 
 
 class UserLogin(BaseModel):
@@ -33,7 +69,12 @@ class Token(BaseModel):
 
 class PasswordChange(BaseModel):
     current_password: str
-    new_password: str = Field(min_length=6, max_length=128)
+    new_password: str = Field(max_length=MAX_LENGTH)
+
+    @field_validator("new_password")
+    @classmethod
+    def _check(cls, v: str) -> str:
+        return validate_password(v)
 
 
 # ---- Courses ----
@@ -159,9 +200,19 @@ class AdminUserCreate(UserCreate):
 class AdminUserUpdate(BaseModel):
     full_name: str | None = Field(None, min_length=1, max_length=255)
     email: EmailStr | None = None
-    password: str | None = Field(None, min_length=6, max_length=128)
+    password: str | None = Field(None, max_length=MAX_LENGTH)
     role: str | None = Field(None, pattern=r"^(user|admin)$")
     is_active: bool | None = None
+
+    @field_validator("password")
+    @classmethod
+    def _check(cls, v: str | None) -> str | None:
+        return validate_password(v) if v is not None else v
+
+    @field_validator("full_name")
+    @classmethod
+    def _norm_name(cls, v: str | None) -> str | None:
+        return _clean_name(v) if v is not None else v
 
 
 # ---- Admin: enrollments & stats ----

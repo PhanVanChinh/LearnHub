@@ -112,7 +112,7 @@ function UserForm({ initial, isSelf, onSubmit, onCancel }: {
       <Field label="Họ và tên"><input className="input" required value={f.full_name} onChange={(e) => setF({ ...f, full_name: e.target.value })} /></Field>
       <Field label="Email"><input className="input" type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></Field>
       <Field label={initial ? "Mật khẩu mới (để trống nếu không đổi)" : "Mật khẩu"}>
-        <input className="input" type="password" minLength={6} value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="new-password" />
+        <input className="input" type="password" minLength={8} placeholder="Tối thiểu 8 ký tự, có chữ và số" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} autoComplete="new-password" />
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Vai trò">

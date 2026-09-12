@@ -16,10 +16,9 @@ def _issue(user: User) -> schemas.Token:
 
 @router.post("/register", response_model=schemas.Token, status_code=status.HTTP_201_CREATED)
 def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
-    email = payload.email.lower()
-    if db.query(User).filter(User.email == email).first():
+    if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Email đã được đăng ký")
-    user = User(email=email, full_name=payload.full_name.strip(), hashed_password=hash_password(payload.password))
+    user = User(email=payload.email, full_name=payload.full_name, hashed_password=hash_password(payload.password))
     db.add(user)
     db.commit()
     db.refresh(user)

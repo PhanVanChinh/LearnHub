@@ -10,8 +10,9 @@ export const tokenStore = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 };
 
+export type FieldErrors = Record<string, string>;
 export class ApiError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public errors: FieldErrors = {}) { super(message); }
 }
 
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -28,13 +29,16 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const detail = typeof data.detail === "string" ? data.detail : Array.isArray(data.detail) ? data.detail[0]?.msg : "Có lỗi xảy ra";
-    throw new ApiError(res.status, detail);
+    // Backend trả errors: [{field, msg}] cho lỗi 422 → map theo trường để form tô đỏ đúng ô
+    const errors: FieldErrors = {};
+    if (Array.isArray(data.errors)) for (const e of data.errors) if (e?.field && !errors[e.field]) errors[e.field] = e.msg;
+    throw new ApiError(res.status, detail, errors);
   }
   return data as T;
 }
 
 export const authApi = {
-  register: (body: { email: string; full_name: string; password: string }) =>
+  register: (body: { email: string; full_name: string; password: string; accept_terms: boolean }) =>
     api<Token>("/api/auth/register", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) =>
     api<Token>("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),

@@ -15,7 +15,7 @@ Lần chạy đầu tự tạo `learnhub.db` (SQLite), nạp 22 khóa học từ
 
 | Method | Path | Auth | Mô tả |
 |---|---|---|---|
-| POST | /api/auth/register | – | Đăng ký → trả JWT + user |
+| POST | /api/auth/register | – | Đăng ký → trả JWT + user. Mật khẩu ≥ 8 ký tự, có chữ và số, không phổ biến, không chứa tên email (xem `app/passwords.py`). Lỗi 422 trả `{detail, errors:[{field,msg}]}` |
 | POST | /api/auth/login | – | Đăng nhập → JWT + user |
 | GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại |
 | POST | /api/auth/change-password | Bearer | Đổi mật khẩu |
@@ -64,6 +64,7 @@ app/
   models.py      User, Course, Enrollment, LessonProgress
   schemas.py     Pydantic request/response
   security.py    bcrypt + JWT, dependencies get_current_user / require_admin
+  passwords.py   Quy tắc mật khẩu (dùng chung đăng ký / đổi mật khẩu / admin)
   seed.py        Nạp seed_data.json + admin
   routers/       auth.py, courses.py, admin.py
 tests/           conftest.py, test_api.py, test_admin.py (chạy: python -m pytest)

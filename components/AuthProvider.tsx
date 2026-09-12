@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => accept(await authApi.login({ email, password })), []);
   const register = useCallback(
-    async (full_name: string, email: string, password: string) => accept(await authApi.register({ full_name, email, password })), []);
+    async (full_name: string, email: string, password: string) => accept(await authApi.register({ full_name, email, password, accept_terms: true })), []);
   const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
 
   return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>;
