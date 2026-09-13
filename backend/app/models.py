@@ -12,7 +12,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     full_name: Mapped[str] = mapped_column(String(255))
-    hashed_password: Mapped[str] = mapped_column(String(255))
+    hashed_password: Mapped[str] = mapped_column(String(255))  # "" = chưa đặt mật khẩu (tài khoản chỉ đăng nhập Google)
     role: Mapped[str] = mapped_column(String(20), default="user")  # user | admin
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -37,6 +37,11 @@ class User(Base):
     @property
     def has_google(self) -> bool:
         return self.google_sub is not None
+
+    @property
+    def has_password(self) -> bool:
+        """False với tài khoản tạo qua Google chưa đặt mật khẩu → không đăng nhập bằng mật khẩu được."""
+        return bool(self.hashed_password)
 
     @property
     def token_invalid_before(self) -> datetime | None:

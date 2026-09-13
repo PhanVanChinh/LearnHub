@@ -68,6 +68,7 @@ function AccountSummary() {
           )}
         </Row>
         <Row k="Vai trò">{user.role === "admin" ? "Quản trị viên" : "Học viên"}</Row>
+        <Row k="Mật khẩu">{user.has_password === false ? <span className="text-amber-700">Chưa đặt</span> : "Đã đặt"}</Row>
         <Row k="Đăng nhập Google">{user.has_google ? "Đã liên kết" : "Chưa liên kết"}</Row>
         <Row k="Thành viên từ">{since}</Row>
       </dl>

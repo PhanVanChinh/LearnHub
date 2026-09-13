@@ -62,6 +62,7 @@ class UserOut(BaseModel):
     email_verified: bool = False
     avatar_url: str | None = None
     has_google: bool = Field(False, description="Đã liên kết tài khoản Google")
+    has_password: bool = Field(True, description="False → tài khoản Google chưa đặt mật khẩu")
     created_at: datetime
 
 
@@ -126,6 +127,17 @@ class AuthConfig(BaseModel):
 
 class GoogleLoginIn(BaseModel):
     credential: str = Field(min_length=20, description="ID token từ Google Identity Services")
+
+
+class PasswordSet(BaseModel):
+    """Đặt mật khẩu lần đầu cho tài khoản Google (không cần mật khẩu hiện tại)."""
+
+    new_password: str = Field(max_length=MAX_LENGTH)
+
+    @field_validator("new_password")
+    @classmethod
+    def _check(cls, v: str) -> str:
+        return validate_password(v)
 
 
 class PasswordChange(BaseModel):

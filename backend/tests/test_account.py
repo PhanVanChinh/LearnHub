@@ -45,3 +45,39 @@ def test_change_password(client):
     assert client.get("/api/auth/me", headers=new_h).status_code == 200
     assert client.post("/api/auth/login", json={"email": "pw.user@example.com", "password": "MatKhau2024"}).status_code == 401
     assert client.post("/api/auth/login", json={"email": "pw.user@example.com", "password": "MatKhauMoi2024"}).status_code == 200
+
+
+def test_google_account_sets_password(client, monkeypatch):
+    from app import google_auth
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(google_auth, "verify_id_token", lambda cred: {
+        "sub": "google-uid-acc", "email": "only.google@gmail.com", "email_verified": True, "name": "Only Google"})
+    r = client.post("/api/auth/google", json={"credential": "fake-google-token-abcdefghij"})
+    assert r.status_code == 200, r.text
+    assert r.json()["user"]["has_password"] is False
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    # đăng nhập bằng mật khẩu → 401 kèm gợi ý dùng Google, không tính là đăng nhập sai
+    r = client.post("/api/auth/login", json={"email": "only.google@gmail.com", "password": "BatKy12345"})
+    assert r.status_code == 401 and "Google" in r.json()["detail"]
+    # đổi mật khẩu không dùng được vì chưa có mật khẩu hiện tại
+    assert client.post("/api/auth/change-password", json={"current_password": "x", "new_password": "MatKhauMoi2024"}, headers=h).status_code == 400
+
+    # đặt mật khẩu lần đầu
+    assert client.post("/api/auth/set-password", json={"new_password": "short"}, headers=h).status_code == 422
+    r = client.post("/api/auth/set-password", json={"new_password": "MatKhauMoi2024"}, headers=h)
+    assert r.status_code == 200, r.text
+    assert r.json()["user"]["has_password"] is True
+    new_h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/api/auth/me", headers=h).status_code == 401  # token cũ bị thu hồi
+    # đã có mật khẩu → không đặt lại lần nữa, phải dùng đổi mật khẩu
+    assert client.post("/api/auth/set-password", json={"new_password": "KhacNua2024"}, headers=new_h).status_code == 400
+    assert client.post("/api/auth/login", json={"email": "only.google@gmail.com", "password": "MatKhauMoi2024"}).status_code == 200
+
+
+def test_regular_account_cannot_set_password(client):
+    h = _register(client, "has.pw@example.com")
+    r = client.post("/api/auth/set-password", json={"new_password": "MatKhauMoi2024"}, headers=h)
+    assert r.status_code == 400 and "đổi mật khẩu" in r.json()["detail"]

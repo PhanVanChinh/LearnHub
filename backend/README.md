@@ -32,7 +32,7 @@ Dùng Google Identity Services: nút Google trên frontend trả `credential` (I
 
 Tạo Client ID tại Google Cloud Console → APIs & Services → Credentials → OAuth client ID (Web application), thêm Authorized JavaScript origins `http://localhost:3000` và domain thật. Đặt `GOOGLE_CLIENT_ID` (backend) và `NEXT_PUBLIC_GOOGLE_CLIENT_ID` (frontend). Thiếu → nút Google ẩn, endpoint trả 503.
 
-Tài khoản tạo qua Google có mật khẩu ngẫu nhiên không dùng được; muốn đăng nhập bằng mật khẩu thì dùng Quên mật khẩu để đặt.
+Tài khoản tạo qua Google chưa có mật khẩu (`has_password=false`): đăng nhập bằng mật khẩu bị từ chối kèm gợi ý dùng Google. Đặt mật khẩu lần đầu tại trang Tài khoản (`POST /api/auth/set-password`) hoặc qua Quên mật khẩu. Tài khoản Google tạo trước bản này vẫn mang mật khẩu ngẫu nhiên nên chỉ đặt được qua Quên mật khẩu.
 
 ## Quên mật khẩu
 
@@ -53,7 +53,9 @@ Tài khoản tạo qua Google có mật khẩu ngẫu nhiên không dùng đư�
 | GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
 | POST | /api/auth/verification/resend | Bearer | Gửi lại mã OTP (cooldown 60s → 429) |
 | POST | /api/auth/verification/confirm | Bearer | Xác nhận mã 6 số (hết hạn 10 phút, tối đa 5 lần sai) |
+| PATCH | /api/auth/me | Bearer | Sửa hồ sơ (họ tên) |
 | POST | /api/auth/change-password | Bearer | Đổi mật khẩu → trả token mới; mọi token cũ hết hiệu lực |
+| POST | /api/auth/set-password | Bearer | Đặt mật khẩu lần đầu cho tài khoản Google chưa có mật khẩu → trả token mới |
 | POST | /api/auth/forgot-password | – | Gửi link đặt lại mật khẩu (luôn 200, không lộ email tồn tại; cooldown 60s) |
 | POST | /api/auth/reset-password | – | Đặt mật khẩu mới bằng token trong link (30 phút, dùng 1 lần) → 204 |
 | GET | /api/courses?category=&q=&featured=&limit=&offset= | – | Danh sách khóa học (lọc, tìm) |

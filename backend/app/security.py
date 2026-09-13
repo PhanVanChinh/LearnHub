@@ -18,6 +18,8 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain: str, hashed: str) -> bool:
+    if not hashed:  # tài khoản chưa đặt mật khẩu
+        return False
     try:
         return bcrypt.checkpw(plain.encode(), hashed.encode())
     except ValueError:

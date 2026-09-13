@@ -2,7 +2,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 const TOKEN_KEY = "learnhub_token";
 const REFRESH_KEY = "learnhub_refresh";
 
-export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; created_at: string };
+export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; has_password?: boolean; created_at: string };
 export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
 export type Token = { access_token: string; refresh_token?: string | null; token_type: string; user: User };
 export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number; google_client_id: string };
@@ -87,6 +87,7 @@ export const authApi = {
     api<void>("/api/auth/reset-password", { method: "POST", body: JSON.stringify({ token, new_password }) }),
   changePassword: (current_password: string, new_password: string) =>
     api<Token>("/api/auth/change-password", { method: "POST", body: JSON.stringify({ current_password, new_password }) }),
+  setPassword: (new_password: string) => api<Token>("/api/auth/set-password", { method: "POST", body: JSON.stringify({ new_password }) }),
 };
 
 export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };

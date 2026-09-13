@@ -48,7 +48,7 @@ def google_login(payload: schemas.GoogleLoginIn, db: Session = Depends(get_db)):
         user.failed_login_attempts, user.locked_until = 0, None
     else:
         user = User(email=email, full_name=(claims.get("name") or email.split("@")[0]).strip()[:255],
-                    hashed_password=hash_password(secrets.token_urlsafe(32)),  # không dùng được; đặt mật khẩu qua Quên mật khẩu
+                    hashed_password="",  # chưa có mật khẩu; đặt tại trang tài khoản hoặc qua Quên mật khẩu
                     email_verified_at=now, google_sub=claims["sub"], avatar_url=claims.get("picture"))
         db.add(user)
     user.last_login_at = now
@@ -149,6 +149,9 @@ def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
     if user.locked_until and user.locked_until > now:
         left = int((user.locked_until - now).total_seconds() // 60) + 1
         raise HTTPException(status.HTTP_423_LOCKED, f"Tài khoản tạm khoá do đăng nhập sai nhiều lần. Thử lại sau {left} phút hoặc dùng Quên mật khẩu")
+    if not user.has_password:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            "Tài khoản này đăng nhập bằng Google. Hãy dùng nút Google, hoặc đặt mật khẩu qua Quên mật khẩu")
     if not verify_password(payload.password, user.hashed_password):
         user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
         left = settings.login_max_failures - user.failed_login_attempts
@@ -213,6 +216,16 @@ def change_password(payload: schemas.PasswordChange, user: User = Depends(get_cu
     if not verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu hiện tại không đúng")
     _check_new_password(user, payload.new_password, payload.current_password)
+    _set_password(db, user, payload.new_password)
+    return _issue(user)
+
+
+@router.post("/set-password", response_model=schemas.Token)
+def set_password(payload: schemas.PasswordSet, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Đặt mật khẩu lần đầu cho tài khoản Google. Tài khoản đã có mật khẩu phải dùng /change-password."""
+    if user.has_password:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản đã có mật khẩu, hãy dùng chức năng đổi mật khẩu")
+    _check_new_password(user, payload.new_password)
     _set_password(db, user, payload.new_password)
     return _issue(user)
 

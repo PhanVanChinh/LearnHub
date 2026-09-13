@@ -79,6 +79,13 @@ Content-Type: application/json
 
 { "current_password": "admin123", "new_password": "MatKhauMoi2024" }
 
+### Đặt mật khẩu lần đầu (chỉ tài khoản Google chưa có mật khẩu)
+POST {{api}}/api/auth/set-password
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "new_password": "MatKhauMoi2024" }
+
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 

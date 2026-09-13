@@ -8,6 +8,50 @@ import { passwordValid } from "@/lib/password";
 import Section from "./Section";
 
 export default function PasswordSection() {
+  const { user } = useAuth();
+  if (user && user.has_password === false) return <SetPasswordForm />;
+  return <ChangePasswordForm />;
+}
+
+/** Tài khoản Google chưa có mật khẩu: đặt lần đầu, không cần mật khẩu hiện tại. */
+function SetPasswordForm() {
+  const { user, setPassword } = useAuth();
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [touched, setTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const email = user?.email ?? "";
+  const valid = passwordValid(pw, email) && confirm === pw;
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    if (!valid) return;
+    setBusy(true); setError("");
+    try {
+      await setPassword(pw); // user.has_password đổi → component cha tự chuyển sang form đổi mật khẩu
+    } catch (err) {
+      const ae = err as ApiError;
+      setError(ae.errors?.new_password || ae.message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Section title="Đặt mật khẩu" description="Tài khoản của bạn hiện chỉ đăng nhập bằng Google. Đặt mật khẩu để có thể đăng nhập bằng email khi cần.">
+      <form onSubmit={submit} noValidate className="space-y-4">
+        <NewPasswordFields password={pw} confirm={confirm} onPassword={(v) => { setPw(v); setError(""); }} onConfirm={setConfirm}
+          touched={touched} onBlur={() => setTouched(true)} email={email} placeholder="Mật khẩu" />
+        {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : "Đặt mật khẩu"}</button>
+      </form>
+    </Section>
+  );
+}
+
+function ChangePasswordForm() {
   const { user, changePassword } = useAuth();
   const [current, setCurrent] = useState("");
   const [pw, setPw] = useState("");
