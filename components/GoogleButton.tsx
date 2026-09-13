@@ -33,11 +33,13 @@ function loadGsi() {
   return gsiPromise;
 }
 
-/** Nút "Tiếp tục với Google" (Google Identity Services). Gọi onSuccess sau khi backend cấp token. */
-export default function GoogleButton({ onSuccess, onError, text = "continue_with" }: {
-  onSuccess: () => void; onError: (msg: string) => void; text?: "signin_with" | "signup_with" | "continue_with";
+/** Nút "Tiếp tục với Google" (Google Identity Services). Mặc định đăng nhập; truyền `onCredential` để dùng cho việc khác (liên kết tài khoản). */
+export default function GoogleButton({ onSuccess, onError, onCredential, text = "continue_with", busyText = "Đang đăng nhập…" }: {
+  onSuccess: () => void; onError: (msg: string) => void; onCredential?: (credential: string) => Promise<void>;
+  text?: "signin_with" | "signup_with" | "continue_with"; busyText?: string;
 }) {
   const { loginWithGoogle } = useAuth();
+  const handle = onCredential ?? loginWithGoogle;
   const ref = useRef<HTMLDivElement>(null);
   const [busy, setBusy] = useState(false);
 
@@ -50,7 +52,7 @@ export default function GoogleButton({ onSuccess, onError, text = "continue_with
         client_id: GOOGLE_CLIENT_ID,
         callback: async (resp: { credential: string }) => {
           setBusy(true);
-          try { await loginWithGoogle(resp.credential); onSuccess(); }
+          try { await handle(resp.credential); onSuccess(); }
           catch (e) { onError((e as Error).message); }
           finally { setBusy(false); }
         },
@@ -70,7 +72,7 @@ export default function GoogleButton({ onSuccess, onError, text = "continue_with
   return (
     <div className="relative">
       <div ref={ref} className="flex min-h-[44px] justify-center" />
-      {busy && <div className="absolute inset-0 grid place-items-center rounded-full bg-white/70 text-sm text-slate-600">Đang đăng nhập…</div>}
+      {busy && <div className="absolute inset-0 grid place-items-center rounded-full bg-white/70 text-sm text-slate-600">{busyText}</div>}
     </div>
   );
 }

@@ -72,6 +72,8 @@ export const authApi = {
   config: () => api<AuthConfig>("/api/auth/config"),
   logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
   google: (credential: string) => api<Token>("/api/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
+  linkGoogle: (credential: string) => api<User>("/api/auth/google/link", { method: "POST", body: JSON.stringify({ credential }) }),
+  unlinkGoogle: () => api<User>("/api/auth/google", { method: "DELETE" }),
   register: (body: { email: string; full_name: string; password: string; accept_terms: boolean; captcha_token?: string | null }) =>
     api<Token>("/api/auth/register", { method: "POST", body: JSON.stringify(body) }),
   login: (body: { email: string; password: string }) =>

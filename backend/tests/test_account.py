@@ -81,3 +81,55 @@ def test_regular_account_cannot_set_password(client):
     h = _register(client, "has.pw@example.com")
     r = client.post("/api/auth/set-password", json={"new_password": "MatKhauMoi2024"}, headers=h)
     assert r.status_code == 400 and "đổi mật khẩu" in r.json()["detail"]
+
+
+def test_link_and_unlink_google(client, monkeypatch):
+    from app import google_auth
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    claims = {"sub": "google-uid-link", "email": "other.mail@gmail.com", "email_verified": True, "name": "X", "picture": "https://img/p.png"}
+    monkeypatch.setattr(google_auth, "verify_id_token", lambda cred: dict(claims))
+
+    h = _register(client, "linker@example.com")
+    # chưa liên kết → gỡ báo lỗi
+    assert client.delete("/api/auth/google", headers=h).status_code == 400
+
+    r = client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h)
+    assert r.status_code == 200, r.text
+    assert r.json()["has_google"] is True and r.json()["avatar_url"] == "https://img/p.png"
+    assert r.json()["email_verified"] is False  # email Google khác email tài khoản → không tự xác thực
+    # liên kết lần 2 → 400
+    assert client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h).status_code == 400
+    # đăng nhập Google bằng sub đó → vào đúng tài khoản linker
+    r = client.post("/api/auth/google", json={"credential": "fake-google-token-abcdefghij"})
+    assert r.status_code == 200 and r.json()["user"]["email"] == "linker@example.com"
+
+    # tài khoản khác muốn liên kết cùng Google → 409
+    h2 = _register(client, "second@example.com")
+    assert client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h2).status_code == 409
+
+    # gỡ liên kết (đã có mật khẩu)
+    r = client.delete("/api/auth/google", headers=h)
+    assert r.status_code == 200 and r.json()["has_google"] is False
+    # giờ second liên kết được
+    assert client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h2).status_code == 200
+
+
+def test_unlink_blocked_without_password(client, monkeypatch):
+    from app import google_auth
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "google_client_id", "test-client-id")
+    monkeypatch.setattr(google_auth, "verify_id_token", lambda cred: {
+        "sub": "google-uid-nopw", "email": "nopw@gmail.com", "email_verified": True, "name": "No PW"})
+    r = client.post("/api/auth/google", json={"credential": "fake-google-token-abcdefghij"})
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    r = client.delete("/api/auth/google", headers=h)
+    assert r.status_code == 400 and "mật khẩu" in r.json()["detail"]
+    # liên kết cùng email → tự xác thực email
+    h3 = _register(client, "same.mail@example.com")
+    monkeypatch.setattr(google_auth, "verify_id_token", lambda cred: {
+        "sub": "google-uid-same", "email": "Same.Mail@example.com", "email_verified": True, "name": "Same"})
+    r = client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h3)
+    assert r.status_code == 200 and r.json()["email_verified"] is True

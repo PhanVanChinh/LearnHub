@@ -57,6 +57,37 @@ def google_login(payload: schemas.GoogleLoginIn, db: Session = Depends(get_db)):
     return _issue(user)
 
 
+@router.post("/google/link", response_model=schemas.UserOut, dependencies=[rate_limit("google", 20, 60)])
+def google_link(payload: schemas.GoogleLoginIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Liên kết tài khoản Google vào tài khoản đang đăng nhập (email Google có thể khác email tài khoản)."""
+    if user.has_google:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản đã liên kết Google. Gỡ liên kết trước nếu muốn đổi")
+    claims = google_auth.verify_id_token(payload.credential)
+    other = db.query(User).filter(User.google_sub == claims["sub"]).first()
+    if other and other.id != user.id:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Tài khoản Google này đã liên kết với một tài khoản khác")
+    user.google_sub = claims["sub"]
+    user.avatar_url = user.avatar_url or claims.get("picture")
+    if claims["email"].strip().lower() == user.email and not user.email_verified:
+        user.email_verified_at = datetime.utcnow()  # cùng email, Google đã xác minh
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.delete("/google", response_model=schemas.UserOut)
+def google_unlink(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Gỡ liên kết Google. Chặn nếu chưa có mật khẩu để không mất cách đăng nhập."""
+    if not user.has_google:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản chưa liên kết Google")
+    if not user.has_password:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Hãy đặt mật khẩu trước khi gỡ Google, nếu không bạn sẽ không đăng nhập được")
+    user.google_sub = None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 @router.post("/register", response_model=schemas.Token, status_code=status.HTTP_201_CREATED,
              dependencies=[rate_limit("register", 5, 3600)])
 def register(payload: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):

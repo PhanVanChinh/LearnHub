@@ -55,6 +55,8 @@ Tài khoản tạo qua Google chưa có mật khẩu (`has_password=false`): đ�
 | POST | /api/auth/verification/confirm | Bearer | Xác nhận mã 6 số (hết hạn 10 phút, tối đa 5 lần sai) |
 | PATCH | /api/auth/me | Bearer | Sửa hồ sơ (họ tên) |
 | POST | /api/auth/change-password | Bearer | Đổi mật khẩu → trả token mới; mọi token cũ hết hiệu lực |
+| POST | /api/auth/google/link | Bearer | Liên kết Google vào tài khoản hiện tại (409 nếu Google đó đã thuộc tài khoản khác) |
+| DELETE | /api/auth/google | Bearer | Gỡ liên kết Google (400 nếu chưa đặt mật khẩu) |
 | POST | /api/auth/set-password | Bearer | Đặt mật khẩu lần đầu cho tài khoản Google chưa có mật khẩu → trả token mới |
 | POST | /api/auth/forgot-password | – | Gửi link đặt lại mật khẩu (luôn 200, không lộ email tồn tại; cooldown 60s) |
 | POST | /api/auth/reset-password | – | Đặt mật khẩu mới bằng token trong link (30 phút, dùng 1 lần) → 204 |

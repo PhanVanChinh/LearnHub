@@ -86,6 +86,17 @@ Content-Type: application/json
 
 { "new_password": "MatKhauMoi2024" }
 
+### Liên kết Google vào tài khoản đang đăng nhập (credential lấy từ nút Google trên frontend)
+POST {{api}}/api/auth/google/link
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "credential": "<google-id-token>" }
+
+### Gỡ liên kết Google (cần đã có mật khẩu)
+DELETE {{api}}/api/auth/google
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 
