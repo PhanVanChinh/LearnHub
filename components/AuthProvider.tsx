@@ -11,6 +11,8 @@ type Ctx = {
   logout: () => void;
   /** Thu hồi mọi phiên trên mọi thiết bị, giữ lại phiên hiện tại */
   logoutAll: () => Promise<void>;
+  /** Đổi mật khẩu; server thu hồi token cũ và trả token mới cho phiên này */
+  changePassword: (current: string, next: string) => Promise<void>;
   /** Tải lại thông tin user từ server (sau khi xác thực email...) */
   refresh: () => Promise<void>;
   setUser: (u: User) => void;
@@ -36,9 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = useCallback(async (credential: string) => accept(await authApi.google(credential)), []);
   const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
   const logoutAll = useCallback(async () => accept(await authApi.logoutAll()), []);
+  const changePassword = useCallback(async (current: string, next: string) => accept(await authApi.changePassword(current, next)), []);
   const refresh = useCallback(async () => { if (tokenStore.get()) setUser(await authApi.me()); }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, logoutAll, refresh, setUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, logoutAll, changePassword, refresh, setUser }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

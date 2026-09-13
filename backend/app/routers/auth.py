@@ -10,6 +10,7 @@ from .. import captcha, google_auth, mailer, schemas
 from ..config import settings
 from ..database import get_db
 from ..models import EmailVerification, PasswordReset, User
+from ..passwords import password_issues
 from ..ratelimit import client_ip, rate_limit
 from ..security import create_access_token, create_refresh_token, get_current_user, hash_password, user_from_token, verify_password
 
@@ -211,8 +212,18 @@ def change_password(payload: schemas.PasswordChange, user: User = Depends(get_cu
     """Đổi mật khẩu. Mọi token cũ bị vô hiệu; trả token mới cho phiên hiện tại."""
     if not verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu hiện tại không đúng")
+    _check_new_password(user, payload.new_password, payload.current_password)
     _set_password(db, user, payload.new_password)
     return _issue(user)
+
+
+def _check_new_password(user: User, new_password: str, current: str | None = None) -> None:
+    """Kiểm tra thêm khi đã biết user: không trùng mật khẩu cũ, không chứa tên email (schema chưa biết email)."""
+    if current is not None and new_password == current:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu mới phải khác mật khẩu hiện tại")
+    issues = password_issues(new_password, user.email)
+    if issues:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, issues[0])
 
 
 # ---------- quên / đặt lại mật khẩu ----------

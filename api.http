@@ -72,6 +72,13 @@ Content-Type: application/json
 
 { "full_name": "Nguyễn Văn A" }
 
+### Đổi mật khẩu (trả token mới, token cũ hết hiệu lực)
+POST {{api}}/api/auth/change-password
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "current_password": "admin123", "new_password": "MatKhauMoi2024" }
+
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 
