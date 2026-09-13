@@ -197,6 +197,15 @@ def me(user: User = Depends(get_current_user)):
     return user
 
 
+@router.patch("/me", response_model=schemas.UserOut)
+def update_me(payload: schemas.UserUpdate, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Cập nhật hồ sơ (hiện chỉ họ tên)."""
+    user.full_name = payload.full_name
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 @router.post("/change-password", response_model=schemas.Token)
 def change_password(payload: schemas.PasswordChange, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Đổi mật khẩu. Mọi token cũ bị vô hiệu; trả token mới cho phiên hiện tại."""

@@ -77,6 +77,7 @@ export const authApi = {
   login: (body: { email: string; password: string }) =>
     api<Token>("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),
   me: () => api<User>("/api/auth/me"),
+  updateMe: (body: { full_name: string }) => api<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
   verification: () => api<VerificationStatus>("/api/auth/verification"),
   resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
   confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),

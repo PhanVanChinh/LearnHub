@@ -38,6 +38,7 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
           <span className="font-medium">{user.full_name}</span>
         </div>
         <div className="flex items-center gap-3 text-sm font-medium">
+          <Link href="/account" className="text-slate-700">Tài khoản</Link>
           {user.role === "admin" && <Link href="/admin" className="text-amber-700">Quản trị</Link>}
           <button onClick={logout} className="text-rose-600">Đăng xuất</button>
         </div>
@@ -56,6 +57,7 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
         <div onMouseLeave={() => setOpen(false)} className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3 text-xs text-slate-500">{user.email}</div>
           <Link href="/my-courses" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-slate-50">Khóa học của tôi</Link>
+          <Link href="/account" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-slate-50">Tài khoản</Link>
           {user.role === "admin" && (
             <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50">Quản trị</Link>
           )}

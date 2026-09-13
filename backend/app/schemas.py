@@ -65,6 +65,17 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class UserUpdate(BaseModel):
+    """Người dùng tự sửa hồ sơ. Email không đổi được ở đây (cần luồng xác thực riêng)."""
+
+    full_name: str = Field(min_length=1, max_length=255)
+
+    @field_validator("full_name")
+    @classmethod
+    def _norm_name(cls, v: str) -> str:
+        return _clean_name(v)
+
+
 class ForgotPasswordIn(BaseModel):
     email: EmailStr
     captcha_token: str | None = None
