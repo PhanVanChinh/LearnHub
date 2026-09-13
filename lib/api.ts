@@ -2,7 +2,8 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 const TOKEN_KEY = "learnhub_token";
 const REFRESH_KEY = "learnhub_refresh";
 
-export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; has_password?: boolean; created_at: string };
+export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; has_password?: boolean; created_at: string;
+  last_login_at?: string | null; password_changed_at?: string | null; sessions_revoked_at?: string | null };
 export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
 export type Token = { access_token: string; refresh_token?: string | null; token_type: string; user: User };
 export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number; google_client_id: string };

@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import ProfileSection from "./ProfileSection";
 import PasswordSection from "./PasswordSection";
 import GoogleSection from "./GoogleSection";
+import SecuritySection from "./SecuritySection";
 
 /** Trang /account: khung chung, từng mục là một section riêng để dễ mở rộng. */
 export default function AccountView() {
@@ -33,6 +34,7 @@ export default function AccountView() {
           <ProfileSection />
           <PasswordSection />
           <GoogleSection />
+          <SecuritySection />
         </div>
         <aside className="space-y-6 lg:self-start">
           <AccountSummary />

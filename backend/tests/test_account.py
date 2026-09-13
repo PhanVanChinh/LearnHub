@@ -133,3 +133,22 @@ def test_unlink_blocked_without_password(client, monkeypatch):
         "sub": "google-uid-same", "email": "Same.Mail@example.com", "email_verified": True, "name": "Same"})
     r = client.post("/api/auth/google/link", json={"credential": "fake-google-token-abcdefghij"}, headers=h3)
     assert r.status_code == 200 and r.json()["email_verified"] is True
+
+
+def test_security_timestamps(client):
+    r = client.post("/api/auth/register", json={"email": "sec@example.com", "full_name": "Sec", "password": "MatKhau2024"})
+    u = r.json()["user"]
+    assert u["last_login_at"] is not None  # đăng ký = đăng nhập lần đầu
+    assert u["password_changed_at"] is None and u["sessions_revoked_at"] is None and u["has_password"] is True
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = client.post("/api/auth/logout-all", headers=h)
+    assert r.status_code == 200 and r.json()["user"]["sessions_revoked_at"] is not None
+    assert client.get("/api/auth/me", headers=h).status_code == 401
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+    r = client.post("/api/auth/change-password", json={"current_password": "MatKhau2024", "new_password": "MatKhauMoi2024"}, headers=h)
+    assert r.status_code == 200 and r.json()["user"]["password_changed_at"] is not None
+
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}).json()
+    assert me["last_login_at"] and me["password_changed_at"] and me["sessions_revoked_at"]

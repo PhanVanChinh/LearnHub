@@ -64,6 +64,9 @@ class UserOut(BaseModel):
     has_google: bool = Field(False, description="Đã liên kết tài khoản Google")
     has_password: bool = Field(True, description="False → tài khoản Google chưa đặt mật khẩu")
     created_at: datetime
+    last_login_at: datetime | None = None
+    password_changed_at: datetime | None = None
+    sessions_revoked_at: datetime | None = Field(None, description="Lần cuối bấm 'đăng xuất mọi thiết bị'")
 
 
 class UserUpdate(BaseModel):

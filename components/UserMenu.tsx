@@ -4,11 +4,7 @@ import { useState } from "react";
 import { useAuth } from "./AuthProvider";
 
 export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
-  const { user, loading, logout, logoutAll } = useAuth();
-  const doLogoutAll = async () => {
-    if (!confirm("Đăng xuất khỏi mọi thiết bị khác? Thiết bị này vẫn giữ đăng nhập.")) return;
-    try { await logoutAll(); alert("Đã đăng xuất các thiết bị khác."); } catch (e) { alert((e as Error).message); }
-  };
+  const { user, loading, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   if (loading) return <div className="h-9 w-24 animate-pulse rounded-lg bg-slate-100" />;
@@ -61,7 +57,6 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
           {user.role === "admin" && (
             <Link href="/admin" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-50">Quản trị</Link>
           )}
-          <button onClick={() => { setOpen(false); void doLogoutAll(); }} className="block w-full px-4 py-2.5 text-left text-sm text-slate-600 hover:bg-slate-50">Đăng xuất mọi thiết bị</button>
           <button onClick={() => { logout(); setOpen(false); }} className="block w-full px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50">Đăng xuất</button>
         </div>
       )}

@@ -94,7 +94,8 @@ def register(payload: schemas.UserCreate, request: Request, db: Session = Depend
     captcha.verify_or_raise(payload.captcha_token, client_ip(request))
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Email đã được đăng ký")
-    user = User(email=payload.email, full_name=payload.full_name, hashed_password=hash_password(payload.password))
+    user = User(email=payload.email, full_name=payload.full_name, hashed_password=hash_password(payload.password),
+                last_login_at=datetime.utcnow())
     db.add(user)
     db.commit()
     db.refresh(user)

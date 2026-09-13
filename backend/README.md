@@ -49,7 +49,7 @@ Tài khoản tạo qua Google chưa có mật khẩu (`has_password=false`): đ�
 | POST | /api/auth/refresh | – | Đổi refresh token lấy access token mới |
 | POST | /api/auth/google | – | Đăng nhập/đăng ký bằng Google ID token (Google Identity Services). Email Google đã xác minh → bỏ qua OTP; tự liên kết với tài khoản cùng email |
 | POST | /api/auth/logout-all | Bearer | Thu hồi mọi token trên mọi thiết bị, trả token mới cho thiết bị hiện tại |
-| GET | /api/auth/me | Bearer | Thông tin tài khoản hiện tại (kèm `email_verified`) |
+| GET | /api/auth/me | Bearer | Thông tin tài khoản, kèm `email_verified`, `has_google`, `has_password`, `last_login_at`, `password_changed_at`, `sessions_revoked_at` (trang /account dùng) |
 | GET | /api/auth/verification | Bearer | Trạng thái xác thực email, số giây chờ gửi lại, nhà cung cấp mail |
 | POST | /api/auth/verification/resend | Bearer | Gửi lại mã OTP (cooldown 60s → 429) |
 | POST | /api/auth/verification/confirm | Bearer | Xác nhận mã 6 số (hết hạn 10 phút, tối đa 5 lần sai) |
