@@ -1,13 +1,8 @@
 import Link from "next/link";
 import CourseBrowser from "@/components/CourseBrowser";
+import HeroStats from "@/components/HeroStats";
 import { courses } from "@/data/courses";
 import { site } from "@/lib/site";
-
-const stats = [
-  { v: `${courses.length}+`, l: "Khóa học & tài liệu" },
-  { v: "5.000+", l: "Sinh viên đã học" },
-  { v: "4.9/5", l: "Đánh giá trung bình" },
-];
 
 const features = [
   { icon: "🎯", t: "Bám sát chương trình", d: "Nội dung biên soạn theo đề cương từng môn, ưu tiên phần hay ra thi." },
@@ -34,14 +29,7 @@ export default function Home() {
               <Link href="/courses" className="btn bg-white text-brand-700 hover:bg-brand-50">Xem tất cả khóa học</Link>
               <Link href="/free" className="btn border border-white/40 text-white hover:bg-white/10">Tài liệu miễn phí →</Link>
             </div>
-            <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-white/20 pt-8">
-              {stats.map((s) => (
-                <div key={s.l}>
-                  <dt className="text-2xl font-bold sm:text-3xl">{s.v}</dt>
-                  <dd className="mt-1 text-sm text-white/75">{s.l}</dd>
-                </div>
-              ))}
-            </dl>
+            <HeroStats />
           </div>
           <div className="hidden lg:block">
             <div className="grid grid-cols-2 gap-4">
