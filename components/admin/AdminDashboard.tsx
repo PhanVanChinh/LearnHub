@@ -46,8 +46,8 @@ export default function AdminDashboard() {
   const cards = stats ? [
     { label: "Người dùng", value: stats.users.toLocaleString("vi-VN"), sub: `${stats.admins} admin` },
     { label: "Khóa học", value: stats.courses.toLocaleString("vi-VN"), sub: `${stats.free_courses} miễn phí · ${stats.paid_courses} trả phí` },
-    { label: "Ghi danh", value: stats.enrollments.toLocaleString("vi-VN"), sub: `${stats.total_sold.toLocaleString("vi-VN")} lượt mua` },
-    { label: "Doanh thu (ước tính)", value: formatVND(stats.revenue), sub: `${stats.total_views.toLocaleString("vi-VN")} lượt xem` },
+    { label: "Ghi danh", value: stats.enrollments.toLocaleString("vi-VN"), sub: `${stats.total_views.toLocaleString("vi-VN")} lượt xem toàn site` },
+    { label: "Doanh thu (ước tính)", value: formatVND(stats.revenue), sub: "giá × số ghi danh khóa trả phí" },
   ] : [];
 
   return (

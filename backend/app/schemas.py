@@ -352,4 +352,4 @@ class AdminStats(BaseModel):
     enrollments: int
     total_views: int
     total_sold: int
-    revenue: int = Field(description="Tổng price × sold của các khóa trả phí")
+    revenue: int = Field(description="Ước tính: tổng price × sold (sold = số ghi danh) của các khóa trả phí; chưa có đơn hàng thật")

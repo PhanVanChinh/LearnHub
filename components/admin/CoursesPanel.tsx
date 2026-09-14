@@ -47,7 +47,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
         <table className={tableCls}>
           <thead><tr>
             <th className={thCls}>Khóa học</th><th className={thCls}>Danh mục</th><th className={thCls}>Giá</th>
-            <th className={thCls}>Xem / Mua</th><th className={thCls}>Ghi danh</th><th className={thCls}>Nổi bật</th><th className={thCls}></th>
+            <th className={thCls}>Lượt xem</th><th className={thCls}>Ghi danh</th><th className={thCls}>Nổi bật</th><th className={thCls}></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={7}>Đang tải…</td></tr>}
@@ -65,7 +65,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
                 </td>
                 <td className={tdCls}><div className="flex flex-wrap gap-1">{c.tags.map((t) => <Badge key={t} tone={t === "free" ? "green" : "slate"}>{t}</Badge>)}</div></td>
                 <td className={`${tdCls} whitespace-nowrap font-semibold ${c.price === 0 ? "text-emerald-600" : "text-slate-900"}`}>{formatVND(c.price)}</td>
-                <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{c.views.toLocaleString("vi-VN")} / {c.sold}</td>
+                <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{c.views.toLocaleString("vi-VN")}</td>
                 <td className={`${tdCls} text-slate-600`}>{c.enrollment_count}</td>
                 <td className={tdCls}>
                   <button onClick={() => toggleFeatured(c)} title="Bật/tắt nổi bật" className={`text-lg ${c.featured ? "" : "opacity-25 grayscale"}`}>⭐</button>
