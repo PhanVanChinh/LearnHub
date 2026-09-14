@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .database import Base, engine, migrate
-from .routers import admin, auth, courses
+from .routers import admin, auth, courses, stats
 from .seed import seed_if_empty
 
 
@@ -64,6 +64,7 @@ async def validation_error_handler(_: Request, exc: RequestValidationError):
 app.include_router(auth.router)
 app.include_router(courses.router)
 app.include_router(admin.router)
+app.include_router(stats.router)
 
 
 @app.get("/api/health", tags=["meta"])

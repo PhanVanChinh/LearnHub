@@ -327,6 +327,22 @@ class PaginatedEnrollments(Paginated):
     items: list[AdminEnrollmentOut]
 
 
+# ---- Public stats ----
+class PublicStats(BaseModel):
+    courses: int
+    lessons: int
+    videos: int
+    students: int = Field(description="Số người đã ghi danh ít nhất một khóa")
+    enrollments: int
+    views: int
+
+
+class CourseStats(BaseModel):
+    slug: str
+    views: int
+    students: int = Field(description="Số ghi danh của khóa (miễn phí + đã mua)")
+
+
 class AdminStats(BaseModel):
     users: int
     admins: int

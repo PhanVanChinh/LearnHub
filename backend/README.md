@@ -69,6 +69,8 @@ Tài khoản tạo qua Google chưa có mật khẩu (`has_password=false`): đ�
 | GET | /api/courses/{slug}/progress | Bearer, đã ghi danh | Tiến độ học của tôi trong khóa |
 | PUT | /api/courses/{slug}/lessons/{index}/complete | Bearer, đã ghi danh | Đánh dấu bài đã hoàn thành (idempotent) |
 | DELETE | /api/courses/{slug}/lessons/{index}/complete | Bearer, đã ghi danh | Bỏ đánh dấu hoàn thành |
+| GET | /api/stats | – | Số liệu công khai thật: khóa học, bài học, video, học viên (đã ghi danh ≥1 khóa), ghi danh, lượt xem |
+| GET | /api/stats/courses | – | Mỗi khóa: `views`, `students` (số ghi danh) — thẻ khóa học dùng |
 | GET | /api/health | – | Health check |
 
 ### Admin (yêu cầu role `admin`, tài khoản mặc định `admin@example.com / admin123`)
@@ -110,9 +112,10 @@ app/
   ratelimit.py   Giới hạn tần suất theo IP
   captcha.py     Xác minh Cloudflare Turnstile
   google_auth.py Xác minh Google ID token
-  seed.py        Nạp seed_data.json + admin
-  routers/       auth.py, courses.py, admin.py
-tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py, test_google.py (chạy: python -m pytest)
+  seed.py        Nạp seed_data.json + admin (views/sold luôn bắt đầu từ 0)
+  routers/       auth.py, courses.py, admin.py, stats.py
+reset_counters.py  DB cũ có số giả từ seed → chạy `python reset_counters.py` để views=0, sold=số ghi danh
+tests/           conftest.py, test_api.py, test_admin.py, test_abuse.py, test_google.py, test_account.py, test_stats.py (chạy: python -m pytest)
 ```
 
 ## Đổi sang PostgreSQL

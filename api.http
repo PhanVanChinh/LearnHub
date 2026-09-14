@@ -97,6 +97,12 @@ Content-Type: application/json
 DELETE {{api}}/api/auth/google
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Số liệu công khai toàn site (khóa học, bài học, video, học viên, lượt xem)
+GET {{api}}/api/stats
+
+### Lượt xem + số học viên theo từng khóa (thẻ khóa học dùng)
+GET {{api}}/api/stats/courses
+
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 

@@ -20,8 +20,9 @@ def seed_if_empty() -> None:
     try:
         if db.query(Course).count() == 0 and SEED_FILE.exists():
             for c in json.loads(SEED_FILE.read_text(encoding="utf-8")):
+                # views/sold không lấy từ file seed: bắt đầu từ 0 và tăng theo hành vi thật (xem trang, ghi danh)
                 db.add(Course(**{k: c.get(k, False if k == "featured" else None) for k in (
-                    "slug", "title", "category", "tags", "price", "views", "sold", "color",
+                    "slug", "title", "category", "tags", "price", "color",
                     "emoji", "short", "description", "includes", "lessons", "featured")}))
         if db.query(User).count() == 0:
             db.add(User(email=settings.admin_email.lower(), full_name="Admin", role="admin",
