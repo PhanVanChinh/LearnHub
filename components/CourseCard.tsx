@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Course } from "@/data/courses";
 import { formatVND } from "@/lib/site";
+import CourseStatsLine from "./CourseStatsLine";
 
 const labels: Record<string, string> = {
   "ai-check": "AI Check", pdf: "PDF", quiz: "Trắc nghiệm", free: "Miễn phí", source: "Source code", video: "Video",
@@ -29,10 +30,7 @@ export default function CourseCard({ course, action, progress }: { course: Cours
           <Link href={`/courses/${course.slug}`}>{course.title}</Link>
         </h3>
         <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] text-sm text-slate-600">{course.short}</p>
-        <div className="mt-3 flex items-center gap-4 text-xs text-slate-500">
-          <span>👁 {course.views.toLocaleString("vi-VN")} lượt xem</span>
-          <span>🛍 {course.sold} đã mua</span>
-        </div>
+        <CourseStatsLine slug={course.slug} lessons={course.lessons.length} className="mt-3 text-xs text-slate-500" />
         {progress && (
           <div className="mt-3">
             <div className="flex justify-between text-xs text-slate-500">

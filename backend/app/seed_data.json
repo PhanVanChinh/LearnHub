@@ -7,8 +7,6 @@
       "ai-check"
     ],
     "price": 20000,
-    "views": 8694,
-    "sold": 546,
     "color": "from-violet-500 to-fuchsia-600",
     "emoji": "🤖",
     "short": "Kiểm tra tỷ lệ trùng lặp và nội dung do AI tạo ra, trả kết quả chi tiết theo từng đoạn.",
@@ -51,8 +49,6 @@
       "ai-check"
     ],
     "price": 15000,
-    "views": 9775,
-    "sold": 145,
     "color": "from-indigo-500 to-violet-600",
     "emoji": "🧠",
     "short": "Quét báo cáo thực tập, đối chiếu nguồn và gợi ý chỉnh sửa để giảm tỷ lệ trùng.",
@@ -94,8 +90,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 3289,
-    "sold": 751,
     "color": "from-rose-500 to-orange-500",
     "emoji": "📚",
     "short": "600 câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương.",
@@ -138,8 +132,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 5451,
-    "sold": 849,
     "color": "from-emerald-500 to-teal-600",
     "emoji": "💹",
     "short": "Bộ câu hỏi ôn thi cuối kỳ, bám sát giáo trình mới nhất.",
@@ -181,8 +173,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 2208,
-    "sold": 252,
     "color": "from-red-500 to-rose-600",
     "emoji": "⭐",
     "short": "Câu hỏi luyện tập theo từng chương với chế độ thi thử tính giờ.",
@@ -224,8 +214,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 1856,
-    "sold": 644,
     "color": "from-amber-500 to-orange-600",
     "emoji": "🏛️",
     "short": "Ôn tập nhanh kiến thức trọng tâm bằng câu hỏi trắc nghiệm.",
@@ -267,8 +255,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 9775,
-    "sold": 145,
     "color": "from-sky-500 to-blue-600",
     "emoji": "🌐",
     "short": "Câu hỏi về mô hình OSI, TCP/IP, định tuyến, subnet và bảo mật mạng.",
@@ -310,8 +296,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 9775,
-    "sold": 145,
     "color": "from-cyan-500 to-sky-600",
     "emoji": "🗄️",
     "short": "Đại số quan hệ, chuẩn hoá, SQL và thiết kế ERD qua 400+ câu hỏi.",
@@ -353,8 +337,6 @@
       "pdf"
     ],
     "price": 15000,
-    "views": 4018,
-    "sold": 742,
     "color": "from-blue-500 to-indigo-600",
     "emoji": "📄",
     "short": "Tổng hợp đề thi cuối kỳ các năm gần đây kèm lời giải chi tiết.",
@@ -397,8 +379,6 @@
       "pdf"
     ],
     "price": 15000,
-    "views": 6532,
-    "sold": 448,
     "color": "from-teal-500 to-emerald-600",
     "emoji": "📐",
     "short": "Đề thi + đáp án + ghi chú các dạng bài thường gặp.",
@@ -441,8 +421,6 @@
       "free"
     ],
     "price": 0,
-    "views": 5451,
-    "sold": 849,
     "color": "from-lime-500 to-green-600",
     "emoji": "🎲",
     "short": "Cheatsheet 12 trang gói gọn toàn bộ công thức cần nhớ.",
@@ -485,8 +463,6 @@
       "free"
     ],
     "price": 0,
-    "views": 5099,
-    "sold": 341,
     "color": "from-slate-600 to-slate-800",
     "emoji": "💻",
     "short": "Slide bài giảng và bộ bài tập có lời giải cho người mới bắt đầu.",
@@ -529,8 +505,6 @@
       "source"
     ],
     "price": 20000,
-    "views": 8694,
-    "sold": 546,
     "color": "from-green-500 to-emerald-700",
     "emoji": "🛒",
     "short": "Đồ án môn Phát triển ứng dụng web: giỏ hàng, thanh toán, quản trị.",
@@ -573,8 +547,6 @@
       "source"
     ],
     "price": 20000,
-    "views": 5451,
-    "sold": 849,
     "color": "from-orange-500 to-red-600",
     "emoji": "☕",
     "short": "Đồ án Lập trình hướng đối tượng, có báo cáo Word đi kèm.",
@@ -616,8 +588,6 @@
       "source"
     ],
     "price": 15000,
-    "views": 2937,
-    "sold": 243,
     "color": "from-sky-400 to-indigo-500",
     "emoji": "📱",
     "short": "Ứng dụng di động đa nền tảng, có hướng dẫn chạy từng bước.",
@@ -659,8 +629,6 @@
       "video"
     ],
     "price": 20000,
-    "views": 5451,
-    "sold": 849,
     "color": "from-yellow-400 to-amber-600",
     "emoji": "🐍",
     "short": "Khoá video dành cho người mới, học xong làm được mini project.",
@@ -703,8 +671,6 @@
       "video"
     ],
     "price": 20000,
-    "views": 1127,
-    "sold": 653,
     "color": "from-fuchsia-500 to-pink-600",
     "emoji": "🧩",
     "short": "Giải thích trực quan bằng hình vẽ, code mẫu C++ và Python.",
@@ -747,8 +713,6 @@
       "free"
     ],
     "price": 0,
-    "views": 3289,
-    "sold": 751,
     "color": "from-brand-500 to-brand-700",
     "emoji": "📈",
     "short": "Hồi quy, phân loại, đánh giá mô hình — thực hành với scikit-learn.",
@@ -797,8 +761,6 @@
       "free"
     ],
     "price": 0,
-    "views": 5451,
-    "sold": 849,
     "color": "from-purple-500 to-indigo-600",
     "emoji": "⚛️",
     "short": "Hệ thống kiến thức theo chương, có bài tập tự luyện.",
@@ -841,8 +803,6 @@
       "free"
     ],
     "price": 0,
-    "views": 1856,
-    "sold": 644,
     "color": "from-blue-400 to-cyan-500",
     "emoji": "🇬🇧",
     "short": "1.000 câu ngữ pháp, từ vựng và đọc hiểu theo format đề thi.",
@@ -885,8 +845,6 @@
       "free"
     ],
     "price": 0,
-    "views": 7965,
-    "sold": 555,
     "color": "from-stone-500 to-stone-700",
     "emoji": "📝",
     "short": "Template Word + checklist trình bày, trích dẫn tài liệu tham khảo.",
@@ -928,8 +886,6 @@
       "quiz"
     ],
     "price": 15000,
-    "views": 1856,
-    "sold": 644,
     "color": "from-zinc-600 to-zinc-800",
     "emoji": "🖥️",
     "short": "Tiến trình, luồng, lập lịch CPU, quản lý bộ nhớ và deadlock.",

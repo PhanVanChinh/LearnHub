@@ -111,6 +111,15 @@ export const coursesApi = {
   lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
 };
 
+// ---- Public stats ----
+export type PublicStats = { courses: number; lessons: number; videos: number; students: number; enrollments: number; views: number };
+export type CourseStats = { slug: string; views: number; students: number };
+
+export const statsApi = {
+  summary: () => api<PublicStats>("/api/stats"),
+  courses: () => api<CourseStats[]>("/api/stats/courses"),
+};
+
 // ---- Admin ----
 export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null };
 export type AdminCourse = {

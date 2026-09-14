@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import CourseCard from "@/components/CourseCard";
+import CourseStatsLine from "@/components/CourseStatsLine";
 import EnrollButton from "@/components/EnrollButton";
 import LessonList from "@/components/LessonList";
 import { youtubeThumb } from "@/components/VideoPlayer";
@@ -35,8 +36,7 @@ export default function CourseDetail({ params }: { params: { slug: string } }) {
               <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{course.title}</h1>
               <p className="mt-3 max-w-2xl text-white/85">{course.short}</p>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/80">
-                <span>👁 {course.views.toLocaleString("vi-VN")} lượt xem</span>
-                <span>🛍 {course.sold} đã mua</span>
+                <CourseStatsLine slug={course.slug} lessons={course.lessons.length} />
                 <span>⭐ 4.9 (120 đánh giá)</span>
               </div>
             </div>

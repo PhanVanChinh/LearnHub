@@ -23,8 +23,7 @@ export type Course = {
   category: Category;
   tags: Category[];
   price: number; // 0 = free
-  views: number;
-  sold: number;
+  // Lượt xem / số học viên KHÔNG nằm ở đây: lấy từ API /api/stats/courses (số thật, tăng theo hành vi người dùng)
   color: string; // gradient cho thumbnail
   emoji: string;
   short: string;
@@ -49,8 +48,6 @@ const base = (
   category,
   tags: [category, ...(price === 0 ? (["free"] as Category[]) : [])],
   price,
-  views: 800 + Math.floor((slug.length * 7919) % 9000),
-  sold: 20 + Math.floor((slug.length * 1301) % 900),
   color,
   emoji,
   short,
