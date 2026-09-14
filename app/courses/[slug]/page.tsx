@@ -7,6 +7,7 @@ import LessonList from "@/components/LessonList";
 import { youtubeThumb } from "@/components/VideoPlayer";
 import { courses, getCourse } from "@/data/courses";
 import { formatVND } from "@/lib/site";
+import { totalDuration } from "@/lib/duration";
 
 export function generateStaticParams() {
   return courses.map((c) => ({ slug: c.slug }));
@@ -37,7 +38,7 @@ export default function CourseDetail({ params }: { params: { slug: string } }) {
               <p className="mt-3 max-w-2xl text-white/85">{course.short}</p>
               <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/80">
                 <CourseStatsLine slug={course.slug} lessons={course.lessons.length} />
-                <span>⭐ 4.9 (120 đánh giá)</span>
+                <span>⏱ {totalDuration(course.lessons)}</span>
               </div>
             </div>
           </div>
