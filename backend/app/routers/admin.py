@@ -2,14 +2,21 @@
 
 Mọi endpoint yêu cầu Bearer token của tài khoản có role = "admin" (xem security.require_admin).
 """
+import logging
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
 from .. import schemas
+from ..config import settings
 from ..database import get_db
 from ..models import Course, Enrollment, User
+from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
+
+log = logging.getLogger("learnhub.admin")
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -78,6 +85,51 @@ def _normalize_tags(data: dict) -> None:
     elif price and price > 0:
         tags = [t for t in tags if t != "free"]
     data["tags"] = tags
+
+
+# ---------- xuất bản (rebuild frontend tĩnh) ----------
+PUBLISH_EVENT = "publish-courses"
+
+
+def _publish_status() -> schemas.PublishStatus:
+    repo = settings.github_repo.strip()
+    return schemas.PublishStatus(
+        configured=bool(settings.github_token and repo and "/" in repo), repo=repo,
+        actions_url=f"https://github.com/{repo}/actions/workflows/{settings.github_workflow_file}",
+        site_url=settings.frontend_url,
+    )
+
+
+@router.get("/publish", response_model=schemas.PublishStatus)
+def publish_status():
+    """Frontend đọc để biết nút Xuất bản có dùng được không."""
+    return _publish_status()
+
+
+@router.post("/publish", response_model=schemas.PublishResult, dependencies=[rate_limit("publish", 3, 600)])
+def publish():
+    """Website công khai được build tĩnh từ DB. Sau khi sửa khóa học, bấm Xuất bản để GitHub Actions build lại
+    (repository_dispatch). Người dùng đã mở trang vẫn thấy bản mới qua API; nút này để bản tĩnh (SEO, khóa mới) đuổi kịp."""
+    st = _publish_status()
+    if not st.configured:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Chưa cấu hình GITHUB_TOKEN / GITHUB_REPO trên backend")
+    try:
+        r = httpx.post(
+            f"https://api.github.com/repos/{st.repo}/dispatches",
+            headers={"Authorization": f"Bearer {settings.github_token}", "Accept": "application/vnd.github+json",
+                     "X-GitHub-Api-Version": "2022-11-28"},
+            json={"event_type": PUBLISH_EVENT, "client_payload": {"source": "learnhub-admin"}},
+            timeout=10,
+        )
+    except httpx.HTTPError as e:
+        log.error("GitHub dispatch lỗi mạng: %s", e)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Không kết nối được GitHub, thử lại sau")
+    if r.status_code != 204:
+        log.error("GitHub dispatch %s: %s", r.status_code, r.text[:300])
+        msg = {401: "GitHub token không hợp lệ hoặc hết hạn", 403: "Token thiếu quyền Contents: write trên repo",
+               404: "Không tìm thấy repo (kiểm tra GITHUB_REPO và quyền token)"}.get(r.status_code, f"GitHub trả {r.status_code}")
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, msg)
+    return schemas.PublishResult(**st.model_dump(), detail="Đã kích hoạt build. Site tĩnh cập nhật sau khoảng 2 phút.")
 
 
 # ---------- stats ----------

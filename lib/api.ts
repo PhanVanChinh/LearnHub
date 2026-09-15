@@ -144,6 +144,8 @@ export type AdminStats = {
   enrollments: number; total_views: number; total_sold: number; revenue: number;
 };
 export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
+export type PublishStatus = { configured: boolean; repo: string; actions_url: string; site_url: string };
+export type PublishResult = PublishStatus & { detail: string };
 
 const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
   const s = new URLSearchParams();
@@ -155,6 +157,8 @@ const json = (method: string, body: unknown): RequestInit => ({ method, body: JS
 
 export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
+  publishStatus: () => api<PublishStatus>("/api/admin/publish"),
+  publish: () => api<PublishResult>("/api/admin/publish", { method: "POST" }),
 
   courses: (params: { q?: string; category?: string; featured?: boolean; limit?: number; offset?: number } = {}) =>
     api<Paginated<AdminCourse>>(`/api/admin/courses${qs(params)}`),

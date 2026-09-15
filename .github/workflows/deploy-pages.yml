@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  # Nút "Xuất bản" trong admin (POST /api/admin/publish) gửi repository_dispatch → build lại từ DB hiện tại
+  repository_dispatch:
+    types: [publish-courses]
 
 permissions:
   contents: read
@@ -35,7 +38,8 @@ jobs:
           STATIC_EXPORT: "1"
           # Repo tên LearnHub → site ở https://phanvanchinh.github.io/LearnHub/
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          # Đổi thành URL backend công khai khi bạn deploy FastAPI (Render, Railway, ...)
+          # URL backend công khai (Render, Railway, ...). Lúc build, lib/courses.server.ts gọi /api/courses/export
+          # để lấy khóa học từ DB; không gọi được → dùng data/courses.ts, build vẫn thành công.
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}

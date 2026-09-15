@@ -352,6 +352,17 @@ class CourseStats(BaseModel):
     students: int = Field(description="Số ghi danh của khóa (miễn phí + đã mua)")
 
 
+class PublishStatus(BaseModel):
+    configured: bool = Field(description="Đã có GITHUB_TOKEN + GITHUB_REPO")
+    repo: str
+    actions_url: str = Field(description="Trang Actions để theo dõi build")
+    site_url: str = Field(description="URL frontend sau khi build xong")
+
+
+class PublishResult(PublishStatus):
+    detail: str
+
+
 class AdminStats(BaseModel):
     users: int
     admins: int

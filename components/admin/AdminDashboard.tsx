@@ -6,6 +6,7 @@ import PageHeader from "@/components/PageHeader";
 import { adminApi, AdminStats } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import CoursesPanel from "./CoursesPanel";
+import PublishButton from "./PublishButton";
 import EnrollmentsPanel from "./EnrollmentsPanel";
 import UsersPanel from "./UsersPanel";
 
@@ -65,6 +66,8 @@ export default function AdminDashboard() {
             </div>
           ))}
         </div>
+
+        <div className="mt-6"><PublishButton /></div>
 
         <div className="mt-8 flex gap-1 border-b border-slate-200">
           {TABS.map((t) => (

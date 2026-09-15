@@ -150,3 +150,40 @@ def test_lesson_video_field(client, admin):
     bad = {**body, "slug": "khoa-video-sai", "lessons": [{"title": "x", "duration": "1:00", "video": "https://youtu.be/aircAruvnKk"}]}
     assert client.post("/api/admin/courses", json=bad, headers=admin).status_code == 422
     client.delete(f"/api/admin/courses/{r.json()['id']}", headers=admin)
+
+
+def test_publish(client, admin, user, monkeypatch):
+    from app.config import settings
+    from app.routers import admin as admin_router
+
+    headers, _ = user
+    assert client.post("/api/admin/publish", headers=headers).status_code == 403  # không phải admin
+
+    # chưa cấu hình → status báo configured=False, POST 503
+    monkeypatch.setattr(settings, "github_token", "")
+    st = client.get("/api/admin/publish", headers=admin).json()
+    assert st["configured"] is False and st["repo"] and "actions" in st["actions_url"]
+    assert client.post("/api/admin/publish", headers=admin).status_code == 503
+
+    # cấu hình + GitHub trả 204 → 200, đúng repo và event
+    monkeypatch.setattr(settings, "github_token", "ghp_test")
+    monkeypatch.setattr(settings, "github_repo", "Owner/Repo")
+    calls = []
+
+    class Resp:
+        def __init__(self, code, text=""): self.status_code, self.text = code, text
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls.append((url, headers, json)); return Resp(204)
+    monkeypatch.setattr(admin_router.httpx, "post", fake_post)
+    r = client.post("/api/admin/publish", headers=admin)
+    assert r.status_code == 200, r.text
+    assert r.json()["configured"] is True and "build" in r.json()["detail"].lower()
+    url, h, body = calls[0]
+    assert url == "https://api.github.com/repos/Owner/Repo/dispatches"
+    assert h["Authorization"] == "Bearer ghp_test" and body["event_type"] == "publish-courses"
+
+    # GitHub từ chối → 502 kèm gợi ý
+    monkeypatch.setattr(admin_router.httpx, "post", lambda *a, **k: Resp(403, "forbidden"))
+    r = client.post("/api/admin/publish", headers=admin)
+    assert r.status_code == 502 and "quyền" in r.json()["detail"]

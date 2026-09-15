@@ -115,6 +115,14 @@ Authorization: Bearer {{login.response.body.access_token}}
 
 ### ===== ADMIN (cần đăng nhập bằng admin@example.com ở khối "Đăng nhập" phía trên) =====
 
+### Trạng thái nút Xuất bản (đã cấu hình GitHub token chưa)
+GET {{api}}/api/admin/publish
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Xuất bản: build lại website tĩnh từ DB (GitHub Actions)
+POST {{api}}/api/admin/publish
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Thống kê
 GET {{api}}/api/admin/stats
 Authorization: Bearer {{login.response.body.access_token}}

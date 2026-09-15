@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     login_lockout_minutes: int = 15
     turnstile_secret_key: str = ""  # bỏ trống → không yêu cầu captcha
 
+    # Nút "Xuất bản" trong admin: kích hoạt GitHub Actions build lại frontend tĩnh (repository_dispatch).
+    # Token fine-grained có quyền Contents: Read and write trên repo. Bỏ trống → nút báo chưa cấu hình.
+    github_token: str = ""
+    github_repo: str = "PhanVanChinh/LearnHub"  # owner/repo
+    github_workflow_file: str = "deploy-pages.yml"
+
     # Đăng nhập Google (Google Identity Services): chỉ cần Client ID, bỏ trống → ẩn nút Google
     google_client_id: str = ""
 
