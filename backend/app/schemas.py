@@ -191,6 +191,15 @@ class CourseDetail(CourseOut):
     enrolled: bool = False
 
 
+class CoursePublic(CourseOut):
+    """Bản công khai đầy đủ của một khóa (không cần đăng nhập): video chỉ giữ ở bài free.
+    Frontend dùng lúc build tĩnh (generateStaticParams + nội dung) nên tuyệt đối không lộ video bài trả phí."""
+
+    description: str
+    includes: list[str]
+    lessons: list[LessonOut]
+
+
 class LessonVideo(BaseModel):
     index: int
     title: str

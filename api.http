@@ -103,6 +103,9 @@ GET {{api}}/api/stats
 ### Lượt xem + số học viên theo từng khóa (thẻ khóa học dùng)
 GET {{api}}/api/stats/courses
 
+### Toàn bộ khóa học dạng công khai (CI build tĩnh dùng; video bài trả phí bị ẩn)
+GET {{api}}/api/courses/export
+
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 

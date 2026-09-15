@@ -48,6 +48,22 @@ def categories(db: Session = Depends(get_db)):
     return [schemas.CategoryCount(key=k, label=v, count=counts[k]) for k, v in CATEGORY_LABELS.items()]
 
 
+@router.get("/export", response_model=list[schemas.CoursePublic])
+def export_courses(db: Session = Depends(get_db)):
+    """Toàn bộ khóa học ở dạng công khai, không phân trang. Frontend gọi lúc build tĩnh (CI) và khi cần đồng bộ danh sách.
+    Video bài không free bị ẩn (chỉ còn has_video) — dữ liệu này nằm trong bundle công khai."""
+    return [_course_public(c) for c in db.query(Course).order_by(Course.id).all()]
+
+
+def _course_public(course: Course) -> schemas.CoursePublic:
+    out = schemas.CoursePublic.model_validate(course)
+    for lesson in out.lessons:
+        lesson.has_video = bool(lesson.video)
+        if not lesson.free:
+            lesson.video = None
+    return out
+
+
 @router.get("/{slug}", response_model=schemas.CourseDetail)
 def get_course(slug: str, db: Session = Depends(get_db), user: User | None = Depends(get_current_user_optional)):
     course = db.query(Course).filter(Course.slug == slug).first()

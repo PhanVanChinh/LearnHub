@@ -264,3 +264,24 @@ def test_forgot_reset_password_flow(client):
     r = client.post("/api/auth/login", json={"email": email, "password": "MoiHopLe2025"})
     assert r.status_code == 200 and r.json()["user"]["email_verified"] is True
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {old_token}"}).status_code == 401
+
+
+def test_export_courses_public(client):
+    """Export cho build tĩnh: đủ mọi khóa, đủ mô tả/bài học, nhưng không lộ video bài trả phí."""
+    rows = client.get("/api/courses/export").json()
+    assert len(rows) == len(client.get("/api/courses", params={"limit": 200}).json())
+    ml = next(c for c in rows if c["slug"] == "video-nhap-mon-machine-learning")
+    assert ml["description"] and ml["includes"] and len(ml["lessons"]) >= 5
+    paid = [l for l in ml["lessons"] if not l["free"]]
+    assert any(l["has_video"] for l in paid), "seed phải có video ở bài trả phí để test có ý nghĩa"
+    assert all(l["video"] is None for l in paid)
+    assert any(l["free"] and l["video"] for l in ml["lessons"])  # bài xem thử vẫn có video
+    # không có bất kỳ ID video trả phí nào trong toàn bộ export
+    import json
+    from app.database import SessionLocal
+    from app.models import Course
+    db = SessionLocal()
+    paid_ids = {l["video"] for c in db.query(Course).all() for l in c.lessons if l.get("video") and not l.get("free")}
+    db.close()
+    dump = json.dumps(rows)
+    assert paid_ids and not any(v in dump for v in paid_ids)
