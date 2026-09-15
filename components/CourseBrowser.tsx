@@ -2,10 +2,12 @@
 import { useMemo, useState } from "react";
 import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
+import { useLiveCourses } from "@/lib/liveCourse";
 
 export default function CourseBrowser({
-  courses, initial = "all", pageSize = 8, showSearch = true,
+  courses: staticCourses, initial = "all", pageSize = 8, showSearch = true,
 }: { courses: Course[]; initial?: Category | "all"; pageSize?: number; showSearch?: boolean }) {
+  const courses = useLiveCourses(staticCourses); // bản tĩnh hiện ngay, API cập nhật giá/tên sau
   const [cat, setCat] = useState<Category | "all">(initial);
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(pageSize);

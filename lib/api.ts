@@ -94,7 +94,12 @@ export const authApi = {
 };
 
 export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };
-export type CourseDetail = { slug: string; title: string; price: number; enrolled: boolean; lessons: LessonOut[] };
+export type CourseDetail = {
+  id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
+  color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[];
+  lessons: LessonOut[]; enrolled: boolean;
+};
+export type CoursePublic = Omit<CourseDetail, "enrolled">;
 export type LessonVideo = { index: number; title: string; video: string | null };
 
 export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null };
@@ -103,6 +108,8 @@ export type EnrolledCourse = { slug: string; title: string; progress: Progress }
 export const coursesApi = {
   enroll: (slug: string) => api<CourseDetail>(`/api/courses/${slug}/enroll`, { method: "POST" }),
   detail: (slug: string) => api<CourseDetail>(`/api/courses/${slug}`),
+  /** Toàn bộ khóa học dạng công khai (bản mới nhất từ DB) — dùng để làm mới danh sách đã build tĩnh */
+  exportAll: () => api<CoursePublic[]>("/api/courses/export"),
   mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),
   progress: (slug: string) => api<Progress>(`/api/courses/${slug}/progress`),
   complete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "PUT" }),

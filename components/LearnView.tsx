@@ -4,27 +4,30 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Course } from "@/data/courses";
 import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
+import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
-export default function LearnView({ course }: { course: Course }) {
+export default function LearnView({ course: staticCourse }: { course: Course }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
-  const lessons = course.lessons;
-
-  const fromUrl = Number(params.get("lesson"));
-  const index = Number.isInteger(fromUrl) && fromUrl >= 0 && fromUrl < lessons.length ? fromUrl : 0;
-  const lesson = lessons[index];
 
   // Chi tiết từ API: biết bài nào có video (has_video) và đã ghi danh chưa
   const [detail, setDetail] = useState<CourseDetail | null>(null);
   useEffect(() => {
     if (loading) return;
-    coursesApi.detail(course.slug).then(setDetail).catch(() => setDetail(null));
-  }, [course.slug, user, loading]);
+    fetchCourseDetail(staticCourse.slug, true).then(setDetail).catch(() => setDetail(null));
+  }, [staticCourse.slug, user, loading]);
+  // Bài học / tiêu đề mới nhất từ DB (admin sửa là thấy), bản tĩnh chỉ là khởi đầu
+  const course = detail ? mergeCourse(staticCourse, detail) : staticCourse;
+  const lessons = course.lessons;
+
+  const fromUrl = Number(params.get("lesson"));
+  const index = Number.isInteger(fromUrl) && fromUrl >= 0 && fromUrl < lessons.length ? fromUrl : 0;
+  const lesson = lessons[index];
 
   // Video của bài đang xem. Bài free lấy từ dữ liệu tĩnh; bài khác phải hỏi API (kiểm tra ghi danh ở server).
   const [state, setState] = useState<{ access: Access; video: string | null }>({ access: "checking", video: null });

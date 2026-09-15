@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { coursesApi } from "@/lib/api";
+import { fetchCourseDetail } from "@/lib/liveCourse";
 
 export default function EnrollButton({ slug, price }: { slug: string; price: number }) {
   const { user, loading } = useAuth();
@@ -12,7 +13,7 @@ export default function EnrollButton({ slug, price }: { slug: string; price: num
 
   useEffect(() => {
     if (!user) return setEnrolled(false);
-    coursesApi.detail(slug).then((d) => setEnrolled(d.enrolled)).catch(() => {});
+    fetchCourseDetail(slug, true).then((d) => setEnrolled(d.enrolled)).catch(() => {}); // fresh: enrolled phụ thuộc user
   }, [user, slug]);
 
   if (price > 0) {

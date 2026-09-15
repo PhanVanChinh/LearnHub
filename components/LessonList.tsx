@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Lesson } from "@/data/courses";
-import { coursesApi } from "@/lib/api";
+import { fetchCourseDetail } from "@/lib/liveCourse";
 import VideoPlayer from "./VideoPlayer";
 
 /** Danh sách bài học trên trang chi tiết. Bài `free` có video thì bấm để xem thử ngay tại đây. */
@@ -13,7 +13,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
   // Video bài trả phí không nằm trong dữ liệu tĩnh → hỏi API cờ has_video để hiện icon đúng
   const [hasVideoApi, setHasVideoApi] = useState<boolean[] | null>(null);
   useEffect(() => {
-    coursesApi.detail(slug).then((d) => setHasVideoApi(d.lessons.map((l) => l.has_video))).catch(() => {});
+    fetchCourseDetail(slug).then((d) => setHasVideoApi(d.lessons.map((l) => l.has_video))).catch(() => {});
   }, [slug]);
   const hasVideo = (i: number) => hasVideoApi?.[i] ?? !!lessons[i].video;
   const videoCount = lessons.filter((_, i) => hasVideo(i)).length;
