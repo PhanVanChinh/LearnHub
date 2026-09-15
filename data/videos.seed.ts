@@ -1,4 +1,5 @@
-// Video của các bài KHÔNG miễn phí — CHỈ dùng cho script seed backend (scripts/export-courses.mts).
+// Video của các bài KHÔNG miễn phí — CHỈ dùng cho script seed lần đầu (scripts/export-courses.mts).
+// Sau khi DB đã có dữ liệu, thêm/sửa video qua trang admin (form bài học nhận link YouTube).
 // KHÔNG import file này vào app/ hay components/: nội dung ở đó được xuất tĩnh lên GitHub Pages,
 // ai cũng đọc được. Video bài trả phí chỉ nằm trong DB và được trả qua API sau khi kiểm tra ghi danh.
 // Cấu trúc: slug → { chỉ_số_bài: youtubeId }

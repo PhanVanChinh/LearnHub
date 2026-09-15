@@ -1,5 +1,6 @@
-// Xuất data/courses.ts -> backend/app/seed_data.json
+// Tạo dữ liệu SEED LẦN ĐẦU cho backend: data/courses.ts (+ video bài trả phí) -> backend/app/seed_data.json
 //   node --experimental-strip-types scripts/export-courses.mts
+// Chỉ dùng khi dựng DB mới. DB đang chạy là nguồn sự thật, không bị ghi đè bởi file seed.
 import { courses } from "../data/courses.ts";
 import { paidLessonVideos } from "../data/videos.seed.ts";
 import { writeFileSync } from "node:fs";

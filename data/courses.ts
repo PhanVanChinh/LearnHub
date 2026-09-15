@@ -1,3 +1,9 @@
+// VAI TRÒ CỦA FILE NÀY (sau khi chuyển sang một nguồn sự thật):
+//  1. Kiểu dữ liệu (Course, Lesson, Category) và danh mục dùng chung cho frontend.
+//  2. Dữ liệu SEED lần đầu cho backend (scripts/export-courses.mts → backend/app/seed_data.json).
+//  3. Dự phòng lúc build tĩnh khi không gọi được API (lib/courses.server.ts).
+// Nguồn sự thật là DB (admin sửa qua /admin). Sửa file này KHÔNG làm đổi website đang chạy;
+// muốn đổi nội dung khóa học hãy dùng trang admin rồi bấm "Xuất bản".
 export type Category = "ai-check" | "pdf" | "quiz" | "free" | "source" | "video";
 
 export const categories: { key: Category | "all"; label: string }[] = [
@@ -294,4 +300,4 @@ export const courses: Course[] = [
   ),
 ];
 
-export const getCourse = (slug: string) => courses.find((c) => c.slug === slug);
+
