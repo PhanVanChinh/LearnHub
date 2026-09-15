@@ -1,7 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import AiCheckDemo from "@/components/AiCheckDemo";
 import CourseCard from "@/components/CourseCard";
-import { courses } from "@/data/courses";
+import { getCourses } from "@/lib/courses.server";
 
 export const metadata = { title: "AI Check đạo văn" };
 
@@ -11,7 +11,8 @@ const steps = [
   ["3", "Nhận báo cáo", "Tỷ lệ trùng theo đoạn, nguồn trùng và gợi ý chỉnh sửa."],
 ];
 
-export default function AiCheckPage() {
+export default async function AiCheckPage() {
+  const courses = await getCourses();
   return (
     <>
       <PageHeader eyebrow="Công cụ" title="AI Check đạo văn & nội dung AI" subtitle="Kiểm tra khoá luận, tiểu luận, báo cáo thực tập trước khi nộp — nhanh, chi tiết, bảo mật." />

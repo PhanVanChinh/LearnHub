@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { Category, categories, countBy, Course } from "@/data/courses";
+import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
 
 export default function CourseBrowser({
@@ -18,6 +18,7 @@ export default function CourseBrowser({
   }, [courses, cat, q]);
 
   const visible = filtered.slice(0, limit);
+  const countBy = (key: Category | "all") => (key === "all" ? courses.length : courses.filter((c) => c.tags.includes(key)).length);
 
   return (
     <div>

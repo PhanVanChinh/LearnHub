@@ -5,22 +5,23 @@ import CourseStatsLine from "@/components/CourseStatsLine";
 import EnrollButton from "@/components/EnrollButton";
 import LessonList from "@/components/LessonList";
 import { youtubeThumb } from "@/components/VideoPlayer";
-import { courses, getCourse } from "@/data/courses";
+import { getCourse, getCourses } from "@/lib/courses.server";
 import { formatVND } from "@/lib/site";
 import { totalDuration } from "@/lib/duration";
 
-export function generateStaticParams() {
-  return courses.map((c) => ({ slug: c.slug }));
+export async function generateStaticParams() {
+  return (await getCourses()).map((c) => ({ slug: c.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: string } }) {
-  const c = getCourse(params.slug);
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+  const c = await getCourse(params.slug);
   return { title: c?.title ?? "Không tìm thấy" };
 }
 
-export default function CourseDetail({ params }: { params: { slug: string } }) {
-  const course = getCourse(params.slug);
+export default async function CourseDetail({ params }: { params: { slug: string } }) {
+  const course = await getCourse(params.slug);
   if (!course) notFound();
+  const courses = await getCourses();
   const previewVideo = course.lessons.find((l) => l.free && l.video)?.video;
   const related = courses.filter((c) => c.category === course.category && c.slug !== course.slug).slice(0, 4);
 

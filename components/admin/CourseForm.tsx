@@ -114,7 +114,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         </Field>
         <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link">
           <textarea className="input font-mono text-xs" rows={5} value={f.lessons} onChange={(e) => set("lessons", e.target.value)}
-            placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/IHZwWFHWa-w"} />
+            placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/aBcDeFgHiJk"} />
         </Field>
       </div>
       <label className="flex items-center gap-2 text-sm">

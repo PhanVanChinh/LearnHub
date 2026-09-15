@@ -1,19 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { courses } from "@/data/courses";
 import { PublicStats, statsApi } from "@/lib/api";
 
 const n = (v: number) => v.toLocaleString("vi-VN");
 
-// Số tĩnh luôn đúng vì tính từ chính dữ liệu khóa học được build vào trang
-const STATIC = {
-  courses: courses.length,
-  lessons: courses.reduce((s, c) => s + c.lessons.length, 0),
-  free: courses.filter((c) => c.price === 0).length,
-};
+type Props = { courses: number; lessons: number; free: number };
 
-/** 3 ô số liệu trên hero. Không dùng con số cố định: tĩnh từ data, hoặc thật từ /api/stats. */
-export default function HeroStats() {
+/** 3 ô số liệu trên hero. Không dùng con số cố định: số lúc build từ trang cha (props), hoặc thật từ /api/stats. */
+export default function HeroStats(STATIC: Props) {
   const [stats, setStats] = useState<PublicStats | null | undefined>(undefined);
   useEffect(() => {
     statsApi.summary().then(setStats).catch(() => setStats(null));

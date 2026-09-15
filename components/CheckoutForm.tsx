@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getCourse } from "@/data/courses";
+import type { Course } from "@/data/courses";
 import { formatVND } from "@/lib/site";
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ courses }: { courses: Course[] }) {
   const slug = useSearchParams().get("course");
-  const course = slug ? getCourse(slug) : undefined;
+  const course = slug ? courses.find((c) => c.slug === slug) : undefined;
   return (
     <div className="container-x grid gap-8 py-12 lg:grid-cols-3">
       <div className="lg:col-span-2">

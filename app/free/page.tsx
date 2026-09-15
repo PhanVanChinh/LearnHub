@@ -1,10 +1,11 @@
 import CourseBrowser from "@/components/CourseBrowser";
 import PageHeader from "@/components/PageHeader";
-import { courses } from "@/data/courses";
+import { getCourses } from "@/lib/courses.server";
 
 export const metadata = { title: "Tài liệu miễn phí" };
 
-export default function FreePage() {
+export default async function FreePage() {
+  const courses = await getCourses();
   const free = courses.filter((c) => c.price === 0);
   return (
     <>

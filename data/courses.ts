@@ -15,6 +15,7 @@ export type Lesson = {
   duration: string;
   free?: boolean; // xem thử không cần ghi danh
   video?: string; // YouTube ID (11 ký tự). CHỈ đặt cho bài free — video bài trả phí nằm ở data/videos.seed.ts
+  hasVideo?: boolean; // từ API: bài (kể cả trả phí) có video hay không, không kèm ID
 };
 
 export type Course = {
@@ -294,5 +295,3 @@ export const courses: Course[] = [
 ];
 
 export const getCourse = (slug: string) => courses.find((c) => c.slug === slug);
-export const countBy = (key: Category | "all") =>
-  key === "all" ? courses.length : courses.filter((c) => c.tags.includes(key)).length;

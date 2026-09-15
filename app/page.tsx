@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
-import { courses } from "@/data/courses";
+import { getCourses } from "@/lib/courses.server";
 import { site } from "@/lib/site";
 
 const features = [
@@ -10,7 +10,8 @@ const features = [
   { icon: "🔒", t: "Thanh toán an toàn", d: "Nhận tài liệu ngay sau khi thanh toán, hoàn tiền nếu không đúng mô tả." },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const courses = await getCourses();
   return (
     <>
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-indigo-700 text-white">
@@ -29,7 +30,7 @@ export default function Home() {
               <Link href="/courses" className="btn bg-white text-brand-700 hover:bg-brand-50">Xem tất cả khóa học</Link>
               <Link href="/free" className="btn border border-white/40 text-white hover:bg-white/10">Tài liệu miễn phí →</Link>
             </div>
-            <HeroStats />
+            <HeroStats courses={courses.length} lessons={courses.reduce((s, c) => s + c.lessons.length, 0)} free={courses.filter((c) => c.price === 0).length} />
           </div>
           <div className="hidden lg:block">
             <div className="grid grid-cols-2 gap-4">
