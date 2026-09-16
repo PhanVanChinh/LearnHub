@@ -16,10 +16,13 @@ export default function EnrollButton({ slug, price }: { slug: string; price: num
     fetchCourseDetail(slug, true).then((d) => setEnrolled(d.enrolled)).catch(() => {}); // fresh: enrolled phụ thuộc user
   }, [user, slug]);
 
+  if (loading) return <div className="mt-4 h-12 animate-pulse rounded-lg bg-slate-100" />;
   if (price > 0) {
+    if (enrolled) {
+      return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;
+    }
     return <Link href={`/checkout?course=${slug}`} className="btn-primary mt-4 w-full !py-3">Mua ngay</Link>;
   }
-  if (loading) return <div className="mt-4 h-12 animate-pulse rounded-lg bg-slate-100" />;
   if (!user) {
     return <Link href={`/login?next=/courses/${slug}`} className="btn-primary mt-4 w-full !py-3">Đăng nhập để học miễn phí</Link>;
   }

@@ -118,6 +118,22 @@ export const coursesApi = {
   lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
 };
 
+// ---- Orders ----
+export type OrderStatus = "pending" | "paid" | "cancelled" | "expired";
+export type PaymentInfo = { bank_name: string; bank_bin: string; account_number: string; account_name: string; amount: number; content: string; qr_url: string | null };
+export type Order = {
+  id: number; code: string; status: OrderStatus; amount: number; payment_method: string; created_at: string; expires_at: string; paid_at: string | null;
+  course_slug: string; course_title: string; course_emoji: string; course_color: string;
+};
+export type OrderDetail = Order & { payment: PaymentInfo | null };
+
+export const ordersApi = {
+  create: (course_slug: string) => api<OrderDetail>("/api/orders", { method: "POST", body: JSON.stringify({ course_slug }) }),
+  mine: () => api<Order[]>("/api/orders/me"),
+  get: (code: string) => api<OrderDetail>(`/api/orders/${encodeURIComponent(code)}`),
+  cancel: (code: string) => api<OrderDetail>(`/api/orders/${encodeURIComponent(code)}/cancel`, { method: "POST" }),
+};
+
 // ---- Public stats ----
 export type PublicStats = { courses: number; lessons: number; videos: number; students: number; enrollments: number; views: number };
 export type CourseStats = { slug: string; views: number; students: number };
