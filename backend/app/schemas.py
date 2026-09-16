@@ -390,6 +390,22 @@ class CourseStats(BaseModel):
     students: int = Field(description="Số ghi danh của khóa (miễn phí + đã mua)")
 
 
+class AdminOrderOut(OrderOut):
+    user_id: int
+    user_email: str = ""
+    user_name: str = ""
+    note: str | None = None
+    confirmed_by_email: str | None = None
+
+
+class PaginatedOrders(Paginated):
+    items: list[AdminOrderOut]
+
+
+class OrderAction(BaseModel):
+    note: str | None = Field(None, max_length=500, description="Ghi chú nội bộ, vd mã giao dịch ngân hàng")
+
+
 class PublishStatus(BaseModel):
     configured: bool = Field(description="Đã có GITHUB_TOKEN + GITHUB_REPO")
     repo: str
@@ -410,4 +426,6 @@ class AdminStats(BaseModel):
     enrollments: int
     total_views: int
     total_sold: int
-    revenue: int = Field(description="Ước tính: tổng price × sold (sold = số ghi danh) của các khóa trả phí; chưa có đơn hàng thật")
+    revenue: int = Field(description="Doanh thu thật: tổng amount của đơn đã thanh toán")
+    paid_orders: int = 0
+    pending_orders: int = 0

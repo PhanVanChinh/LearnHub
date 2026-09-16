@@ -3,6 +3,7 @@
 Mọi endpoint yêu cầu Bearer token của tài khoản có role = "admin" (xem security.require_admin).
 """
 import logging
+from datetime import datetime
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,9 +13,10 @@ from sqlalchemy.orm import Session
 from .. import schemas
 from ..config import settings
 from ..database import get_db
-from ..models import Course, Enrollment, User
+from ..models import Course, Enrollment, Order, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
+from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, order_out
 
 log = logging.getLogger("learnhub.admin")
 
@@ -142,12 +144,78 @@ def stats(db: Session = Depends(get_db)):
     enrollments = db.query(func.count(Enrollment.id)).scalar() or 0
     total_views = db.query(func.coalesce(func.sum(Course.views), 0)).scalar() or 0
     total_sold = db.query(func.coalesce(func.sum(Course.sold), 0)).scalar() or 0
-    revenue = db.query(func.coalesce(func.sum(Course.price * Course.sold), 0)).scalar() or 0
+    revenue = db.query(func.coalesce(func.sum(Order.amount), 0)).filter(Order.status == PAID).scalar() or 0
+    paid_orders = db.query(func.count(Order.id)).filter(Order.status == PAID).scalar() or 0
+    expire_stale(db, db.query(Order).filter(Order.status == PENDING).all())
+    pending_orders = db.query(func.count(Order.id)).filter(Order.status == PENDING).scalar() or 0
     return schemas.AdminStats(
         users=users, admins=admins, courses=courses, free_courses=free_courses,
         paid_courses=courses - free_courses, enrollments=enrollments,
         total_views=total_views, total_sold=total_sold, revenue=revenue,
+        paid_orders=paid_orders, pending_orders=pending_orders,
     )
+
+
+# ---------- orders ----------
+def _admin_order_out(o: Order) -> schemas.AdminOrderOut:
+    base = order_out(o).model_dump()
+    return schemas.AdminOrderOut(**base, user_id=o.user_id, user_email=o.user.email, user_name=o.user.full_name, note=o.note,
+                                 confirmed_by_email=o.confirmed_by.email if o.confirmed_by else None)
+
+
+def _get_order(db: Session, order_id: int) -> Order:
+    o = db.get(Order, order_id)
+    if not o:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy đơn hàng")
+    expire_stale(db, [o])
+    return o
+
+
+@router.get("/orders", response_model=schemas.PaginatedOrders)
+def list_orders(
+    status_: str | None = Query(None, alias="status", description="pending | paid | cancelled | expired"),
+    q: str | None = Query(None, description="Tìm theo mã đơn hoặc email người mua"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    expire_stale(db, db.query(Order).filter(Order.status == PENDING).all())
+    query = db.query(Order).join(Order.user)
+    if status_:
+        query = query.filter(Order.status == status_)
+    if q:
+        kw = f"%{q.strip()}%"
+        query = query.filter(or_(Order.code.ilike(kw), User.email.ilike(kw)))
+    total = query.count()
+    # đơn chờ lên đầu, rồi mới nhất trước
+    items = query.order_by((Order.status == PENDING).desc(), Order.id.desc()).offset(offset).limit(limit).all()
+    return schemas.PaginatedOrders(total=total, limit=limit, offset=offset, items=[_admin_order_out(o) for o in items])
+
+
+@router.post("/orders/{order_id}/confirm", response_model=schemas.AdminOrderOut)
+def confirm_order(order_id: int, payload: schemas.OrderAction, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Đã nhận tiền → đơn paid + cấp quyền học (tạo Enrollment). Cho phép duyệt cả đơn đã hết hạn (tiền về muộn)."""
+    o = _get_order(db, order_id)
+    if o.status not in (PENDING, EXPIRED):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Đơn đang ở trạng thái '{o.status}', không duyệt được")
+    o.status, o.paid_at, o.confirmed_by_id, o.note = PAID, datetime.utcnow(), admin.id, payload.note or o.note
+    if not db.query(Enrollment).filter_by(user_id=o.user_id, course_id=o.course_id).first():
+        db.add(Enrollment(user_id=o.user_id, course_id=o.course_id))
+        o.course.sold += 1
+    db.commit()
+    db.refresh(o)
+    return _admin_order_out(o)
+
+
+@router.post("/orders/{order_id}/cancel", response_model=schemas.AdminOrderOut)
+def admin_cancel_order(order_id: int, payload: schemas.OrderAction, db: Session = Depends(get_db)):
+    o = _get_order(db, order_id)
+    if o.status != PENDING:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ huỷ được đơn đang chờ thanh toán")
+    o.status, o.note = CANCELLED, payload.note or o.note
+    db.commit()
+    db.refresh(o)
+    return _admin_order_out(o)
 
 
 # ---------- courses ----------

@@ -157,8 +157,9 @@ export type AdminEnrollment = {
 };
 export type AdminStats = {
   users: number; admins: number; courses: number; free_courses: number; paid_courses: number;
-  enrollments: number; total_views: number; total_sold: number; revenue: number;
+  enrollments: number; total_views: number; total_sold: number; revenue: number; paid_orders: number; pending_orders: number;
 };
+export type AdminOrder = Order & { user_id: number; user_email: string; user_name: string; note: string | null; confirmed_by_email: string | null };
 export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
 export type PublishStatus = { configured: boolean; repo: string; actions_url: string; site_url: string };
 export type PublishResult = PublishStatus & { detail: string };
@@ -197,4 +198,9 @@ export const adminApi = {
   createEnrollment: (body: { user_id: number; course_id: number }) =>
     api<AdminEnrollment>("/api/admin/enrollments", json("POST", body)),
   deleteEnrollment: (id: number) => api<void>(`/api/admin/enrollments/${id}`, { method: "DELETE" }),
+
+  orders: (params: { status?: OrderStatus | ""; q?: string; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminOrder>>(`/api/admin/orders${qs(params)}`),
+  confirmOrder: (id: number, note?: string) => api<AdminOrder>(`/api/admin/orders/${id}/confirm`, json("POST", { note: note || null })),
+  cancelOrder: (id: number, note?: string) => api<AdminOrder>(`/api/admin/orders/${id}/cancel`, json("POST", { note: note || null })),
 };

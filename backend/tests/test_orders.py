@@ -75,3 +75,61 @@ def test_order_expires(client):
     assert r.json()["status"] == "expired" and r.json()["payment"] is None
     # đơn hết hạn → tạo lại được đơn mới
     assert client.post("/api/orders", json={"course_slug": _paid_course(client)["slug"]}, headers=h).json()["code"] != code
+
+
+def _admin(client):
+    r = client.post("/api/auth/login", json={"email": "admin@example.com", "password": "admin123"})
+    return {"Authorization": f"Bearer {r.json()['access_token']}"}
+
+
+def test_admin_confirms_order_and_grants_access(client):
+    admin = _admin(client)
+    h = _buyer(client, "buyer5@example.com")
+    paid = _paid_course(client)
+    o = client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h).json()
+    before = client.get("/api/admin/stats", headers=admin).json()
+
+    # người thường không vào được admin
+    assert client.get("/api/admin/orders", headers=h).status_code == 403
+    lst = client.get("/api/admin/orders", params={"status": "pending", "q": "buyer5"}, headers=admin).json()
+    assert lst["total"] == 1 and lst["items"][0]["code"] == o["code"] and lst["items"][0]["user_email"] == "buyer5@example.com"
+
+    # chưa duyệt → chưa có quyền
+    assert client.get(f"/api/courses/{paid['slug']}", headers=h).json()["enrolled"] is False
+    r = client.post(f"/api/admin/orders/{o['id']}/confirm", json={"note": "CK 16/09 mã GD 999"}, headers=admin)
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["status"] == "paid" and d["paid_at"] and d["note"] == "CK 16/09 mã GD 999" and d["confirmed_by_email"] == "admin@example.com"
+    # người mua có quyền học, đơn hiện paid, xem được video bài trả phí
+    assert client.get(f"/api/courses/{paid['slug']}", headers=h).json()["enrolled"] is True
+    assert client.get(f"/api/orders/{o['code']}", headers=h).json()["status"] == "paid"
+    assert paid["slug"] in [c["slug"] for c in client.get("/api/courses/me/enrolled", headers=h).json()]
+    # duyệt lần 2 → 400; huỷ đơn đã paid → 400
+    assert client.post(f"/api/admin/orders/{o['id']}/confirm", json={}, headers=admin).status_code == 400
+    assert client.post(f"/api/admin/orders/{o['id']}/cancel", json={}, headers=admin).status_code == 400
+    # doanh thu thật tăng đúng số tiền đơn
+    after = client.get("/api/admin/stats", headers=admin).json()
+    assert after["revenue"] == before["revenue"] + paid["price"] and after["paid_orders"] == before["paid_orders"] + 1
+    # đã có quyền → không tạo đơn mới cho khóa đó
+    assert client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h).status_code == 409
+
+
+def test_admin_cancel_and_confirm_expired(client):
+    admin = _admin(client)
+    h = _buyer(client, "buyer6@example.com")
+    paid = _paid_course(client)
+    o = client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h).json()
+    r = client.post(f"/api/admin/orders/{o['id']}/cancel", json={"note": "khách đổi ý"}, headers=admin)
+    assert r.status_code == 200 and r.json()["status"] == "cancelled" and r.json()["note"] == "khách đổi ý"
+    assert client.get(f"/api/orders/{o['code']}", headers=h).json()["status"] == "cancelled"
+
+    # đơn hết hạn nhưng tiền về muộn → vẫn duyệt được
+    o2 = client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h).json()
+    db = SessionLocal()
+    db.query(Order).filter_by(code=o2["code"]).update({"expires_at": datetime.utcnow() - timedelta(hours=1)})
+    db.commit(); db.close()
+    assert client.get("/api/admin/orders", params={"status": "expired"}, headers=admin).json()["total"] >= 1
+    r = client.post(f"/api/admin/orders/{o2['id']}/confirm", json={}, headers=admin)
+    assert r.status_code == 200 and r.json()["status"] == "paid"
+    assert client.get(f"/api/courses/{paid['slug']}", headers=h).json()["enrolled"] is True
+    assert client.post("/api/admin/orders/99999/confirm", json={}, headers=admin).status_code == 404

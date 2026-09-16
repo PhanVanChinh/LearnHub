@@ -8,9 +8,11 @@ import { formatVND } from "@/lib/site";
 import CoursesPanel from "./CoursesPanel";
 import PublishButton from "./PublishButton";
 import EnrollmentsPanel from "./EnrollmentsPanel";
+import OrdersPanel from "./OrdersPanel";
 import UsersPanel from "./UsersPanel";
 
 const TABS = [
+  { key: "orders", label: "Đơn hàng" },
   { key: "courses", label: "Khóa học" },
   { key: "users", label: "Người dùng" },
   { key: "enrollments", label: "Ghi danh" },
@@ -20,7 +22,7 @@ type Tab = (typeof TABS)[number]["key"];
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("courses");
+  const [tab, setTab] = useState<Tab>("orders");
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   const isAdmin = !!user && user.role === "admin";
@@ -48,7 +50,7 @@ export default function AdminDashboard() {
     { label: "Người dùng", value: stats.users.toLocaleString("vi-VN"), sub: `${stats.admins} admin` },
     { label: "Khóa học", value: stats.courses.toLocaleString("vi-VN"), sub: `${stats.free_courses} miễn phí · ${stats.paid_courses} trả phí` },
     { label: "Ghi danh", value: stats.enrollments.toLocaleString("vi-VN"), sub: `${stats.total_views.toLocaleString("vi-VN")} lượt xem toàn site` },
-    { label: "Doanh thu (ước tính)", value: formatVND(stats.revenue), sub: "giá × số ghi danh khóa trả phí" },
+    { label: "Doanh thu", value: formatVND(stats.revenue), sub: `${stats.paid_orders} đơn đã thanh toán · ${stats.pending_orders} đơn chờ` },
   ] : [];
 
   return (
@@ -74,11 +76,15 @@ export default function AdminDashboard() {
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${tab === t.key ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
               {t.label}
+              {t.key === "orders" && !!stats?.pending_orders && (
+                <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">{stats.pending_orders}</span>
+              )}
             </button>
           ))}
         </div>
 
         <div className="mt-6">
+          {tab === "orders" && <OrdersPanel onChanged={loadStats} />}
           {tab === "courses" && <CoursesPanel onChanged={loadStats} />}
           {tab === "users" && <UsersPanel onChanged={loadStats} />}
           {tab === "enrollments" && <EnrollmentsPanel onChanged={loadStats} />}

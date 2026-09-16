@@ -145,6 +145,24 @@ Authorization: Bearer {{login.response.body.access_token}}
 POST {{api}}/api/admin/publish
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Đơn hàng (admin): lọc theo trạng thái, tìm theo mã / email
+GET {{api}}/api/admin/orders?status=pending
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Xác nhận đã nhận tiền → cấp quyền học
+POST {{api}}/api/admin/orders/1/confirm
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "note": "CK Vietcombank 16/09 14:02, mã GD 123456" }
+
+### Admin huỷ đơn chờ
+POST {{api}}/api/admin/orders/1/cancel
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "note": "Khách đổi ý" }
+
 ### Thống kê
 GET {{api}}/api/admin/stats
 Authorization: Bearer {{login.response.body.access_token}}
