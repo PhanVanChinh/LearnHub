@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .database import Base, engine, migrate
-from .routers import admin, auth, courses, stats
+from .routers import admin, auth, courses, orders, stats
 from .seed import seed_if_empty
 
 
@@ -65,6 +65,7 @@ app.include_router(auth.router)
 app.include_router(courses.router)
 app.include_router(admin.router)
 app.include_router(stats.router)
+app.include_router(orders.router)
 
 
 @app.get("/api/health", tags=["meta"])

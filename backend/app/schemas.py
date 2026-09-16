@@ -336,6 +336,44 @@ class PaginatedEnrollments(Paginated):
     items: list[AdminEnrollmentOut]
 
 
+# ---- Orders ----
+class OrderCreate(BaseModel):
+    course_slug: str = Field(min_length=1, max_length=255)
+
+
+class PaymentInfo(BaseModel):
+    """Hướng dẫn chuyển khoản cho một đơn. `qr_url` None khi backend chưa cấu hình ngân hàng."""
+
+    bank_name: str
+    bank_bin: str
+    account_number: str
+    account_name: str
+    amount: int
+    content: str = Field(description="Nội dung chuyển khoản = mã đơn")
+    qr_url: str | None = None
+
+
+class OrderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    code: str
+    status: str
+    amount: int
+    payment_method: str
+    created_at: datetime
+    expires_at: datetime
+    paid_at: datetime | None = None
+    course_slug: str = ""
+    course_title: str = ""
+    course_emoji: str = ""
+    course_color: str = ""
+
+
+class OrderDetail(OrderOut):
+    payment: PaymentInfo | None = Field(None, description="Chỉ có khi đơn đang chờ thanh toán")
+
+
 # ---- Public stats ----
 class PublicStats(BaseModel):
     courses: int

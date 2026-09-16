@@ -49,6 +49,7 @@ class User(Base):
         marks = [d for d in (self.password_changed_at, self.sessions_revoked_at) if d]
         return max(marks) if marks else None
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -72,6 +73,7 @@ class Course(Base):
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):
@@ -87,6 +89,30 @@ class Enrollment(Base):
 
     user: Mapped[User] = relationship(back_populates="enrollments")
     course: Mapped[Course] = relationship(back_populates="enrollments")
+
+
+class Order(Base):
+    """Đơn mua khóa học trả phí. Luồng: pending (chờ chuyển khoản) → paid (admin xác nhận, tự tạo Enrollment)
+    hoặc cancelled (người mua / admin huỷ) / expired (quá hạn chưa thanh toán)."""
+
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(20), unique=True, index=True)  # mã đơn = nội dung chuyển khoản, vd LH7K3M9P
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    amount: Mapped[int] = mapped_column(Integer)  # giá tại thời điểm đặt (VND)
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)  # pending | paid | cancelled | expired
+    payment_method: Mapped[str] = mapped_column(String(30), default="bank_transfer")
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)  # ghi chú của admin khi duyệt/huỷ
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    confirmed_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+
+    user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="orders")
+    course: Mapped[Course] = relationship(back_populates="orders")
+    confirmed_by: Mapped[User | None] = relationship(foreign_keys=[confirmed_by_id])
 
 
 class LessonProgress(Base):

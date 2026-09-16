@@ -113,6 +113,28 @@ GET {{api}}/api/courses?category=quiz
 POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
 Authorization: Bearer {{login.response.body.access_token}}
 
+### ===== ĐƠN HÀNG (khóa trả phí, chuyển khoản QR) =====
+
+### Tạo đơn (đã có đơn chờ cùng khóa → trả lại đơn đó)
+# @name order
+POST {{api}}/api/orders
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "course_slug": "ai-check-dao-van-khoa-luan" }
+
+### Đơn hàng của tôi
+GET {{api}}/api/orders/me
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Chi tiết đơn kèm QR / hướng dẫn chuyển khoản (frontend poll để biết đã duyệt chưa)
+GET {{api}}/api/orders/{{order.response.body.code}}
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Huỷ đơn đang chờ
+POST {{api}}/api/orders/{{order.response.body.code}}/cancel
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### ===== ADMIN (cần đăng nhập bằng admin@example.com ở khối "Đăng nhập" phía trên) =====
 
 ### Trạng thái nút Xuất bản (đã cấu hình GitHub token chưa)

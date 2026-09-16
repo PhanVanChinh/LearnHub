@@ -32,6 +32,13 @@ class Settings(BaseSettings):
     login_lockout_minutes: int = 15
     turnstile_secret_key: str = ""  # bỏ trống → không yêu cầu captcha
 
+    # Thanh toán chuyển khoản / QR (VietQR). Người mua chuyển đúng số tiền với nội dung = mã đơn; admin xác nhận trong /admin.
+    bank_bin: str = ""  # mã ngân hàng cho VietQR, vd 970436 (Vietcombank), 970422 (MB), 970407 (Techcombank). Trống → không hiện QR
+    bank_account_number: str = ""
+    bank_account_name: str = ""
+    bank_name: str = ""  # tên hiển thị, vd "Vietcombank"
+    order_expire_hours: int = 24  # đơn chờ quá hạn → expired
+
     # Nút "Xuất bản" trong admin: kích hoạt GitHub Actions build lại frontend tĩnh (repository_dispatch).
     # Token fine-grained có quyền Contents: Read and write trên repo. Bỏ trống → nút báo chưa cấu hình.
     github_token: str = ""
