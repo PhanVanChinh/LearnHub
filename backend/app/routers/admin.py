@@ -16,7 +16,7 @@ from ..database import get_db
 from ..models import Course, Enrollment, Order, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
-from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, order_out
+from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
 
 log = logging.getLogger("learnhub.admin")
 
@@ -204,6 +204,7 @@ def confirm_order(order_id: int, payload: schemas.OrderAction, db: Session = Dep
         o.course.sold += 1
     db.commit()
     db.refresh(o)
+    notify_paid(o)
     return _admin_order_out(o)
 
 

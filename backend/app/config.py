@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     bank_account_name: str = ""
     bank_name: str = ""  # tên hiển thị, vd "Vietcombank"
     order_expire_hours: int = 24  # đơn chờ quá hạn → expired
+    order_notify_email: str = ""  # nhận mail "có đơn mới" để đi đối soát; trống → dùng ADMIN_EMAIL
 
     # Nút "Xuất bản" trong admin: kích hoạt GitHub Actions build lại frontend tĩnh (repository_dispatch).
     # Token fine-grained có quyền Contents: Read and write trên repo. Bỏ trống → nút báo chưa cấu hình.

@@ -10,7 +10,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from .. import schemas
+from .. import mailer, schemas
 from ..config import settings
 from ..database import get_db
 from ..models import Course, Enrollment, Order, User
@@ -63,6 +63,26 @@ def order_out(order: Order, detail: bool = False) -> schemas.OrderOut:
     return out
 
 
+def notify_created(order: Order) -> None:
+    """Mail hướng dẫn cho người mua + mail báo admin. Lỗi gửi mail không làm hỏng việc tạo đơn."""
+    pay = payment_info(order)
+    bank = pay.model_dump() if pay else {}
+    fe = settings.frontend_url.rstrip("/")
+    subject, html = mailer.order_created_email(order.user.full_name, order.code, order.course.title, order.amount, bank,
+                                               settings.order_expire_hours, f"{fe}/checkout?order={order.code}")
+    mailer.send_email(order.user.email, subject, html)
+    to_admin = (settings.order_notify_email or settings.admin_email).strip().lower()
+    if to_admin and to_admin != order.user.email:
+        subject, html = mailer.order_admin_notify_email(order.code, order.user.email, order.course.title, order.amount, f"{fe}/admin")
+        mailer.send_email(to_admin, subject, html)
+
+
+def notify_paid(order: Order) -> None:
+    fe = settings.frontend_url.rstrip("/")
+    subject, html = mailer.order_paid_email(order.user.full_name, order.code, order.course.title, f"{fe}/learn/{order.course.slug}")
+    mailer.send_email(order.user.email, subject, html)
+
+
 def _my_order(db: Session, user: User, code: str) -> Order:
     order = db.query(Order).filter_by(code=code.upper(), user_id=user.id).first()
     if not order:
@@ -91,6 +111,7 @@ def create_order(payload: schemas.OrderCreate, db: Session = Depends(get_db), us
     db.add(order)
     db.commit()
     db.refresh(order)
+    notify_created(order)
     return order_out(order, detail=True)
 
 

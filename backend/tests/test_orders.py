@@ -133,3 +133,33 @@ def test_admin_cancel_and_confirm_expired(client):
     assert r.status_code == 200 and r.json()["status"] == "paid"
     assert client.get(f"/api/courses/{paid['slug']}", headers=h).json()["enrolled"] is True
     assert client.post("/api/admin/orders/99999/confirm", json={}, headers=admin).status_code == 404
+
+
+def test_order_emails(client, monkeypatch):
+    from app import mailer
+
+    monkeypatch.setattr(settings, "bank_bin", "970436")
+    monkeypatch.setattr(settings, "bank_account_number", "0123456789")
+    monkeypatch.setattr(settings, "bank_name", "Vietcombank")
+    monkeypatch.setattr(settings, "order_notify_email", "kiemtra@example.com")
+    admin = _admin(client)
+    h = _buyer(client, "buyer7@example.com")
+    paid = _paid_course(client)
+    n = len(mailer.console_outbox)
+
+    o = client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h).json()
+    new = mailer.console_outbox[n:]
+    assert [m["to"] for m in new] == ["buyer7@example.com", "kiemtra@example.com"]
+    buyer_mail, admin_mail = new
+    assert o["code"] in buyer_mail["subject"] and o["code"] in buyer_mail["html"] and "0123456789" in buyer_mail["html"]
+    assert f"/checkout?order={o['code']}" in buyer_mail["html"]
+    assert o["code"] in admin_mail["subject"] and "buyer7@example.com" in admin_mail["html"] and "/admin" in admin_mail["html"]
+
+    # tạo lại → trả đơn cũ, KHÔNG gửi mail lần nữa
+    client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h)
+    assert len(mailer.console_outbox) == n + 2
+
+    # duyệt → mail "đã xác nhận" kèm link vào học
+    client.post(f"/api/admin/orders/{o['id']}/confirm", json={}, headers=admin)
+    m = mailer.console_outbox[-1]
+    assert m["to"] == "buyer7@example.com" and "xác nhận" in m["subject"].lower() and f"/learn/{paid['slug']}" in m["html"]

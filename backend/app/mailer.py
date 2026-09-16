@@ -76,3 +76,46 @@ def reset_password_email(name: str, link: str, minutes: int) -> tuple[str, str]:
 <p style="text-align:center;margin:24px 0"><a href="{link}" style="background:#1d4ed8;color:#fff;text-decoration:none;font-weight:700;padding:12px 24px;border-radius:10px;display:inline-block">Đặt lại mật khẩu</a></p>
 <p style="color:#64748b;font-size:13px">Hoặc dán link này vào trình duyệt:<br><a href="{link}" style="color:#1d4ed8;word-break:break-all">{link}</a></p>"""
     return subject, _layout("Đặt lại mật khẩu", body)
+
+
+def _btn(link: str, label: str) -> str:
+    return (f'<p style="text-align:center;margin:24px 0"><a href="{link}" style="background:#1d4ed8;color:#fff;text-decoration:none;'
+            f'font-weight:700;padding:12px 24px;border-radius:10px;display:inline-block">{label}</a></p>')
+
+
+def _vnd(n: int) -> str:
+    return f"{n:,}".replace(",", ".") + "đ"
+
+
+def order_created_email(name: str, code: str, course_title: str, amount: int, bank: dict, expire_hours: int, link: str) -> tuple[str, str]:
+    """Gửi người mua ngay khi tạo đơn: hướng dẫn chuyển khoản + link mở lại đơn."""
+    subject = f"Đơn {code} — hướng dẫn thanh toán {course_title}"
+    rows = "".join(f'<tr><td style="padding:6px 0;color:#64748b">{k}</td><td style="padding:6px 0;text-align:right;font-weight:600">{v}</td></tr>'
+                   for k, v in [("Ngân hàng", bank.get("bank_name")), ("Số tài khoản", bank.get("account_number")),
+                                ("Chủ tài khoản", bank.get("account_name")), ("Số tiền", _vnd(amount)),
+                                ("Nội dung chuyển khoản", f'<span style="font-family:monospace;color:#1d4ed8">{code}</span>')] if v)
+    body = f"""<p>Chào {name},</p>
+<p>Bạn vừa đặt mua <b>{course_title}</b>. Để hoàn tất, hãy chuyển khoản theo thông tin dưới đây trong <b>{expire_hours} giờ</b>.</p>
+<table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:12px;padding:8px 16px;margin:16px 0">{rows}</table>
+<p style="color:#b45309;font-size:13px">Nhập đúng nội dung <b>{code}</b> để chúng tôi đối soát nhanh. Khóa học tự mở khi được xác nhận (thường dưới 30 phút trong giờ làm việc).</p>
+{_btn(link, "Mở đơn hàng & mã QR")}"""
+    return subject, _layout("Hướng dẫn thanh toán", body)
+
+
+def order_paid_email(name: str, code: str, course_title: str, learn_link: str) -> tuple[str, str]:
+    """Gửi người mua khi admin xác nhận đã nhận tiền."""
+    subject = f"Đã xác nhận thanh toán — {course_title}"
+    body = f"""<p>Chào {name},</p>
+<p>Đơn <b>{code}</b> đã được xác nhận. Khóa học <b>{course_title}</b> đã mở trong tài khoản của bạn, học được trên mọi thiết bị.</p>
+{_btn(learn_link, "Vào học ngay")}
+<p style="color:#64748b;font-size:13px">Cảm ơn bạn đã tin tưởng LearnHub. Cần hỗ trợ, hãy trả lời email này.</p>"""
+    return subject, _layout("Thanh toán thành công 🎉", body)
+
+
+def order_admin_notify_email(code: str, buyer_email: str, course_title: str, amount: int, admin_link: str) -> tuple[str, str]:
+    """Báo admin có đơn mới cần đối soát."""
+    subject = f"[LearnHub] Đơn mới {code} — {_vnd(amount)}"
+    body = f"""<p><b>{buyer_email}</b> vừa đặt <b>{course_title}</b>, số tiền <b>{_vnd(amount)}</b>.</p>
+<p>Kiểm tra giao dịch có nội dung <span style="font-family:monospace;color:#1d4ed8">{code}</span> trong app ngân hàng rồi bấm "Đã nhận tiền".</p>
+{_btn(admin_link, "Mở trang duyệt đơn")}"""
+    return subject, _layout("Có đơn hàng mới", body)
