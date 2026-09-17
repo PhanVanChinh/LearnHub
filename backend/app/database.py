@@ -47,3 +47,5 @@ def migrate() -> None:
                 conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_google_sub ON users (google_sub)"))
             if "avatar_url" not in cols:
                 conn.execute(text("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500)"))
+            if "deleted_at" not in cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN deleted_at DATETIME"))

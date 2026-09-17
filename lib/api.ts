@@ -83,6 +83,8 @@ export const authApi = {
   updateMe: (body: { full_name: string }) => api<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
   /** Toàn bộ dữ liệu cá nhân dạng JSON (quyền truy cập dữ liệu) */
   exportData: () => api<Record<string, unknown>>("/api/account/export"),
+  deleteAccount: (confirm: string, password?: string) =>
+    api<void>("/api/account", { method: "DELETE", body: JSON.stringify({ confirm, password: password || null }) }),
   verification: () => api<VerificationStatus>("/api/auth/verification"),
   resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
   confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),

@@ -24,6 +24,7 @@ class User(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     google_sub: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)  # id tài khoản Google đã liên kết
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # đã tự xoá: hồ sơ ẩn danh, giữ đơn hàng
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="user", cascade="all, delete-orphan")

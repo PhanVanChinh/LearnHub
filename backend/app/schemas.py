@@ -358,6 +358,7 @@ class AdminCourseOut(CourseOut):
 class AdminUserOut(UserOut):
     is_active: bool
     enrollment_count: int = 0
+    deleted_at: datetime | None = None
 
 
 class AdminUserCreate(UserCreate):
@@ -417,6 +418,12 @@ class PaginatedUsers(Paginated):
 
 class PaginatedEnrollments(Paginated):
     items: list[AdminEnrollmentOut]
+
+
+# ---- Account (dữ liệu cá nhân) ----
+class AccountDeleteIn(BaseModel):
+    confirm: str = Field(description="Gõ đúng email tài khoản để xác nhận")
+    password: str | None = Field(None, description="Bắt buộc nếu tài khoản có mật khẩu")
 
 
 # ---- AI Check ----

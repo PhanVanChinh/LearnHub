@@ -9,6 +9,8 @@ from .config import settings
 from .database import Base, engine, migrate
 from .routers import account, admin, ai_check, auth, contact, courses, orders, stats
 from .seed import seed_if_empty
+from .routers.account import purge_expired_tokens
+from .database import SessionLocal
 
 
 @asynccontextmanager
@@ -16,6 +18,11 @@ async def lifespan(app: FastAPI):
     migrate()
     Base.metadata.create_all(bind=engine)
     seed_if_empty()
+    db = SessionLocal()
+    try:
+        purge_expired_tokens(db)
+    finally:
+        db.close()
     yield
 
 

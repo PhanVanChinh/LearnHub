@@ -69,6 +69,13 @@ Authorization: Bearer {{login.response.body.access_token}}
 GET {{api}}/api/account/export
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Xoá tài khoản của tôi (gõ đúng email; có mật khẩu thì kèm mật khẩu) → 204
+DELETE {{api}}/api/account
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "confirm": "user@example.com", "password": "MatKhau2024" }
+
 ### Sửa họ tên
 PATCH {{api}}/api/auth/me
 Authorization: Bearer {{login.response.body.access_token}}
