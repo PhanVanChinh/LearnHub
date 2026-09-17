@@ -200,6 +200,10 @@ export type AdminContact = {
 };
 export type AdminOrder = Order & { user_id: number; user_email: string; user_name: string; note: string | null; confirmed_by_email: string | null };
 export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
+export type AuditLog = {
+  id: number; actor_id: number | null; actor_email: string | null; action: string; target_type: string; target_id: string | null;
+  summary: string; detail: Record<string, unknown> | null; ip: string | null; created_at: string;
+};
 export type PublishStatus = { configured: boolean; repo: string; actions_url: string; site_url: string };
 export type PublishResult = PublishStatus & { detail: string };
 
@@ -214,6 +218,8 @@ const json = (method: string, body: unknown): RequestInit => ({ method, body: JS
 export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
   publishStatus: () => api<PublishStatus>("/api/admin/publish"),
+  audit: (params: { action?: string; actor?: string; q?: string; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AuditLog>>(`/api/admin/audit${qs(params)}`),
   publish: () => api<PublishResult>("/api/admin/publish", { method: "POST" }),
 
   courses: (params: { q?: string; category?: string; featured?: boolean; limit?: number; offset?: number } = {}) =>
