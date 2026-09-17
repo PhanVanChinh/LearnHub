@@ -50,6 +50,7 @@ class User(Base):
         return max(marks) if marks else None
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
+    quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -74,6 +75,7 @@ class Course(Base):
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):
@@ -113,6 +115,25 @@ class Order(Base):
     user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="orders")
     course: Mapped[Course] = relationship(back_populates="orders")
     confirmed_by: Mapped[User | None] = relationship(foreign_keys=[confirmed_by_id])
+
+
+class QuizAttempt(Base):
+    """Một lần nộp bài trắc nghiệm của người dùng (chỉ lưu khi đã đăng nhập)."""
+
+    __tablename__ = "quiz_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    lesson_index: Mapped[int] = mapped_column(Integer)
+    score: Mapped[int] = mapped_column(Integer)
+    total: Mapped[int] = mapped_column(Integer)
+    percent: Mapped[int] = mapped_column(Integer)
+    passed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="quiz_attempts")
+    course: Mapped[Course] = relationship(back_populates="quiz_attempts")
 
 
 class ContactMessage(Base):

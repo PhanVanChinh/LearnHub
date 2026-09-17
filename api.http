@@ -109,6 +109,21 @@ GET {{api}}/api/courses/export
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 
+### Đề trắc nghiệm của bài (không kèm đáp án)
+GET {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Nộp bài (đúng số câu; null = bỏ trống) → điểm, đáp án, giải thích
+POST {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz/submit
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "answers": [0, 2, null] }
+
+### Lịch sử làm bài của tôi
+GET {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz/attempts
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Ghi danh khóa miễn phí
 POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
 Authorization: Bearer {{login.response.body.access_token}}

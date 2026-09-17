@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas
 from ..database import get_db
-from ..models import Course, Enrollment, LessonProgress, User
+from ..models import Course, Enrollment, LessonProgress, QuizAttempt, User
 from ..security import get_current_user, get_current_user_optional, require_verified
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
@@ -55,10 +55,19 @@ def export_courses(db: Session = Depends(get_db)):
     return [_course_public(c) for c in db.query(Course).order_by(Course.id).all()]
 
 
+def _mark_lesson_flags(out_lessons: list[schemas.LessonOut], raw_lessons: list[dict]) -> None:
+    """Điền has_video / has_quiz / quiz_count từ dữ liệu gốc (LessonOut không chứa quiz nên không lộ đáp án)."""
+    for lesson, raw in zip(out_lessons, raw_lessons or []):
+        lesson.has_video = bool(lesson.video)
+        quiz = raw.get("quiz") or {}
+        lesson.quiz_count = len(quiz.get("questions") or [])
+        lesson.has_quiz = lesson.quiz_count > 0
+
+
 def _course_public(course: Course) -> schemas.CoursePublic:
     out = schemas.CoursePublic.model_validate(course)
+    _mark_lesson_flags(out.lessons, course.lessons)
     for lesson in out.lessons:
-        lesson.has_video = bool(lesson.video)
         if not lesson.free:
             lesson.video = None
     return out
@@ -82,8 +91,8 @@ def _course_detail(course: Course, db: Session, user: User | None) -> schemas.Co
     """Ẩn video ID của bài không free với người chưa ghi danh (chỉ để lại cờ has_video)."""
     out = schemas.CourseDetail.model_validate(course)
     out.enrolled = _is_enrolled(db, user, course)
+    _mark_lesson_flags(out.lessons, course.lessons)
     for lesson in out.lessons:
-        lesson.has_video = bool(lesson.video)
         if not lesson.free and not out.enrolled:
             lesson.video = None
     return out
@@ -106,6 +115,79 @@ def lesson_video(slug: str, index: int, db: Session = Depends(get_db), user: Use
         if not _is_enrolled(db, user, course):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
     return schemas.LessonVideo(index=index, title=lesson["title"], video=lesson.get("video"))
+
+
+# ---------- trắc nghiệm ----------
+def _lesson_for_access(slug: str, index: int, db: Session, user: User | None) -> tuple[Course, dict]:
+    """Cùng luật với video: bài free → ai cũng vào; bài khác → 401 chưa đăng nhập, 403 chưa xác thực / chưa ghi danh."""
+    course = db.query(Course).filter(Course.slug == slug).first()
+    if not course:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
+    if index < 0 or index >= len(course.lessons or []):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy bài học")
+    lesson = course.lessons[index]
+    if not lesson.get("free"):
+        if user is None:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Bạn cần đăng nhập để làm bài này", headers={"WWW-Authenticate": "Bearer"})
+        if not user.email_verified:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn cần xác thực email trước khi làm bài")
+        if not _is_enrolled(db, user, course):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
+    return course, lesson
+
+
+def _quiz_of(lesson: dict) -> schemas.Quiz:
+    quiz = lesson.get("quiz")
+    if not quiz or not quiz.get("questions"):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Bài học này không có trắc nghiệm")
+    return schemas.Quiz.model_validate(quiz)
+
+
+@router.get("/{slug}/lessons/{index}/quiz", response_model=schemas.QuizPublic)
+def get_quiz(slug: str, index: int, db: Session = Depends(get_db), user: User | None = Depends(get_current_user_optional)):
+    """Đề trắc nghiệm KHÔNG kèm đáp án. Đáp án và giải thích chỉ trả về sau khi nộp."""
+    _, lesson = _lesson_for_access(slug, index, db, user)
+    quiz = _quiz_of(lesson)
+    return schemas.QuizPublic(index=index, title=lesson["title"], pass_percent=quiz.pass_percent, total=len(quiz.questions),
+                              questions=[schemas.QuizQuestionPublic(q=q.q, options=q.options) for q in quiz.questions])
+
+
+@router.post("/{slug}/lessons/{index}/quiz/submit", response_model=schemas.QuizResult)
+def submit_quiz(slug: str, index: int, payload: schemas.QuizSubmitIn, db: Session = Depends(get_db),
+                user: User | None = Depends(get_current_user_optional)):
+    """Chấm điểm. Đăng nhập → lưu lần làm; đạt và đã ghi danh → đánh dấu bài hoàn thành."""
+    course, lesson = _lesson_for_access(slug, index, db, user)
+    quiz = _quiz_of(lesson)
+    if len(payload.answers) != len(quiz.questions):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Cần đúng {len(quiz.questions)} câu trả lời")
+    results = []
+    for i, (q, chosen) in enumerate(zip(quiz.questions, payload.answers)):
+        if chosen is not None and not (0 <= chosen < len(q.options)):
+            chosen = None
+        results.append(schemas.QuizAnswerResult(index=i, chosen=chosen, answer=q.answer, correct=chosen == q.answer, explain=q.explain))
+    score = sum(r.correct for r in results)
+    total = len(results)
+    percent = round(score * 100 / total)
+    passed = percent >= quiz.pass_percent
+    out = schemas.QuizResult(score=score, total=total, percent=percent, pass_percent=quiz.pass_percent, passed=passed, results=results)
+    if user is not None:
+        db.add(QuizAttempt(user_id=user.id, course_id=course.id, lesson_index=index, score=score, total=total, percent=percent, passed=passed))
+        out.saved = True
+        if passed and user.email_verified and _is_enrolled(db, user, course):
+            if not db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first():
+                db.add(LessonProgress(user_id=user.id, course_id=course.id, lesson_index=index))
+            out.lesson_completed = True
+        db.commit()
+    return out
+
+
+@router.get("/{slug}/lessons/{index}/quiz/attempts", response_model=schemas.QuizAttempts)
+def quiz_attempts(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Lịch sử làm bài của tôi: số lần, lần tốt nhất, lần gần nhất."""
+    course, _ = _lesson_for_access(slug, index, db, user)
+    rows = db.query(QuizAttempt).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).order_by(QuizAttempt.id).all()
+    return schemas.QuizAttempts(count=len(rows), best=max(rows, key=lambda r: (r.percent, r.id)) if rows else None,
+                                last=rows[-1] if rows else None)
 
 
 @router.post("/{slug}/enroll", response_model=schemas.CourseDetail, status_code=status.HTTP_201_CREATED)

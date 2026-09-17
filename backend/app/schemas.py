@@ -2,7 +2,7 @@ from datetime import datetime
 
 import re
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator, model_validator
 
 from .passwords import MAX_LENGTH, validate_password
 
@@ -154,11 +154,38 @@ class PasswordChange(BaseModel):
 
 
 # ---- Courses ----
-class Lesson(BaseModel):
+class QuizQuestion(BaseModel):
+    q: str = Field(min_length=1, max_length=1000)
+    options: list[str] = Field(min_length=2, max_length=6)
+    answer: int = Field(ge=0, description="Chỉ số đáp án đúng trong options")
+    explain: str = Field("", max_length=2000)
+
+    @model_validator(mode="after")
+    def _check(self):
+        self.options = [o.strip() for o in self.options]
+        if any(not o for o in self.options):
+            raise ValueError("Phương án trả lời không được để trống")
+        if self.answer >= len(self.options):
+            raise ValueError("Chỉ số đáp án đúng vượt quá số phương án")
+        return self
+
+
+class Quiz(BaseModel):
+    pass_percent: int = Field(70, ge=0, le=100, description="Đạt từ % này → bài học được đánh dấu hoàn thành")
+    questions: list[QuizQuestion] = Field(min_length=1, max_length=100)
+
+
+class LessonBase(BaseModel):
     title: str
     duration: str
     free: bool = False
     video: str | None = Field(None, pattern=r"^[A-Za-z0-9_-]{11}$", description="YouTube video ID")
+
+
+class Lesson(LessonBase):
+    """Bản đầy đủ (admin ghi vào DB). `quiz` chứa đáp án → KHÔNG BAO GIỜ trả ra public; dùng LessonOut."""
+
+    quiz: Quiz | None = None
 
 
 class CourseOut(BaseModel):
@@ -178,10 +205,13 @@ class CourseOut(BaseModel):
     featured: bool
 
 
-class LessonOut(Lesson):
-    """Bài học trả cho public: `video` chỉ có khi bài free hoặc người xem đã ghi danh; `has_video` luôn có."""
+class LessonOut(LessonBase):
+    """Bài học trả cho public: `video` chỉ có khi bài free hoặc người xem đã ghi danh; `has_video` luôn có.
+    Trắc nghiệm chỉ lộ cờ và số câu; đề lấy qua /lessons/{i}/quiz, đáp án chỉ biết sau khi nộp."""
 
     has_video: bool = False
+    has_quiz: bool = False
+    quiz_count: int = 0
 
 
 class CourseDetail(CourseOut):
@@ -198,6 +228,59 @@ class CoursePublic(CourseOut):
     description: str
     includes: list[str]
     lessons: list[LessonOut]
+
+
+class QuizQuestionPublic(BaseModel):
+    q: str
+    options: list[str]
+
+
+class QuizPublic(BaseModel):
+    index: int
+    title: str
+    pass_percent: int
+    total: int
+    questions: list[QuizQuestionPublic]
+
+
+class QuizSubmitIn(BaseModel):
+    answers: list[int | None] = Field(description="Chỉ số phương án đã chọn theo từng câu; None = bỏ trống")
+
+
+class QuizAnswerResult(BaseModel):
+    index: int
+    chosen: int | None
+    answer: int
+    correct: bool
+    explain: str = ""
+
+
+class QuizResult(BaseModel):
+    score: int
+    total: int
+    percent: int
+    pass_percent: int
+    passed: bool
+    results: list[QuizAnswerResult]
+    saved: bool = Field(False, description="Đã lưu lần làm (cần đăng nhập)")
+    lesson_completed: bool = Field(False, description="Đạt và đã ghi danh → bài được đánh dấu hoàn thành")
+
+
+class QuizAttemptOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    score: int
+    total: int
+    percent: int
+    passed: bool
+    created_at: datetime
+
+
+class QuizAttempts(BaseModel):
+    count: int
+    best: QuizAttemptOut | None = None
+    last: QuizAttemptOut | None = None
 
 
 class LessonVideo(BaseModel):
