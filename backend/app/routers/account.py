@@ -1,12 +1,12 @@
 """Quyền của người dùng với dữ liệu cá nhân (Nghị định 13/2023): xuất dữ liệu, xoá tài khoản."""
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from .. import schemas
+from .. import audit, schemas
 from ..database import get_db
 from ..models import AiCheckRun, ContactMessage, EmailVerification, Enrollment, LessonProgress, Order, PasswordReset, QuizAttempt, User
 from ..ratelimit import rate_limit
@@ -93,7 +93,7 @@ def anonymize_user(db: Session, user: User) -> None:
 
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT, dependencies=[rate_limit("delete-account", 5, 3600)])
-def delete_my_account(payload: schemas.AccountDeleteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def delete_my_account(payload: schemas.AccountDeleteIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Tự xoá tài khoản: gõ đúng email + mật khẩu (nếu có). Admin phải được hạ quyền trước để không mất quyền quản trị."""
     if user.role == "admin":
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản quản trị không tự xoá được. Hãy nhờ admin khác hạ quyền trước")
@@ -101,7 +101,10 @@ def delete_my_account(payload: schemas.AccountDeleteIn, db: Session = Depends(ge
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email xác nhận không khớp")
     if user.has_password and not (payload.password and verify_password(payload.password, user.hashed_password)):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu không đúng")
+    email, uid = user.email, user.id
     anonymize_user(db, user)
+    # actor=None: hồ sơ đã ẩn danh; giữ email gốc trong summary để đối soát yêu cầu xoá dữ liệu
+    audit.record(db, request, None, "account.delete", "account", uid, f"Người dùng {email} tự xoá tài khoản")
 
 
 def purge_expired_tokens(db: Session) -> int:

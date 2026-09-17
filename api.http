@@ -214,6 +214,10 @@ Authorization: Bearer {{login.response.body.access_token}}
 POST {{api}}/api/admin/contacts/1/replied
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Nhật ký hành động admin (lọc action tiền tố, actor email, tìm tóm tắt)
+GET {{api}}/api/admin/audit?action=order&limit=50
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Thống kê
 GET {{api}}/api/admin/stats
 Authorization: Bearer {{login.response.body.access_token}}

@@ -6,14 +6,14 @@ import logging
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
-from .. import schemas
+from .. import audit, schemas
 from ..config import settings
 from ..database import get_db
-from ..models import ContactMessage, Course, Enrollment, Order, User
+from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
 from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
@@ -109,7 +109,7 @@ def publish_status():
 
 
 @router.post("/publish", response_model=schemas.PublishResult, dependencies=[rate_limit("publish", 3, 600)])
-def publish():
+def publish(request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Website công khai được build tĩnh từ DB. Sau khi sửa khóa học, bấm Xuất bản để GitHub Actions build lại
     (repository_dispatch). Người dùng đã mở trang vẫn thấy bản mới qua API; nút này để bản tĩnh (SEO, khóa mới) đuổi kịp."""
     st = _publish_status()
@@ -131,6 +131,7 @@ def publish():
         msg = {401: "GitHub token không hợp lệ hoặc hết hạn", 403: "Token thiếu quyền Contents: write trên repo",
                404: "Không tìm thấy repo (kiểm tra GITHUB_REPO và quyền token)"}.get(r.status_code, f"GitHub trả {r.status_code}")
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, msg)
+    audit.record(db, request, admin, "site.publish", "site", summary=f"Kích hoạt build lại site ({st.repo})")
     return schemas.PublishResult(**st.model_dump(), detail="Đã kích hoạt build. Site tĩnh cập nhật sau khoảng 2 phút.")
 
 
@@ -179,7 +180,7 @@ def list_contacts(
 
 
 @router.post("/contacts/{msg_id}/replied", response_model=schemas.ContactOut)
-def mark_contact_replied(msg_id: int, db: Session = Depends(get_db)):
+def mark_contact_replied(msg_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Admin trả lời qua email xong → đánh dấu. Bấm lại → quay về 'new' (đánh dấu nhầm)."""
     m = db.get(ContactMessage, msg_id)
     if not m:
@@ -190,16 +191,20 @@ def mark_contact_replied(msg_id: int, db: Session = Depends(get_db)):
         m.status, m.replied_at = "new", None
     db.commit()
     db.refresh(m)
+    audit.record(db, request, admin, "contact.replied" if m.status == "replied" else "contact.unreplied", "contact", m.id,
+                 f"{'Đánh dấu đã trả lời' if m.status == 'replied' else 'Bỏ đánh dấu trả lời'} tin nhắn của {m.email}")
     return m
 
 
 @router.delete("/contacts/{msg_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_contact(msg_id: int, db: Session = Depends(get_db)):
+def delete_contact(msg_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     m = db.get(ContactMessage, msg_id)
     if not m:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy tin nhắn")
+    summary = f"Xoá tin nhắn #{m.id} của {m.email}"
     db.delete(m)
     db.commit()
+    audit.record(db, request, admin, "contact.delete", "contact", msg_id, summary)
 
 
 # ---------- orders ----------
@@ -239,7 +244,7 @@ def list_orders(
 
 
 @router.post("/orders/{order_id}/confirm", response_model=schemas.AdminOrderOut)
-def confirm_order(order_id: int, payload: schemas.OrderAction, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+def confirm_order(order_id: int, payload: schemas.OrderAction, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Đã nhận tiền → đơn paid + cấp quyền học (tạo Enrollment). Cho phép duyệt cả đơn đã hết hạn (tiền về muộn)."""
     o = _get_order(db, order_id)
     if o.status not in (PENDING, EXPIRED):
@@ -250,18 +255,22 @@ def confirm_order(order_id: int, payload: schemas.OrderAction, db: Session = Dep
         o.course.sold += 1
     db.commit()
     db.refresh(o)
+    audit.record(db, request, admin, "order.confirm", "order", o.id, f"Xác nhận đơn {o.code} · {o.user.email} · {o.amount:,}đ".replace(",", "."),
+                 {"code": o.code, "amount": o.amount, "course": o.course.slug, "note": payload.note})
     notify_paid(o)
     return _admin_order_out(o)
 
 
 @router.post("/orders/{order_id}/cancel", response_model=schemas.AdminOrderOut)
-def admin_cancel_order(order_id: int, payload: schemas.OrderAction, db: Session = Depends(get_db)):
+def admin_cancel_order(order_id: int, payload: schemas.OrderAction, request: Request, db: Session = Depends(get_db),
+                       admin: User = Depends(require_admin)):
     o = _get_order(db, order_id)
     if o.status != PENDING:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ huỷ được đơn đang chờ thanh toán")
     o.status, o.note = CANCELLED, payload.note or o.note
     db.commit()
     db.refresh(o)
+    audit.record(db, request, admin, "order.cancel", "order", o.id, f"Huỷ đơn {o.code} · {o.user.email}", {"code": o.code, "note": payload.note})
     return _admin_order_out(o)
 
 
@@ -289,7 +298,7 @@ def list_courses(
 
 
 @router.post("/courses", response_model=schemas.AdminCourseOut, status_code=status.HTTP_201_CREATED)
-def create_course(payload: schemas.CourseCreate, db: Session = Depends(get_db)):
+def create_course(payload: schemas.CourseCreate, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     _ensure_slug_free(db, payload.slug)
     data = payload.model_dump()
     _normalize_tags(data)
@@ -297,6 +306,8 @@ def create_course(payload: schemas.CourseCreate, db: Session = Depends(get_db)):
     db.add(course)
     db.commit()
     db.refresh(course)
+    audit.record(db, request, admin, "course.create", "course", course.id, f"Tạo khóa học «{course.title}» (/{course.slug})",
+                 {"slug": course.slug, "price": course.price, "lessons": len(course.lessons or [])})
     return _course_out(course, 0)
 
 
@@ -307,7 +318,8 @@ def get_course(course_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/courses/{course_id}", response_model=schemas.AdminCourseOut)
 @router.put("/courses/{course_id}", response_model=schemas.AdminCourseOut, include_in_schema=False)
-def update_course(course_id: int, payload: schemas.CourseUpdate, db: Session = Depends(get_db)):
+def update_course(course_id: int, payload: schemas.CourseUpdate, request: Request, db: Session = Depends(get_db),
+                  admin: User = Depends(require_admin)):
     course = _get_course(db, course_id)
     data = payload.model_dump(exclude_unset=True)
     if not data:
@@ -320,18 +332,23 @@ def update_course(course_id: int, payload: schemas.CourseUpdate, db: Session = D
     if any(k in data for k in ("tags", "category", "price")):
         _normalize_tags(merged)
         data["tags"] = merged["tags"]
+    changed = {k: {"from": getattr(course, k), "to": v} for k, v in data.items() if k in ("price", "title", "slug", "featured", "category")}
     for k, v in data.items():
         setattr(course, k, v)
     db.commit()
     db.refresh(course)
+    audit.record(db, request, admin, "course.update", "course", course.id, f"Sửa khóa học «{course.title}»: {', '.join(data.keys())}",
+                 {"fields": sorted(data.keys()), "changed": changed})
     return _course_out(course)
 
 
 @router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_course(course_id: int, db: Session = Depends(get_db)):
+def delete_course(course_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     course = _get_course(db, course_id)
+    summary = f"Xoá khóa học «{course.title}» (/{course.slug}), {len(course.enrollments)} ghi danh"
     db.delete(course)  # cascade xoá enrollments
     db.commit()
+    audit.record(db, request, admin, "course.delete", "course", course_id, summary)
 
 
 # ---------- users ----------
@@ -358,7 +375,7 @@ def list_users(
 
 
 @router.post("/users", response_model=schemas.AdminUserOut, status_code=status.HTTP_201_CREATED)
-def create_user(payload: schemas.AdminUserCreate, db: Session = Depends(get_db)):
+def create_user(payload: schemas.AdminUserCreate, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     email = payload.email.lower()
     _ensure_email_free(db, email)
     user = User(email=email, full_name=payload.full_name.strip(), role=payload.role,
@@ -366,6 +383,7 @@ def create_user(payload: schemas.AdminUserCreate, db: Session = Depends(get_db))
     db.add(user)
     db.commit()
     db.refresh(user)
+    audit.record(db, request, admin, "user.create", "user", user.id, f"Tạo người dùng {user.email} (role {user.role})")
     return _user_out(user, 0)
 
 
@@ -375,7 +393,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.patch("/users/{user_id}", response_model=schemas.AdminUserOut)
-def update_user(user_id: int, payload: schemas.AdminUserUpdate,
+def update_user(user_id: int, payload: schemas.AdminUserUpdate, request: Request,
                 db: Session = Depends(get_db), me: User = Depends(require_admin)):
     user = _get_user(db, user_id)
     data = payload.model_dump(exclude_unset=True)
@@ -392,22 +410,27 @@ def update_user(user_id: int, payload: schemas.AdminUserUpdate,
             _ensure_email_free(db, data["email"], exclude_id=user.id)
     if "full_name" in data:
         data["full_name"] = data["full_name"].strip()
+    fields = sorted(data.keys())  # ghi tên trường, không ghi giá trị mật khẩu
     if "password" in data:
         user.hashed_password = hash_password(data.pop("password"))
+    changed = {k: {"from": getattr(user, k), "to": v} for k, v in data.items() if k in ("role", "is_active", "email")}
     for k, v in data.items():
         setattr(user, k, v)
     db.commit()
     db.refresh(user)
+    audit.record(db, request, me, "user.update", "user", user.id, f"Sửa người dùng {user.email}: {', '.join(fields)}", {"fields": fields, "changed": changed})
     return _user_out(user)
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: int, db: Session = Depends(get_db), me: User = Depends(require_admin)):
+def delete_user(user_id: int, request: Request, db: Session = Depends(get_db), me: User = Depends(require_admin)):
     user = _get_user(db, user_id)
     if user.id == me.id:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể xoá tài khoản của chính mình")
+    summary = f"Xoá người dùng {user.email} ({len(user.enrollments)} ghi danh, {len(user.orders)} đơn)"
     db.delete(user)  # cascade xoá enrollments
     db.commit()
+    audit.record(db, request, me, "user.delete", "user", user_id, summary)
 
 
 # ---------- enrollments ----------
@@ -430,7 +453,7 @@ def list_enrollments(
 
 
 @router.post("/enrollments", response_model=schemas.AdminEnrollmentOut, status_code=status.HTTP_201_CREATED)
-def create_enrollment(payload: schemas.AdminEnrollmentCreate, db: Session = Depends(get_db)):
+def create_enrollment(payload: schemas.AdminEnrollmentCreate, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Admin cấp quyền truy cập khóa học cho người dùng (kể cả khóa trả phí — ví dụ sau khi nhận chuyển khoản)."""
     user = _get_user(db, payload.user_id)
     course = _get_course(db, payload.course_id)
@@ -441,15 +464,41 @@ def create_enrollment(payload: schemas.AdminEnrollmentCreate, db: Session = Depe
     db.add(e)
     db.commit()
     db.refresh(e)
+    audit.record(db, request, admin, "enrollment.create", "enrollment", e.id, f"Cấp quyền «{course.title}» cho {user.email}",
+                 {"user": user.email, "course": course.slug})
     return _enrollment_out(e)
 
 
 @router.delete("/enrollments/{enrollment_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_enrollment(enrollment_id: int, db: Session = Depends(get_db)):
+def delete_enrollment(enrollment_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     e = db.get(Enrollment, enrollment_id)
     if not e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy ghi danh")
+    summary = f"Thu hồi quyền «{e.course.title}» của {e.user.email}"
     if e.course.sold > 0:
         e.course.sold -= 1
     db.delete(e)
     db.commit()
+    audit.record(db, request, admin, "enrollment.delete", "enrollment", enrollment_id, summary)
+
+
+# ---------- audit log ----------
+@router.get("/audit", response_model=schemas.PaginatedAudit)
+def list_audit(
+    action: str | None = Query(None, description="Lọc theo action hoặc tiền tố, vd 'order' hoặc 'order.confirm'"),
+    actor: str | None = Query(None, description="Email admin thực hiện"),
+    q: str | None = Query(None, description="Tìm trong tóm tắt"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(AuditLog)
+    if action:
+        query = query.filter(AuditLog.action.like(f"{action.strip()}%"))
+    if actor:
+        query = query.filter(AuditLog.actor_email.ilike(f"%{actor.strip()}%"))
+    if q:
+        query = query.filter(AuditLog.summary.ilike(f"%{q.strip()}%"))
+    total = query.count()
+    items = query.order_by(AuditLog.id.desc()).offset(offset).limit(limit).all()
+    return schemas.PaginatedAudit(total=total, limit=limit, offset=offset, items=items)

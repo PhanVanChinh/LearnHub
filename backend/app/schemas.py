@@ -573,6 +573,25 @@ class OrderAction(BaseModel):
     note: str | None = Field(None, max_length=500, description="Ghi chú nội bộ, vd mã giao dịch ngân hàng")
 
 
+class AuditLogOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    actor_id: int | None
+    actor_email: str | None
+    action: str
+    target_type: str
+    target_id: str | None
+    summary: str
+    detail: dict | None = None
+    ip: str | None
+    created_at: datetime
+
+
+class PaginatedAudit(Paginated):
+    items: list[AuditLogOut]
+
+
 class PublishStatus(BaseModel):
     configured: bool = Field(description="Đã có GITHUB_TOKEN + GITHUB_REPO")
     repo: str

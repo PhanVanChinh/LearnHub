@@ -154,6 +154,23 @@ class AiCheckRun(Base):
     user: Mapped[User] = relationship(back_populates="ai_checks")
 
 
+class AuditLog(Base):
+    """Nhật ký hành động admin / thao tác nhạy cảm. Không FK cứng tới đối tượng để giữ được sau khi đối tượng bị xoá."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    actor_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    action: Mapped[str] = mapped_column(String(50), index=True)  # vd course.create, order.confirm, account.delete
+    target_type: Mapped[str] = mapped_column(String(30), default="")  # course | user | enrollment | order | contact | site | account
+    target_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    summary: Mapped[str] = mapped_column(String(500), default="")
+    detail: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
 class ContactMessage(Base):
     """Tin nhắn từ form Liên hệ. status: new → replied (admin đánh dấu sau khi trả lời qua email)."""
 
