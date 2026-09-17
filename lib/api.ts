@@ -118,6 +118,12 @@ export const coursesApi = {
   lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
 };
 
+// ---- Contact ----
+export const contactApi = {
+  send: (body: { name: string; email: string; subject: string; message: string; captcha_token?: string | null }) =>
+    api<{ detail: string }>("/api/contact", { method: "POST", body: JSON.stringify(body) }),
+};
+
 // ---- Orders ----
 export type OrderStatus = "pending" | "paid" | "cancelled" | "expired";
 export type PaymentInfo = { bank_name: string; bank_bin: string; account_number: string; account_name: string; amount: number; content: string; qr_url: string | null };

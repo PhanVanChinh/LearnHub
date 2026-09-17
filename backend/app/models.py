@@ -115,6 +115,22 @@ class Order(Base):
     confirmed_by: Mapped[User | None] = relationship(foreign_keys=[confirmed_by_id])
 
 
+class ContactMessage(Base):
+    """Tin nhắn từ form Liên hệ. status: new → replied (admin đánh dấu sau khi trả lời qua email)."""
+
+    __tablename__ = "contact_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255), index=True)
+    subject: Mapped[str] = mapped_column(String(255), default="")
+    message: Mapped[str] = mapped_column(Text)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)  # nếu gửi khi đang đăng nhập
+    status: Mapped[str] = mapped_column(String(20), default="new", index=True)  # new | replied
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
 class LessonProgress(Base):
     """Bài học (theo chỉ số trong course.lessons) mà người dùng đã đánh dấu hoàn thành."""
 

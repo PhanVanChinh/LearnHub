@@ -336,6 +336,48 @@ class PaginatedEnrollments(Paginated):
     items: list[AdminEnrollmentOut]
 
 
+# ---- Contact ----
+class ContactIn(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    email: EmailStr
+    subject: str = Field("", max_length=255)
+    message: str = Field(min_length=10, max_length=5000)
+    captcha_token: str | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _norm_name(cls, v: str) -> str:
+        return _clean_name(v)
+
+    @field_validator("email")
+    @classmethod
+    def _norm_email(cls, v: str) -> str:
+        return v.strip().lower()
+
+    @field_validator("message", "subject")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return v.strip()
+
+
+class ContactOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    email: EmailStr
+    subject: str
+    message: str
+    user_id: int | None = None
+    status: str
+    created_at: datetime
+    replied_at: datetime | None = None
+
+
+class PaginatedContacts(Paginated):
+    items: list[ContactOut]
+
+
 # ---- Orders ----
 class OrderCreate(BaseModel):
     course_slug: str = Field(min_length=1, max_length=255)

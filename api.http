@@ -113,6 +113,12 @@ GET {{api}}/api/courses?category=quiz
 POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Gửi liên hệ (không cần đăng nhập; đăng nhập thì gắn user_id)
+POST {{api}}/api/contact
+Content-Type: application/json
+
+{ "name": "Nguyễn Văn A", "email": "a@example.com", "subject": "Hỏi về khóa ML", "message": "Khóa này có bài tập thực hành không ạ?" }
+
 ### ===== ĐƠN HÀNG (khóa trả phí, chuyển khoản QR) =====
 
 ### Tạo đơn (đã có đơn chờ cùng khóa → trả lại đơn đó)

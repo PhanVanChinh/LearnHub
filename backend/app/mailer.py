@@ -2,6 +2,7 @@
 
 Đổi nhà cung cấp sau này chỉ cần thêm một hàm _send_xxx và nhánh trong send_email.
 """
+import html as _html
 import logging
 
 import httpx
@@ -119,3 +120,28 @@ def order_admin_notify_email(code: str, buyer_email: str, course_title: str, amo
 <p>Kiểm tra giao dịch có nội dung <span style="font-family:monospace;color:#1d4ed8">{code}</span> trong app ngân hàng rồi bấm "Đã nhận tiền".</p>
 {_btn(admin_link, "Mở trang duyệt đơn")}"""
     return subject, _layout("Có đơn hàng mới", body)
+
+
+def _quote(text: str) -> str:
+    safe = _html.escape(text).replace("\n", "<br>")
+    return f'<blockquote style="margin:12px 0;padding:12px 16px;background:#f8fafc;border-left:4px solid #cbd5e1;border-radius:8px;white-space:pre-wrap">{safe}</blockquote>'
+
+
+def contact_admin_email(msg_id: int, name: str, email: str, subject: str, message: str, admin_link: str) -> tuple[str, str]:
+    """Báo admin có tin nhắn liên hệ mới. Trả lời trực tiếp email này sẽ tới người gửi (reply-to)."""
+    subj = f"[LearnHub] Liên hệ #{msg_id}: {subject or '(không có chủ đề)'}"
+    body = f"""<p><b>{_html.escape(name)}</b> &lt;{_html.escape(email)}&gt; vừa gửi tin nhắn:</p>
+{_quote(message)}
+<p style="color:#64748b;font-size:13px">Trả lời: gửi email tới <a href="mailto:{_html.escape(email)}">{_html.escape(email)}</a>, sau đó đánh dấu "đã trả lời" trong trang quản trị.</p>
+{_btn(admin_link, "Mở trang quản trị")}"""
+    return subj, _layout("Tin nhắn liên hệ mới", body)
+
+
+def contact_ack_email(name: str, subject: str, message: str) -> tuple[str, str]:
+    """Xác nhận cho người gửi: đã nhận, sẽ phản hồi trong 24 giờ làm việc."""
+    subj = "LearnHub đã nhận tin nhắn của bạn"
+    body = f"""<p>Chào {_html.escape(name)},</p>
+<p>Chúng tôi đã nhận tin nhắn{f" về <b>{_html.escape(subject)}</b>" if subject else ""} và sẽ phản hồi qua email này trong <b>24 giờ làm việc</b>.</p>
+<p style="color:#64748b;font-size:13px">Nội dung bạn đã gửi:</p>
+{_quote(message)}"""
+    return subj, _layout("Đã nhận tin nhắn", body)
