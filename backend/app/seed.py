@@ -15,6 +15,28 @@ from .security import hash_password
 SEED_FILE = Path(__file__).with_name("seed_data.json")
 
 
+def apply_seed_quizzes(db, overwrite: bool = False) -> int:
+    """Điền trắc nghiệm mẫu từ seed_data.json vào các bài CHƯA có đề (DB tạo trước khi có tính năng quiz).
+    overwrite=True → thay cả đề đã có. Trả về số bài được cập nhật."""
+    if not SEED_FILE.exists():
+        return 0
+    seed = {c["slug"]: c for c in json.loads(SEED_FILE.read_text(encoding="utf-8"))}
+    changed = 0
+    for course in db.query(Course).all():
+        src = seed.get(course.slug)
+        if not src:
+            continue
+        lessons = [dict(l) for l in (course.lessons or [])]
+        for i, l in enumerate(src.get("lessons", [])):
+            if i < len(lessons) and l.get("quiz") and (overwrite or not lessons[i].get("quiz")):
+                lessons[i]["quiz"] = l["quiz"]
+                changed += 1
+        if changed:
+            course.lessons = lessons  # gán list mới để SQLAlchemy nhận ra JSON đã đổi
+    db.commit()
+    return changed
+
+
 def seed_if_empty() -> None:
     db = SessionLocal()
     try:

@@ -80,3 +80,27 @@ def test_submit_scores_and_marks_progress(client):
     a = client.get("/api/courses/quiz-test/lessons/0/quiz/attempts", headers=h).json()
     assert a["count"] == 2 and a["best"]["percent"] == 100 and a["last"]["percent"] == 100
     assert client.get("/api/courses/quiz-test/lessons/0/quiz/attempts").status_code == 401
+
+
+def test_seed_quizzes_present_and_hidden(client):
+    """Seed mẫu: các khóa Trắc nghiệm có đề ở bài 0 (xem thử) → khách làm được; đáp án không lộ ở export."""
+    from app.database import SessionLocal
+    from app.seed import apply_seed_quizzes
+
+    d = client.get("/api/courses/trac-nghiem-triet-hoc-mac-lenin").json()
+    assert d["lessons"][0]["has_quiz"] and d["lessons"][0]["quiz_count"] == 5 and d["lessons"][1]["quiz_count"] == 5
+    q = client.get("/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz").json()
+    assert q["total"] == 5 and "answer" not in json.dumps(q)
+    r = client.post("/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz/submit", json={"answers": [1, 1, 1, 2, 2]}).json()
+    assert r["score"] == 5 and r["passed"] is True
+    quiz_courses = [c for c in client.get("/api/courses", params={"category": "quiz"}).json()]
+    assert len(quiz_courses) >= 8
+    export = {c["slug"]: c for c in client.get("/api/courses/export").json()}
+    assert all(export[c["slug"]]["lessons"][0]["has_quiz"] for c in quiz_courses)
+    assert '"answer"' not in json.dumps(export)
+
+    # idempotent: DB đã có đề → không đổi gì; overwrite → ghi lại đúng số bài có đề
+    db = SessionLocal()
+    assert apply_seed_quizzes(db) == 0
+    assert apply_seed_quizzes(db, overwrite=True) == 9
+    db.close()

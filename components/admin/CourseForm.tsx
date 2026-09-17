@@ -2,6 +2,7 @@
 import { FormEvent, useState } from "react";
 import { categories } from "@/data/courses";
 import { AdminCourse, CourseInput, Lesson } from "@/lib/api";
+import { parseQuizText, quizToText } from "@/lib/quizText";
 import { ErrorBox, Field } from "./ui";
 
 const COLORS = [
@@ -48,6 +49,10 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
     short: initial?.short ?? "", description: initial?.description ?? "", featured: initial?.featured ?? false,
     includes: (initial?.includes ?? []).join("\n"), lessons: lessonsToText(initial?.lessons ?? []),
   });
+  // Trắc nghiệm soạn riêng theo chỉ số bài (textarea "Bài học" chỉ giữ tiêu đề/thời lượng/video)
+  const [quizText, setQuizText] = useState<Record<number, string>>(() =>
+    Object.fromEntries((initial?.lessons ?? []).map((l, i) => [i, quizToText(l.quiz)]).filter(([, t]) => t)));
+  const [quizLesson, setQuizLesson] = useState(0);
   const [autoSlug, setAutoSlug] = useState(!initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,6 +65,12 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
     try {
       const lessons = textToLessons(f.lessons);
       if (lessons.some((l) => !l.title || !l.duration)) throw new Error("Mỗi dòng bài học cần dạng: Tiêu đề | Thời lượng | free (tuỳ chọn)");
+      for (const [i, text] of Object.entries(quizText)) {
+        const idx = Number(i);
+        if (!text.trim() || !lessons[idx]) continue;
+        try { lessons[idx].quiz = parseQuizText(text); }
+        catch (err) { throw new Error(`Trắc nghiệm bài ${idx + 1}: ${(err as Error).message}`); }
+      }
       await onSubmit({
         slug: f.slug, title: f.title.trim(), category: f.category, price: Number(f.price) || 0, emoji: f.emoji, color: f.color,
         short: f.short.trim(), description: f.description.trim(), featured: f.featured,
@@ -117,6 +128,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
             placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/aBcDeFgHiJk"} />
         </Field>
       </div>
+      <QuizEditor lessonsText={f.lessons} quizText={quizText} setQuizText={setQuizText} lesson={quizLesson} setLesson={setQuizLesson} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={f.featured} onChange={(e) => set("featured", e.target.checked)} />
         Nổi bật (hiển thị ở trang chủ)
@@ -127,5 +139,50 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : initial ? "Lưu thay đổi" : "Tạo khóa học"}</button>
       </div>
     </form>
+  );
+}
+
+
+const QUIZ_PLACEHOLDER = `đạt: 70
+1. Triết học Mác – Lênin ra đời vào thời gian nào?
+A. Đầu thế kỷ XVIII
+B. Những năm 40 của thế kỷ XIX *
+C. Đầu thế kỷ XX
+> Gắn với hoạt động của C. Mác và Ph. Ăngghen từ những năm 1840.
+
+2. Câu tiếp theo...
+A. ...
+B. ... *`;
+
+/** Soạn trắc nghiệm cho từng bài bằng văn bản (xem định dạng ở lib/quizText.ts). Kiểm tra lỗi ngay khi gõ. */
+function QuizEditor({ lessonsText, quizText, setQuizText, lesson, setLesson }: {
+  lessonsText: string; quizText: Record<number, string>; setQuizText: (v: Record<number, string>) => void;
+  lesson: number; setLesson: (i: number) => void;
+}) {
+  const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
+  const idx = Math.min(lesson, Math.max(0, titles.length - 1));
+  const text = quizText[idx] ?? "";
+  let status = "";
+  let bad = false;
+  if (text.trim()) {
+    try { const q = parseQuizText(text); status = q ? `✓ ${q.questions.length} câu · đạt ${q.pass_percent}%` : ""; }
+    catch (e) { status = (e as Error).message; bad = true; }
+  }
+  const counts = titles.map((_, i) => { try { return parseQuizText(quizText[i] ?? "")?.questions.length ?? 0; } catch { return 0; } });
+  if (titles.length === 0) return null;
+  return (
+    <Field label="Trắc nghiệm theo bài" hint="Chọn bài rồi soạn câu hỏi. Dấu * ở cuối phương án = đáp án đúng; dòng > là giải thích. Đạt ngưỡng → bài tự đánh dấu hoàn thành.">
+      <div className="flex flex-wrap gap-1.5">
+        {titles.map((t, i) => (
+          <button key={i} type="button" onClick={() => setLesson(i)}
+            className={`chip !py-1 text-xs ${i === idx ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}>
+            {i + 1}. {t.length > 24 ? t.slice(0, 24) + "…" : t}{counts[i] ? ` · ${counts[i]} câu` : ""}
+          </button>
+        ))}
+      </div>
+      <textarea className={`input mt-2 font-mono text-xs ${bad ? "!border-rose-400" : ""}`} rows={8} value={text} placeholder={QUIZ_PLACEHOLDER}
+        onChange={(e) => setQuizText({ ...quizText, [idx]: e.target.value })} />
+      {status && <p className={`mt-1 text-xs ${bad ? "text-rose-600" : "text-emerald-600"}`}>{status}</p>}
+    </Field>
   );
 }

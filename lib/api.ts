@@ -161,7 +161,9 @@ export const statsApi = {
 };
 
 // ---- Admin ----
-export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null };
+export type QuizQuestion = { q: string; options: string[]; answer: number; explain: string };
+export type Quiz = { pass_percent: number; questions: QuizQuestion[] };
+export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null; quiz?: Quiz | null };
 export type AdminCourse = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
   color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
