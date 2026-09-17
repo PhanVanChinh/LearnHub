@@ -81,6 +81,8 @@ export const authApi = {
     api<Token>("/api/auth/login", { method: "POST", body: JSON.stringify(body) }),
   me: () => api<User>("/api/auth/me"),
   updateMe: (body: { full_name: string }) => api<User>("/api/auth/me", { method: "PATCH", body: JSON.stringify(body) }),
+  /** Toàn bộ dữ liệu cá nhân dạng JSON (quyền truy cập dữ liệu) */
+  exportData: () => api<Record<string, unknown>>("/api/account/export"),
   verification: () => api<VerificationStatus>("/api/auth/verification"),
   resendVerification: () => api<VerificationStatus>("/api/auth/verification/resend", { method: "POST" }),
   confirmVerification: (code: string) => api<User>("/api/auth/verification/confirm", { method: "POST", body: JSON.stringify({ code }) }),

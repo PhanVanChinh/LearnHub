@@ -65,6 +65,10 @@ Authorization: Bearer {{login.response.body.access_token}}
 GET {{api}}/api/auth/me
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Tải toàn bộ dữ liệu cá nhân (JSON, Nghị định 13)
+GET {{api}}/api/account/export
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Sửa họ tên
 PATCH {{api}}/api/auth/me
 Authorization: Bearer {{login.response.body.access_token}}
