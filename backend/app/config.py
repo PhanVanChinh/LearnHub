@@ -40,6 +40,13 @@ class Settings(BaseSettings):
     order_expire_hours: int = 24  # đơn chờ quá hạn → expired
     order_notify_email: str = ""  # nhận mail "có đơn mới" để đi đối soát; trống → dùng ADMIN_EMAIL
 
+    # AI Check (gọi Claude). Trống ANTHROPIC_API_KEY → tính năng báo "chưa cấu hình", không trả kết quả giả.
+    anthropic_api_key: str = ""
+    ai_check_model: str = "claude-opus-5"
+    ai_check_daily_limit: int = 5  # lượt / tài khoản / 24 giờ
+    ai_check_max_chars: int = 15000
+    ai_check_min_words: int = 80
+
     # Nút "Xuất bản" trong admin: kích hoạt GitHub Actions build lại frontend tĩnh (repository_dispatch).
     # Token fine-grained có quyền Contents: Read and write trên repo. Bỏ trống → nút báo chưa cấu hình.
     github_token: str = ""

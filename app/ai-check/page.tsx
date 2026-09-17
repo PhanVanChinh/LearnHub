@@ -1,5 +1,5 @@
 import PageHeader from "@/components/PageHeader";
-import AiCheckDemo from "@/components/AiCheckDemo";
+import AiCheckTool from "@/components/AiCheckTool";
 import CourseCard from "@/components/CourseCard";
 import { getCourses } from "@/lib/courses.server";
 
@@ -17,7 +17,7 @@ export default async function AiCheckPage() {
     <>
       <PageHeader eyebrow="Công cụ" title="AI Check đạo văn & nội dung AI" subtitle="Kiểm tra khoá luận, tiểu luận, báo cáo thực tập trước khi nộp — nhanh, chi tiết, bảo mật." />
       <div className="container-x grid gap-8 py-12 lg:grid-cols-5">
-        <div className="lg:col-span-3"><AiCheckDemo /></div>
+        <div className="lg:col-span-3"><AiCheckTool /></div>
         <div className="space-y-4 lg:col-span-2">
           {steps.map(([n, t, d]) => (
             <div key={n} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5">

@@ -419,6 +419,41 @@ class PaginatedEnrollments(Paginated):
     items: list[AdminEnrollmentOut]
 
 
+# ---- AI Check ----
+class AiCheckIn(BaseModel):
+    text: str = Field(min_length=1, max_length=100_000)
+
+
+class AiCheckStatus(BaseModel):
+    enabled: bool
+    daily_limit: int
+    used_today: int
+    remaining: int
+    max_chars: int
+    min_words: int
+    model: str = ""
+
+
+class AiCheckSegmentOut(BaseModel):
+    text: str
+    ai_likelihood: int
+    reason: str
+
+
+class AiCheckOut(BaseModel):
+    ai_score: int
+    confidence: str
+    verdict: str
+    signals: list[str]
+    segments: list[AiCheckSegmentOut]
+    suggestions: list[str]
+    writing_feedback: str
+    words: int
+    remaining: int
+    daily_limit: int
+    model: str
+
+
 # ---- Contact ----
 class ContactIn(BaseModel):
     name: str = Field(min_length=1, max_length=255)

@@ -51,6 +51,7 @@ class User(Base):
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    ai_checks: Mapped[list["AiCheckRun"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -134,6 +135,22 @@ class QuizAttempt(Base):
 
     user: Mapped[User] = relationship(back_populates="quiz_attempts")
     course: Mapped[Course] = relationship(back_populates="quiz_attempts")
+
+
+class AiCheckRun(Base):
+    """Một lượt AI Check (để tính hạn mức ngày và thống kê). Không lưu văn bản người dùng."""
+
+    __tablename__ = "ai_check_runs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    chars: Mapped[int] = mapped_column(Integer)
+    words: Mapped[int] = mapped_column(Integer)
+    ai_score: Mapped[int] = mapped_column(Integer)
+    confidence: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    user: Mapped[User] = relationship(back_populates="ai_checks")
 
 
 class ContactMessage(Base):

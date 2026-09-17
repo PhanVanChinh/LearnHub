@@ -129,6 +129,18 @@ export const coursesApi = {
   quizAttempts: (slug: string, index: number) => api<QuizAttempts>(`/api/courses/${slug}/lessons/${index}/quiz/attempts`),
 };
 
+// ---- AI Check ----
+export type AiCheckStatus = { enabled: boolean; daily_limit: number; used_today: number; remaining: number; max_chars: number; min_words: number; model: string };
+export type AiCheckSegment = { text: string; ai_likelihood: number; reason: string };
+export type AiCheckResult = {
+  ai_score: number; confidence: "low" | "medium" | "high"; verdict: string; signals: string[]; segments: AiCheckSegment[];
+  suggestions: string[]; writing_feedback: string; words: number; remaining: number; daily_limit: number; model: string;
+};
+export const aiCheckApi = {
+  status: () => api<AiCheckStatus>("/api/ai-check/status"),
+  run: (text: string) => api<AiCheckResult>("/api/ai-check", { method: "POST", body: JSON.stringify({ text }) }),
+};
+
 // ---- Contact ----
 export const contactApi = {
   send: (body: { name: string; email: string; subject: string; message: string; captcha_token?: string | null }) =>

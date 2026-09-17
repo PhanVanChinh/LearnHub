@@ -134,6 +134,17 @@ Content-Type: application/json
 
 { "name": "Nguyễn Văn A", "email": "a@example.com", "subject": "Hỏi về khóa ML", "message": "Khóa này có bài tập thực hành không ạ?" }
 
+### AI Check: trạng thái (bật chưa, còn mấy lượt)
+GET {{api}}/api/ai-check/status
+Authorization: Bearer {{login.response.body.access_token}}
+
+### AI Check: phân tích văn bản (cần ANTHROPIC_API_KEY trên backend; ≥ 80 từ)
+POST {{api}}/api/ai-check
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "text": "Dán đoạn tiểu luận ít nhất 80 từ vào đây..." }
+
 ### ===== ĐƠN HÀNG (khóa trả phí, chuyển khoản QR) =====
 
 ### Tạo đơn (đã có đơn chờ cùng khóa → trả lại đơn đó)
