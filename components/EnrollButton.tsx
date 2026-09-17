@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { coursesApi } from "@/lib/api";
 import { fetchCourseDetail } from "@/lib/liveCourse";
+import { isComingSoon } from "@/lib/site";
 
-export default function EnrollButton({ slug, price }: { slug: string; price: number }) {
+export default function EnrollButton({ slug, price, category = "" }: { slug: string; price: number; category?: string }) {
   const { user, loading } = useAuth();
   const [enrolled, setEnrolled] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -17,6 +18,14 @@ export default function EnrollButton({ slug, price }: { slug: string; price: num
   }, [user, slug]);
 
   if (loading) return <div className="mt-4 h-12 animate-pulse rounded-lg bg-slate-100" />;
+  if (price > 0 && isComingSoon(category) && !enrolled) {
+    return (
+      <>
+        <button disabled className="btn mt-4 w-full !py-3 bg-slate-200 text-slate-500">Sắp mở bán</button>
+        <p className="mt-2 text-center text-xs text-slate-500">Bạn có thể <Link href="/ai-check" className="text-brand-700 underline">dùng AI Check miễn phí</Link> theo hạn mức ngày.</p>
+      </>
+    );
+  }
   if (price > 0) {
     if (enrolled) {
       return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;

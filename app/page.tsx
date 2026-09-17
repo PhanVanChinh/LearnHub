@@ -6,8 +6,8 @@ import { site } from "@/lib/site";
 
 const features = [
   { icon: "🎯", t: "Bám sát chương trình", d: "Nội dung biên soạn theo đề cương từng môn, ưu tiên phần hay ra thi." },
-  { icon: "⚡", t: "Học nhanh, nhớ lâu", d: "Tóm tắt ngắn gọn, câu hỏi luyện tập tính giờ và giải thích từng đáp án." },
-  { icon: "🔒", t: "Thanh toán an toàn", d: "Nhận tài liệu ngay sau khi thanh toán, hoàn tiền nếu không đúng mô tả." },
+  { icon: "⚡", t: "Học nhanh, nhớ lâu", d: "Video ngắn gọn, trắc nghiệm ngay trong bài với giải thích từng đáp án và theo dõi tiến độ." },
+  { icon: "🔒", t: "Thanh toán minh bạch", d: "Chuyển khoản QR, mở khóa ngay khi xác nhận. Hoàn tiền theo chính sách công khai." },
 ];
 
 export default async function Home() {
@@ -69,8 +69,8 @@ export default async function Home() {
       <section className="container-x">
         <div className="rounded-3xl bg-slate-900 px-8 py-12 text-white sm:px-12 lg:flex lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-2xl font-bold sm:text-3xl">Kiểm tra đạo văn & nội dung AI trước khi nộp</h2>
-            <p className="mt-2 max-w-xl text-slate-300">Tải lên khoá luận, tiểu luận hoặc báo cáo — nhận kết quả chi tiết theo từng đoạn trong vài phút.</p>
+            <h2 className="text-2xl font-bold sm:text-3xl">Rà soát dấu hiệu AI trong bài viết trước khi nộp</h2>
+            <p className="mt-2 max-w-xl text-slate-300">Dán tiểu luận, báo cáo hoặc khoá luận — nhận điểm ước lượng, đoạn đáng chú ý và gợi ý chỉnh sửa trong khoảng một phút.</p>
           </div>
           <Link href="/ai-check" className="btn-primary mt-6 lg:mt-0">Dùng thử AI Check</Link>
         </div>

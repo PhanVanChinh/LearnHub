@@ -1,7 +1,7 @@
 [
   {
     "slug": "ai-check-dao-van-khoa-luan",
-    "title": "AI Check đạo văn & AI content — Khoá luận, tiểu luận",
+    "title": "Gói AI Check mở rộng — Khoá luận, tiểu luận",
     "category": "ai-check",
     "tags": [
       "ai-check"
@@ -9,8 +9,8 @@
     "price": 20000,
     "color": "from-violet-500 to-fuchsia-600",
     "emoji": "🤖",
-    "short": "Kiểm tra tỷ lệ trùng lặp và nội dung do AI tạo ra, trả kết quả chi tiết theo từng đoạn.",
-    "description": "Kiểm tra tỷ lệ trùng lặp và nội dung do AI tạo ra, trả kết quả chi tiết theo từng đoạn. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Thêm lượt rà soát dấu hiệu AI cho bài dài, phân tích theo từng phần và gợi ý chỉnh sửa. Sắp mở bán.",
+    "description": "Thêm lượt rà soát dấu hiệu AI cho bài dài, phân tích theo từng phần và gợi ý chỉnh sửa. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -43,7 +43,7 @@
   },
   {
     "slug": "ai-check-bao-cao-thuc-tap",
-    "title": "AI Check đạo văn — Báo cáo thực tập",
+    "title": "Gói AI Check mở rộng — Báo cáo thực tập",
     "category": "ai-check",
     "tags": [
       "ai-check"
@@ -51,8 +51,8 @@
     "price": 15000,
     "color": "from-indigo-500 to-violet-600",
     "emoji": "🧠",
-    "short": "Quét báo cáo thực tập, đối chiếu nguồn và gợi ý chỉnh sửa để giảm tỷ lệ trùng.",
-    "description": "Quét báo cáo thực tập, đối chiếu nguồn và gợi ý chỉnh sửa để giảm tỷ lệ trùng. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Thêm lượt rà soát báo cáo thực tập theo từng chương, kèm nhận xét học thuật. Sắp mở bán.",
+    "description": "Thêm lượt rà soát báo cáo thực tập theo từng chương, kèm nhận xét học thuật. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -84,7 +84,7 @@
   },
   {
     "slug": "trac-nghiem-triet-hoc-mac-lenin",
-    "title": "Ngân hàng trắc nghiệm Triết học Mác – Lênin (600 câu)",
+    "title": "Ngân hàng trắc nghiệm Triết học Mác – Lênin",
     "category": "quiz",
     "tags": [
       "quiz"
@@ -92,8 +92,8 @@
     "price": 15000,
     "color": "from-rose-500 to-orange-500",
     "emoji": "📚",
-    "short": "600 câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương.",
-    "description": "600 câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương, làm ngay trong bài học.",
+    "description": "Câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương, làm ngay trong bài học. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -355,8 +355,8 @@
     "price": 15000,
     "color": "from-red-500 to-rose-600",
     "emoji": "⭐",
-    "short": "Câu hỏi luyện tập theo từng chương với chế độ thi thử tính giờ.",
-    "description": "Câu hỏi luyện tập theo từng chương với chế độ thi thử tính giờ. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Câu hỏi luyện tập theo từng chương, chấm điểm và giải thích ngay sau khi nộp.",
+    "description": "Câu hỏi luyện tập theo từng chương, chấm điểm và giải thích ngay sau khi nộp. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",

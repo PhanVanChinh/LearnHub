@@ -14,9 +14,13 @@ const fromApi = (c: ApiCourse): Course => ({
   lessons: c.lessons.map((l) => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined })),
 });
 
+// Next lưu cache fetch trong .next/cache qua nhiều lần build → build sau có thể dùng dữ liệu cũ.
+// Thêm nonce theo tiến trình build để mỗi lần build lấy bản mới nhất, mà vẫn là fetch "tĩnh" (export được).
+const BUILD_NONCE = Date.now().toString(36);
+
 async function fetchFromApi(): Promise<Course[] | null> {
   try {
-    const res = await fetch(`${API_URL}/api/courses/export`, {
+    const res = await fetch(`${API_URL}/api/courses/export?build=${BUILD_NONCE}`, {
       signal: AbortSignal.timeout(15_000),
       // build: cache theo lần build; dev: luôn lấy mới để thấy thay đổi từ admin ngay
       cache: process.env.NODE_ENV === "production" ? "force-cache" : "no-store",

@@ -20,6 +20,7 @@ from ..security import get_current_user, require_verified
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
 PENDING, PAID, CANCELLED, EXPIRED = "pending", "paid", "cancelled", "expired"
+COMING_SOON_CATEGORIES = {"ai-check"}  # chưa có cơ chế cấp lượt theo gói → chưa nhận đơn (khớp lib/site.ts)
 _ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # bỏ I O 0 1 để đọc/nhập không nhầm
 
 
@@ -99,6 +100,8 @@ def create_order(payload: schemas.OrderCreate, db: Session = Depends(get_db), us
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
     if course.price <= 0:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Khóa học miễn phí — hãy ghi danh trực tiếp")
+    if course.category in COMING_SOON_CATEGORIES:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Gói này sắp mở bán, hiện chưa nhận đơn")
     if db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Bạn đã có quyền truy cập khóa học này")
     pending = db.query(Order).filter_by(user_id=user.id, course_id=course.id, status=PENDING).all()

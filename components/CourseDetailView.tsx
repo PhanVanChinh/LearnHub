@@ -63,7 +63,7 @@ export default function CourseDetailView({ course: initial, related }: { course:
               <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} text-5xl`}>{course.emoji}</div>
             )}
             <p className={`mt-5 text-3xl font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</p>
-            <EnrollButton slug={course.slug} price={course.price} />
+            <EnrollButton slug={course.slug} price={course.price} category={course.category} />
             <ul className="mt-5 space-y-2 text-sm text-slate-600">
               {course.includes.map((x) => <li key={x}>✅ {x}</li>)}
             </ul>

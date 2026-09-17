@@ -15,7 +15,7 @@ export const site = {
     nav: [
         { href: "/free", label: "Tài liệu miễn phí" },
         { href: "/courses", label: "Tất cả khóa học" },
-        { href: "/ai-check", label: "AI Check đạo văn" },
+        { href: "/ai-check", label: "AI Check bài viết" },
         { href: "/phenikaa", label: "Dành cho Phenikaa" },
         { href: "/contact", label: "Liên hệ" },
     ],
@@ -27,6 +27,10 @@ export const site = {
         { href: "/policy/refund", label: "Chính sách hoàn tiền" },
     ],
 };
+
+/** Danh mục chưa mở bán: hiện "Sắp mở bán", không tạo được đơn. Gói AI Check chờ cơ chế cấp lượt theo gói. */
+export const comingSoonCategories: string[] = ["ai-check"];
+export const isComingSoon = (category: string) => comingSoonCategories.includes(category);
 
 export const formatVND = (n: number) =>
     n === 0 ? "Miễn phí" : n.toLocaleString("vi-VN") + "đ";

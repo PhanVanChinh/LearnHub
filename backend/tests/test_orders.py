@@ -14,7 +14,8 @@ def _buyer(client, email):
 
 
 def _paid_course(client):
-    return next(c for c in client.get("/api/courses").json() if c["price"] > 0)
+    """Khóa trả phí mua được (bỏ danh mục 'sắp mở bán')."""
+    return next(c for c in client.get("/api/courses").json() if c["price"] > 0 and c["category"] != "ai-check")
 
 
 def test_create_and_reuse_order(client, monkeypatch):
@@ -163,3 +164,10 @@ def test_order_emails(client, monkeypatch):
     client.post(f"/api/admin/orders/{o['id']}/confirm", json={}, headers=admin)
     m = mailer.console_outbox[-1]
     assert m["to"] == "buyer7@example.com" and "xác nhận" in m["subject"].lower() and f"/learn/{paid['slug']}" in m["html"]
+
+
+def test_coming_soon_category_refuses_orders(client):
+    h = _buyer(client, "buyer8@example.com")
+    ai = next(c for c in client.get("/api/courses", params={"category": "ai-check"}).json() if c["price"] > 0)
+    r = client.post("/api/orders", json={"course_slug": ai["slug"]}, headers=h)
+    assert r.status_code == 400 and "sắp mở bán" in r.json()["detail"].lower()
