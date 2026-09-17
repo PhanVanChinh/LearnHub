@@ -163,7 +163,11 @@ export type AdminEnrollment = {
 };
 export type AdminStats = {
   users: number; admins: number; courses: number; free_courses: number; paid_courses: number;
-  enrollments: number; total_views: number; total_sold: number; revenue: number; paid_orders: number; pending_orders: number;
+  enrollments: number; total_views: number; total_sold: number; revenue: number; paid_orders: number; pending_orders: number; new_contacts: number;
+};
+export type AdminContact = {
+  id: number; name: string; email: string; subject: string; message: string; user_id: number | null;
+  status: "new" | "replied"; created_at: string; replied_at: string | null;
 };
 export type AdminOrder = Order & { user_id: number; user_email: string; user_name: string; note: string | null; confirmed_by_email: string | null };
 export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
@@ -204,6 +208,11 @@ export const adminApi = {
   createEnrollment: (body: { user_id: number; course_id: number }) =>
     api<AdminEnrollment>("/api/admin/enrollments", json("POST", body)),
   deleteEnrollment: (id: number) => api<void>(`/api/admin/enrollments/${id}`, { method: "DELETE" }),
+
+  contacts: (params: { status?: "new" | "replied" | ""; q?: string; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminContact>>(`/api/admin/contacts${qs(params)}`),
+  toggleContactReplied: (id: number) => api<AdminContact>(`/api/admin/contacts/${id}/replied`, { method: "POST" }),
+  deleteContact: (id: number) => api<void>(`/api/admin/contacts/${id}`, { method: "DELETE" }),
 
   orders: (params: { status?: OrderStatus | ""; q?: string; limit?: number; offset?: number } = {}) =>
     api<Paginated<AdminOrder>>(`/api/admin/orders${qs(params)}`),

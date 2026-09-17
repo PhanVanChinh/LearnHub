@@ -9,6 +9,7 @@ import CoursesPanel from "./CoursesPanel";
 import PublishButton from "./PublishButton";
 import EnrollmentsPanel from "./EnrollmentsPanel";
 import OrdersPanel from "./OrdersPanel";
+import ContactsPanel from "./ContactsPanel";
 import UsersPanel from "./UsersPanel";
 
 const TABS = [
@@ -16,6 +17,7 @@ const TABS = [
   { key: "courses", label: "Khóa học" },
   { key: "users", label: "Người dùng" },
   { key: "enrollments", label: "Ghi danh" },
+  { key: "contacts", label: "Liên hệ" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -79,12 +81,16 @@ export default function AdminDashboard() {
               {t.key === "orders" && !!stats?.pending_orders && (
                 <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">{stats.pending_orders}</span>
               )}
+              {t.key === "contacts" && !!stats?.new_contacts && (
+                <span className="ml-1.5 rounded-full bg-brand-100 px-1.5 py-0.5 text-xs font-semibold text-brand-700">{stats.new_contacts}</span>
+              )}
             </button>
           ))}
         </div>
 
         <div className="mt-6">
           {tab === "orders" && <OrdersPanel onChanged={loadStats} />}
+          {tab === "contacts" && <ContactsPanel onChanged={loadStats} />}
           {tab === "courses" && <CoursesPanel onChanged={loadStats} />}
           {tab === "users" && <UsersPanel onChanged={loadStats} />}
           {tab === "enrollments" && <EnrollmentsPanel onChanged={loadStats} />}

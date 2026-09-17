@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from .. import schemas
 from ..config import settings
 from ..database import get_db
-from ..models import Course, Enrollment, Order, User
+from ..models import ContactMessage, Course, Enrollment, Order, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
 from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
@@ -148,12 +148,58 @@ def stats(db: Session = Depends(get_db)):
     paid_orders = db.query(func.count(Order.id)).filter(Order.status == PAID).scalar() or 0
     expire_stale(db, db.query(Order).filter(Order.status == PENDING).all())
     pending_orders = db.query(func.count(Order.id)).filter(Order.status == PENDING).scalar() or 0
+    new_contacts = db.query(func.count(ContactMessage.id)).filter(ContactMessage.status == "new").scalar() or 0
     return schemas.AdminStats(
         users=users, admins=admins, courses=courses, free_courses=free_courses,
         paid_courses=courses - free_courses, enrollments=enrollments,
         total_views=total_views, total_sold=total_sold, revenue=revenue,
-        paid_orders=paid_orders, pending_orders=pending_orders,
+        paid_orders=paid_orders, pending_orders=pending_orders, new_contacts=new_contacts,
     )
+
+
+# ---------- contact ----------
+@router.get("/contacts", response_model=schemas.PaginatedContacts)
+def list_contacts(
+    status_: str | None = Query(None, alias="status", description="new | replied"),
+    q: str | None = Query(None, description="Tìm theo tên, email, chủ đề, nội dung"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(ContactMessage)
+    if status_:
+        query = query.filter(ContactMessage.status == status_)
+    if q:
+        kw = f"%{q.strip()}%"
+        query = query.filter(or_(ContactMessage.name.ilike(kw), ContactMessage.email.ilike(kw),
+                                 ContactMessage.subject.ilike(kw), ContactMessage.message.ilike(kw)))
+    total = query.count()
+    items = query.order_by((ContactMessage.status == "new").desc(), ContactMessage.id.desc()).offset(offset).limit(limit).all()
+    return schemas.PaginatedContacts(total=total, limit=limit, offset=offset, items=items)
+
+
+@router.post("/contacts/{msg_id}/replied", response_model=schemas.ContactOut)
+def mark_contact_replied(msg_id: int, db: Session = Depends(get_db)):
+    """Admin trả lời qua email xong → đánh dấu. Bấm lại → quay về 'new' (đánh dấu nhầm)."""
+    m = db.get(ContactMessage, msg_id)
+    if not m:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy tin nhắn")
+    if m.status == "new":
+        m.status, m.replied_at = "replied", datetime.utcnow()
+    else:
+        m.status, m.replied_at = "new", None
+    db.commit()
+    db.refresh(m)
+    return m
+
+
+@router.delete("/contacts/{msg_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_contact(msg_id: int, db: Session = Depends(get_db)):
+    m = db.get(ContactMessage, msg_id)
+    if not m:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy tin nhắn")
+    db.delete(m)
+    db.commit()
 
 
 # ---------- orders ----------

@@ -169,6 +169,14 @@ Content-Type: application/json
 
 { "note": "Khách đổi ý" }
 
+### Tin nhắn liên hệ (admin)
+GET {{api}}/api/admin/contacts?status=new
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Đánh dấu đã trả lời (bấm lại → bỏ đánh dấu)
+POST {{api}}/api/admin/contacts/1/replied
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Thống kê
 GET {{api}}/api/admin/stats
 Authorization: Bearer {{login.response.body.access_token}}

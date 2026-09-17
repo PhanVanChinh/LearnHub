@@ -44,3 +44,27 @@ def test_contact_validation_and_user_link(client):
     db = SessionLocal()
     assert db.query(ContactMessage).filter_by(email="ct@example.com").first().user_id == reg.json()["user"]["id"]
     db.close()
+
+
+def test_admin_contacts(client):
+    r = client.post("/api/auth/login", json={"email": "admin@example.com", "password": "admin123"})
+    admin = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.get("/api/admin/contacts").status_code == 401
+
+    client.post("/api/contact", json={**BODY, "email": "z@example.com", "subject": "Về học phí", "message": "Có giảm giá cho sinh viên năm nhất không?"})
+    before = client.get("/api/admin/stats", headers=admin).json()["new_contacts"]
+    lst = client.get("/api/admin/contacts", params={"status": "new", "q": "học phí"}, headers=admin).json()
+    assert lst["total"] == 1 and lst["items"][0]["email"] == "z@example.com"
+    mid = lst["items"][0]["id"]
+
+    r = client.post(f"/api/admin/contacts/{mid}/replied", headers=admin)
+    assert r.status_code == 200 and r.json()["status"] == "replied" and r.json()["replied_at"]
+    assert client.get("/api/admin/stats", headers=admin).json()["new_contacts"] == before - 1
+    # bấm lại → quay về new
+    assert client.post(f"/api/admin/contacts/{mid}/replied", headers=admin).json()["status"] == "new"
+    # tin chưa trả lời xếp trước
+    all_ = client.get("/api/admin/contacts", headers=admin).json()["items"]
+    assert [m["status"] for m in all_] == sorted([m["status"] for m in all_], key=lambda s: s != "new")
+
+    assert client.delete(f"/api/admin/contacts/{mid}", headers=admin).status_code == 204
+    assert client.delete(f"/api/admin/contacts/{mid}", headers=admin).status_code == 404

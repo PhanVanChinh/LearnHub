@@ -471,3 +471,4 @@ class AdminStats(BaseModel):
     revenue: int = Field(description="Doanh thu thật: tổng amount của đơn đã thanh toán")
     paid_orders: int = 0
     pending_orders: int = 0
+    new_contacts: int = 0
