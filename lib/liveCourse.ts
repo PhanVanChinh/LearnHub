@@ -28,7 +28,7 @@ function fetchExport(): Promise<CoursePublic[]> {
   return p;
 }
 
-const toLesson = (l: LessonOut): Lesson => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video });
+const toLesson = (l: LessonOut): Lesson => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined });
 
 /** Trộn bản API vào bản tĩnh (API thắng). */
 export function mergeCourse(base: Course, d: CoursePublic | CourseDetail): Course {

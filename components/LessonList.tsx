@@ -17,12 +17,14 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
   }, [slug]);
   const hasVideo = (i: number) => hasVideoApi?.[i] ?? !!lessons[i].video;
   const videoCount = lessons.filter((_, i) => hasVideo(i)).length;
+  const quizCount = lessons.filter((l) => l.quizCount).length;
 
   return (
     <div>
       <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-500">
         <span>{lessons.length} bài học</span>
         {videoCount > 0 && <span>· 🎬 {videoCount} video</span>}
+        {quizCount > 0 && <span>· 📝 {quizCount} bài trắc nghiệm</span>}
         {previewable.length > 0 && <span>· {previewable.length} bài xem thử miễn phí</span>}
       </div>
 
@@ -53,7 +55,8 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
                 {l.free && <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Xem thử</span>}
               </div>
               <div className="flex shrink-0 items-center gap-3 text-sm text-slate-500">
-                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : <span title="Tài liệu đọc">📄</span>}
+                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : l.quizCount ? <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span> : <span title="Tài liệu đọc">📄</span>}
+                {!!l.quizCount && hasVideo(i) && <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span>}
                 {!l.free && <span title="Cần ghi danh">🔒</span>}
                 <span>{l.duration}</span>
               </div>

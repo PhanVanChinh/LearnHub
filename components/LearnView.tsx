@@ -7,6 +7,7 @@ import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
+import QuizPlayer from "./QuizPlayer";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
@@ -57,6 +58,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
     if (!enrolled) return setProgress(null);
     coursesApi.progress(course.slug).then(setProgress).catch(() => setProgress(null));
   }, [enrolled, course.slug]);
+  const reloadProgress = () => { if (enrolled) coursesApi.progress(course.slug).then(setProgress).catch(() => {}); };
   const isDone = (i: number) => progress?.completed.includes(i) ?? false;
   const toggleDone = async () => {
     if (!enrolled || saving) return;
@@ -100,7 +102,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
         {/* Khu vực nội dung */}
         <div className="min-w-0">
           {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
-          {access === "granted" && !video && (
+          {access === "granted" && !video && !lesson.quizCount && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
                 <p className="text-5xl">📄</p>
@@ -162,6 +164,12 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
             </div>
           </div>
 
+          {access === "granted" && !!lesson.quizCount && (
+            <div className="mt-6">
+              <QuizPlayer key={`${course.slug}-${index}`} slug={course.slug} index={index} loggedIn={!!user} onCompleted={reloadProgress} />
+            </div>
+          )}
+
           <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
             <p className="font-semibold text-white">Về khóa học</p>
             <p className="mt-2">{course.description}</p>
@@ -173,7 +181,10 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
           <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <div className="border-b border-white/10 px-4 py-3">
               <p className="font-semibold text-white">Nội dung khóa học</p>
-              <p className="text-xs text-slate-400">{lessons.length} bài · {lessons.filter((_, i) => hasVideo(i)).length} video</p>
+              <p className="text-xs text-slate-400">
+                {lessons.length} bài · {lessons.filter((_, i) => hasVideo(i)).length} video
+                {lessons.some((l) => l.quizCount) && <> · {lessons.filter((l) => l.quizCount).length} trắc nghiệm</>}
+              </p>
               {progress && (
                 <div className="mt-2">
                   <div className="flex justify-between text-xs text-slate-300">
@@ -200,7 +211,8 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{hasVideo(i) ? "🎬" : "📄"} {l.duration}</span>
+                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : "📄"} {l.duration}</span>
+                          {!!l.quizCount && <span>{l.quizCount} câu</span>}
                           {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
                           {locked && <span>🔒</span>}
                         </span>

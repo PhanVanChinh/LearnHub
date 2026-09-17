@@ -93,7 +93,7 @@ export const authApi = {
   setPassword: (new_password: string) => api<Token>("/api/auth/set-password", { method: "POST", body: JSON.stringify({ new_password }) }),
 };
 
-export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean };
+export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; has_quiz: boolean; quiz_count: number };
 export type CourseDetail = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
   color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[];
@@ -101,6 +101,12 @@ export type CourseDetail = {
 };
 export type CoursePublic = Omit<CourseDetail, "enrolled">;
 export type LessonVideo = { index: number; title: string; video: string | null };
+
+export type QuizPublic = { index: number; title: string; pass_percent: number; total: number; questions: { q: string; options: string[] }[] };
+export type QuizAnswerResult = { index: number; chosen: number | null; answer: number; correct: boolean; explain: string };
+export type QuizResult = { score: number; total: number; percent: number; pass_percent: number; passed: boolean; results: QuizAnswerResult[]; saved: boolean; lesson_completed: boolean };
+export type QuizAttempt = { id: number; score: number; total: number; percent: number; passed: boolean; created_at: string };
+export type QuizAttempts = { count: number; best: QuizAttempt | null; last: QuizAttempt | null };
 
 export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null };
 export type EnrolledCourse = { slug: string; title: string; progress: Progress };
@@ -116,6 +122,11 @@ export const coursesApi = {
   uncomplete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "DELETE" }),
   /** Video của một bài: bài free → công khai; bài khác → 401 chưa đăng nhập, 403 chưa ghi danh */
   lessonVideo: (slug: string, index: number) => api<LessonVideo>(`/api/courses/${slug}/lessons/${index}/video`),
+  /** Đề trắc nghiệm không kèm đáp án; luật truy cập như video */
+  quiz: (slug: string, index: number) => api<QuizPublic>(`/api/courses/${slug}/lessons/${index}/quiz`),
+  submitQuiz: (slug: string, index: number, answers: (number | null)[]) =>
+    api<QuizResult>(`/api/courses/${slug}/lessons/${index}/quiz/submit`, { method: "POST", body: JSON.stringify({ answers }) }),
+  quizAttempts: (slug: string, index: number) => api<QuizAttempts>(`/api/courses/${slug}/lessons/${index}/quiz/attempts`),
 };
 
 // ---- Contact ----
