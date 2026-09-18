@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import PasswordInput from "@/components/PasswordInput";
@@ -26,7 +27,7 @@ export default function DataSection() {
   };
 
   return (
-    <Section title="Dữ liệu cá nhân" description="Bạn có quyền xem, tải về và yêu cầu xoá dữ liệu mà LearnHub lưu về mình.">
+    <Section title="Dữ liệu cá nhân" description="Bạn có quyền xem, tải về và xoá dữ liệu mà LearnHub lưu về mình. Chi tiết trong Chính sách bảo mật.">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="text-sm text-slate-600">
           <p className="font-medium text-slate-800">Tải toàn bộ dữ liệu của tôi</p>
@@ -36,6 +37,9 @@ export default function DataSection() {
         <button onClick={download} disabled={busy} className="btn-outline shrink-0 disabled:opacity-60">{busy ? "Đang tạo file…" : "⬇ Tải JSON"}</button>
       </div>
       <DeleteAccount />
+      <p className="mt-4 text-xs text-slate-500">
+        Đọc <Link href="/policy/privacy" className="text-brand-700 underline">Chính sách bảo mật & dữ liệu cá nhân</Link> để biết chúng tôi lưu gì, bao lâu và chia sẻ với ai.
+      </p>
     </Section>
   );
 }
