@@ -40,6 +40,15 @@ class Settings(BaseSettings):
     order_expire_hours: int = 24  # đơn chờ quá hạn → expired
     order_notify_email: str = ""  # nhận mail "có đơn mới" để đi đối soát; trống → dùng ADMIN_EMAIL
 
+    # Lưu file tài liệu bài học (S3 tương thích: Cloudflare R2 / Backblaze B2 / MinIO). Trống → chỉ đính kèm link ngoài.
+    s3_endpoint_url: str = ""  # R2: https://<account_id>.r2.cloudflarestorage.com
+    s3_bucket: str = ""
+    s3_access_key_id: str = ""
+    s3_secret_access_key: str = ""
+    s3_region: str = "auto"
+    s3_link_expire_seconds: int = 600  # link tải có hạn 10 phút
+    upload_max_mb: int = 50
+
     # AI Check (gọi Claude). Trống ANTHROPIC_API_KEY → tính năng báo "chưa cấu hình", không trả kết quả giả.
     anthropic_api_key: str = ""
     ai_check_model: str = "claude-opus-5"

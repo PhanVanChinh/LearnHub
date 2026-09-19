@@ -6,11 +6,11 @@ import logging
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
-from .. import audit, schemas
+from .. import audit, schemas, storage
 from ..config import settings
 from ..database import get_db
 from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, User
@@ -156,6 +156,42 @@ def stats(db: Session = Depends(get_db)):
         total_views=total_views, total_sold=total_sold, revenue=revenue,
         paid_orders=paid_orders, pending_orders=pending_orders, new_contacts=new_contacts,
     )
+
+
+# ---------- uploads (tài liệu bài học) ----------
+@router.get("/uploads/status")
+def uploads_status():
+    return {"enabled": storage.enabled(), "max_mb": settings.upload_max_mb, "allowed": sorted(set(storage.ALLOWED_TYPES.values()))}
+
+
+@router.post("/uploads", response_model=schemas.UploadOut, status_code=status.HTTP_201_CREATED)
+async def upload_file(request: Request, file: UploadFile = File(...), course_slug: str = Form(...),
+                      db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Tải file lên S3, trả `key` để admin gắn vào lesson.attachments khi lưu khóa học."""
+    if not storage.enabled():
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Chưa cấu hình lưu trữ file (S3_*). Hiện chỉ đính kèm được link ngoài")
+    ctype = (file.content_type or "").split(";")[0].strip().lower()
+    if ctype not in storage.ALLOWED_TYPES:
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Không hỗ trợ loại file {ctype or 'không rõ'}. Cho phép: PDF, Word, PowerPoint, Excel, ZIP, TXT, ảnh")
+    data = await file.read()
+    if len(data) > settings.upload_max_mb * 1024 * 1024:
+        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"File tối đa {settings.upload_max_mb} MB")
+    if not data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "File rỗng")
+    name = (file.filename or "tai-lieu").strip()[:200]
+    key = storage.make_key(course_slug, name)
+    storage.put(key, data, ctype)
+    audit.record(db, request, admin, "upload.create", "upload", key, f"Tải lên «{name}» ({len(data) // 1024} KB) cho /{course_slug}")
+    return schemas.UploadOut(key=key, name=name, size=len(data), content_type=ctype)
+
+
+@router.delete("/uploads", status_code=status.HTTP_204_NO_CONTENT)
+def delete_upload(key: str, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Xoá file trên S3 (chỉ key trong thư mục courses/). Không tự gỡ khỏi lesson.attachments — admin lưu lại khóa học."""
+    if not key.startswith("courses/") or ".." in key:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Key không hợp lệ")
+    storage.delete(key)
+    audit.record(db, request, admin, "upload.delete", "upload", key, f"Xoá file {key}")
 
 
 # ---------- contact ----------

@@ -120,6 +120,10 @@ GET {{api}}/api/courses/export
 ### Danh sách khóa học trắc nghiệm
 GET {{api}}/api/courses?category=quiz
 
+### Link tải tài liệu đính kèm (bài free công khai; bài khác cần ghi danh). File S3 → URL ký 10 phút
+GET {{api}}/api/courses/video-nhap-mon-machine-learning/lessons/0/attachments/0/download
+Authorization: Bearer {{login.response.body.access_token}}
+
 ### Đề trắc nghiệm của bài (không kèm đáp án)
 GET {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz
 Authorization: Bearer {{login.response.body.access_token}}
@@ -217,6 +221,23 @@ Authorization: Bearer {{login.response.body.access_token}}
 ### Nhật ký hành động admin (lọc action tiền tố, actor email, tìm tóm tắt)
 GET {{api}}/api/admin/audit?action=order&limit=50
 Authorization: Bearer {{login.response.body.access_token}}
+
+### Upload tài liệu (admin, multipart) → key gắn vào lesson.attachments
+# Dùng REST Client: chọn file bằng cú pháp < ./duong-dan/file.pdf
+POST {{api}}/api/admin/uploads
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: multipart/form-data; boundary=----X
+
+------X
+Content-Disposition: form-data; name="course_slug"
+
+video-nhap-mon-machine-learning
+------X
+Content-Disposition: form-data; name="file"; filename="slide.pdf"
+Content-Type: application/pdf
+
+< ./slide.pdf
+------X--
 
 ### Thống kê
 GET {{api}}/api/admin/stats

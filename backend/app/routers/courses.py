@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import String, or_
 from sqlalchemy.orm import Session
 
-from .. import schemas
+from .. import schemas, storage
 from ..database import get_db
 from ..models import Course, Enrollment, LessonProgress, QuizAttempt, User
 from ..security import get_current_user, get_current_user_optional, require_verified
@@ -62,6 +62,9 @@ def _mark_lesson_flags(out_lessons: list[schemas.LessonOut], raw_lessons: list[d
         quiz = raw.get("quiz") or {}
         lesson.quiz_count = len(quiz.get("questions") or [])
         lesson.has_quiz = lesson.quiz_count > 0
+        lesson.attachments = [schemas.AttachmentOut(name=a.get("name", "Tài liệu"), kind=a.get("kind", "file"),
+                                                    size=a.get("size", 0), content_type=a.get("content_type", ""))
+                              for a in (raw.get("attachments") or [])]
 
 
 def _course_public(course: Course) -> schemas.CoursePublic:
@@ -115,6 +118,22 @@ def lesson_video(slug: str, index: int, db: Session = Depends(get_db), user: Use
         if not _is_enrolled(db, user, course):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Bạn chưa ghi danh khóa học này")
     return schemas.LessonVideo(index=index, title=lesson["title"], video=lesson.get("video"))
+
+
+# ---------- tài liệu đính kèm ----------
+@router.get("/{slug}/lessons/{index}/attachments/{pos}/download", response_model=schemas.AttachmentLink)
+def attachment_link(slug: str, index: int, pos: int, db: Session = Depends(get_db), user: User | None = Depends(get_current_user_optional)):
+    """Link tải tài liệu. Cùng luật với video: bài free công khai; bài khác cần đăng nhập, xác thực, đã ghi danh.
+    File S3 → URL ký có hạn (không tái sử dụng được lâu); link ngoài → trả thẳng URL."""
+    _, lesson = _lesson_for_access(slug, index, db, user)
+    atts = lesson.get("attachments") or []
+    if pos < 0 or pos >= len(atts):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy tài liệu")
+    a = atts[pos]
+    if a.get("kind") == "link":
+        return schemas.AttachmentLink(name=a["name"], url=a["url"], expires_in=None)
+    from ..config import settings
+    return schemas.AttachmentLink(name=a["name"], url=storage.presigned_get(a["key"], a["name"]), expires_in=settings.s3_link_expire_seconds)
 
 
 # ---------- trắc nghiệm ----------

@@ -175,6 +175,47 @@ class Quiz(BaseModel):
     questions: list[QuizQuestion] = Field(min_length=1, max_length=100)
 
 
+class Attachment(BaseModel):
+    """Tài liệu đính kèm bài học. kind=file → `key` trên S3 (không public); kind=link → `url` ngoài (Drive, Notion...)."""
+
+    name: str = Field(min_length=1, max_length=200)
+    kind: str = Field("file", pattern=r"^(file|link)$")
+    key: str | None = Field(None, max_length=300)
+    url: str | None = Field(None, max_length=1000)
+    size: int = Field(0, ge=0, description="bytes, 0 nếu là link")
+    content_type: str = Field("", max_length=100)
+
+    @model_validator(mode="after")
+    def _check(self):
+        if self.kind == "file" and not self.key:
+            raise ValueError("Tài liệu dạng file cần có key")
+        if self.kind == "link" and not (self.url and self.url.startswith(("http://", "https://"))):
+            raise ValueError("Link tài liệu phải bắt đầu bằng http:// hoặc https://")
+        return self
+
+
+class AttachmentOut(BaseModel):
+    """Bản công khai: không lộ key S3 hay URL ngoài — tải qua /attachments/{i}/download sau khi kiểm tra quyền."""
+
+    name: str
+    kind: str
+    size: int = 0
+    content_type: str = ""
+
+
+class AttachmentLink(BaseModel):
+    name: str
+    url: str
+    expires_in: int | None = Field(None, description="Giây; None với link ngoài")
+
+
+class UploadOut(BaseModel):
+    key: str
+    name: str
+    size: int
+    content_type: str
+
+
 class LessonBase(BaseModel):
     title: str
     duration: str
@@ -183,9 +224,10 @@ class LessonBase(BaseModel):
 
 
 class Lesson(LessonBase):
-    """Bản đầy đủ (admin ghi vào DB). `quiz` chứa đáp án → KHÔNG BAO GIỜ trả ra public; dùng LessonOut."""
+    """Bản đầy đủ (admin ghi vào DB). `quiz` chứa đáp án, `attachments` chứa key/URL → KHÔNG trả ra public; dùng LessonOut."""
 
     quiz: Quiz | None = None
+    attachments: list[Attachment] = Field(default_factory=list, max_length=20)
 
 
 class CourseOut(BaseModel):
@@ -212,6 +254,7 @@ class LessonOut(LessonBase):
     has_video: bool = False
     has_quiz: bool = False
     quiz_count: int = 0
+    attachments: list[AttachmentOut] = Field(default_factory=list)
 
 
 class CourseDetail(CourseOut):
