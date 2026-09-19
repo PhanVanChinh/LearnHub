@@ -5,13 +5,13 @@
 import { API_URL } from "./api";
 import { Category, Course, courses as fallbackCourses } from "@/data/courses";
 
-type ApiLesson = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; quiz_count?: number };
+type ApiLesson = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; quiz_count?: number; attachments?: { name: string; kind: "file" | "link"; size: number; content_type: string }[] };
 type ApiCourse = Omit<Course, "lessons" | "tags" | "category"> & { category: string; tags: string[]; lessons: ApiLesson[] };
 
 const fromApi = (c: ApiCourse): Course => ({
   slug: c.slug, title: c.title, category: c.category as Category, tags: c.tags as Category[], price: c.price,
   color: c.color, emoji: c.emoji, short: c.short, description: c.description, includes: c.includes, featured: c.featured,
-  lessons: c.lessons.map((l) => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined })),
+  lessons: c.lessons.map((l) => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined, attachments: l.attachments?.length ? l.attachments : undefined })),
 });
 
 // Next lưu cache fetch trong .next/cache qua nhiều lần build → build sau có thể dùng dữ liệu cũ.

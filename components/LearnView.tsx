@@ -8,6 +8,7 @@ import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
+import LessonAttachments from "./LessonAttachments";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
@@ -102,12 +103,21 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
         {/* Khu vực nội dung */}
         <div className="min-w-0">
           {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
-          {access === "granted" && !video && !lesson.quizCount && (
+          {access === "granted" && !video && !lesson.quizCount && !lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
                 <p className="text-5xl">📄</p>
-                <p className="mt-3 text-lg font-semibold text-white">Bài này là tài liệu đọc</p>
-                <p className="mt-1 text-sm text-white/80">Video cho bài học này sẽ được bổ sung. Tài liệu đính kèm nằm trong phần "Khóa học bao gồm".</p>
+                <p className="mt-3 text-lg font-semibold text-white">Nội dung bài này đang được cập nhật</p>
+                <p className="mt-1 text-sm text-white/80">Bài chưa có video hay tài liệu. Hãy chuyển sang bài kế tiếp hoặc quay lại sau.</p>
+              </div>
+            </div>
+          )}
+          {access === "granted" && !video && !!lesson.attachments?.length && (
+            <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
+              <div>
+                <p className="text-5xl">📚</p>
+                <p className="mt-3 text-lg font-semibold text-white">Bài học dạng tài liệu</p>
+                <p className="mt-1 text-sm text-white/80">Tải {lesson.attachments.length} tài liệu bên dưới để học.{lesson.quizCount ? " Làm trắc nghiệm sau khi đọc xong." : ""}</p>
               </div>
             </div>
           )}
@@ -164,6 +174,12 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
             </div>
           </div>
 
+          {!!lesson.attachments?.length && (access === "granted" || access === "enroll" || access === "login") && (
+            <div className="mt-6">
+              <LessonAttachments slug={course.slug} index={index} attachments={lesson.attachments} locked={access !== "granted"} />
+            </div>
+          )}
+
           {access === "granted" && !!lesson.quizCount && (
             <div className="mt-6">
               <QuizPlayer key={`${course.slug}-${index}`} slug={course.slug} index={index} loggedIn={!!user} onCompleted={reloadProgress} />
@@ -211,8 +227,9 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : "📄"} {l.duration}</span>
+                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
                           {!!l.quizCount && <span>{l.quizCount} câu</span>}
+                          {!!l.attachments?.length && <span>📎 {l.attachments.length}</span>}
                           {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
                           {locked && <span>🔒</span>}
                         </span>

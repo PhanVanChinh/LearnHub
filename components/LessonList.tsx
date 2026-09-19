@@ -18,6 +18,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
   const hasVideo = (i: number) => hasVideoApi?.[i] ?? !!lessons[i].video;
   const videoCount = lessons.filter((_, i) => hasVideo(i)).length;
   const quizCount = lessons.filter((l) => l.quizCount).length;
+  const attCount = lessons.reduce((s, l) => s + (l.attachments?.length ?? 0), 0);
 
   return (
     <div>
@@ -25,6 +26,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
         <span>{lessons.length} bài học</span>
         {videoCount > 0 && <span>· 🎬 {videoCount} video</span>}
         {quizCount > 0 && <span>· 📝 {quizCount} bài trắc nghiệm</span>}
+        {attCount > 0 && <span>· 📎 {attCount} tài liệu</span>}
         {previewable.length > 0 && <span>· {previewable.length} bài xem thử miễn phí</span>}
       </div>
 
@@ -57,6 +59,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
               <div className="flex shrink-0 items-center gap-3 text-sm text-slate-500">
                 {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : l.quizCount ? <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span> : <span title="Tài liệu đọc">📄</span>}
                 {!!l.quizCount && hasVideo(i) && <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span>}
+                {!!l.attachments?.length && <span title={`${l.attachments.length} tài liệu`}>📎</span>}
                 {!l.free && <span title="Cần ghi danh">🔒</span>}
                 <span>{l.duration}</span>
               </div>

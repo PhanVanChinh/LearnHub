@@ -97,7 +97,9 @@ export const authApi = {
   setPassword: (new_password: string) => api<Token>("/api/auth/set-password", { method: "POST", body: JSON.stringify({ new_password }) }),
 };
 
-export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; has_quiz: boolean; quiz_count: number };
+export type AttachmentOut = { name: string; kind: "file" | "link"; size: number; content_type: string };
+export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; has_quiz: boolean; quiz_count: number; attachments: AttachmentOut[] };
+export type AttachmentLink = { name: string; url: string; expires_in: number | null };
 export type CourseDetail = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
   color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[];
@@ -131,6 +133,8 @@ export const coursesApi = {
   submitQuiz: (slug: string, index: number, answers: (number | null)[]) =>
     api<QuizResult>(`/api/courses/${slug}/lessons/${index}/quiz/submit`, { method: "POST", body: JSON.stringify({ answers }) }),
   quizAttempts: (slug: string, index: number) => api<QuizAttempts>(`/api/courses/${slug}/lessons/${index}/quiz/attempts`),
+  /** Link tải tài liệu (URL ký 10 phút với file S3); luật truy cập như video */
+  attachmentLink: (slug: string, index: number, pos: number) => api<AttachmentLink>(`/api/courses/${slug}/lessons/${index}/attachments/${pos}/download`),
 };
 
 // ---- AI Check ----
