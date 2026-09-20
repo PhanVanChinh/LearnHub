@@ -44,7 +44,8 @@ async function tryRefresh(): Promise<boolean> {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}, _retried = false): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json", ...(init.headers as Record<string, string>) };
+  // FormData: để trình duyệt tự đặt Content-Type kèm boundary
+  const headers: Record<string, string> = { ...(init.body instanceof FormData ? {} : { "Content-Type": "application/json" }), ...(init.headers as Record<string, string>) };
   const token = tokenStore.get();
   if (token) headers.Authorization = `Bearer ${token}`;
   let res: Response;
@@ -183,7 +184,10 @@ export const statsApi = {
 // ---- Admin ----
 export type QuizQuestion = { q: string; options: string[]; answer: number; explain: string };
 export type Quiz = { pass_percent: number; questions: QuizQuestion[] };
-export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null; quiz?: Quiz | null };
+export type Attachment = { name: string; kind: "file" | "link"; key?: string | null; url?: string | null; size: number; content_type: string };
+export type Lesson = { title: string; duration: string; free?: boolean; video?: string | null; quiz?: Quiz | null; attachments?: Attachment[] };
+export type UploadStatus = { enabled: boolean; max_mb: number; allowed: string[] };
+export type UploadOut = { key: string; name: string; size: number; content_type: string };
 export type AdminCourse = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
   color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
@@ -222,6 +226,12 @@ const json = (method: string, body: unknown): RequestInit => ({ method, body: JS
 export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
   publishStatus: () => api<PublishStatus>("/api/admin/publish"),
+  uploadStatus: () => api<UploadStatus>("/api/admin/uploads/status"),
+  upload: (file: File, course_slug: string) => {
+    const fd = new FormData(); fd.append("file", file); fd.append("course_slug", course_slug);
+    return api<UploadOut>("/api/admin/uploads", { method: "POST", body: fd });
+  },
+  deleteUpload: (key: string) => api<void>(`/api/admin/uploads?key=${encodeURIComponent(key)}`, { method: "DELETE" }),
   audit: (params: { action?: string; actor?: string; q?: string; limit?: number; offset?: number } = {}) =>
     api<Paginated<AuditLog>>(`/api/admin/audit${qs(params)}`),
   publish: () => api<PublishResult>("/api/admin/publish", { method: "POST" }),
