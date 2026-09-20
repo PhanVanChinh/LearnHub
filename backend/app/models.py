@@ -53,6 +53,7 @@ class User(Base):
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_checks: Mapped[list["AiCheckRun"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    reviews: Mapped[list["Review"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -78,6 +79,7 @@ class Course(Base):
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    reviews: Mapped[list["Review"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):
@@ -117,6 +119,26 @@ class Order(Base):
     user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="orders")
     course: Mapped[Course] = relationship(back_populates="orders")
     confirmed_by: Mapped[User | None] = relationship(foreign_keys=[confirmed_by_id])
+
+
+class Review(Base):
+    """Đánh giá khóa học: mỗi người đã ghi danh một đánh giá (sửa được). Admin có thể ẩn (hidden) nhưng không sửa nội dung."""
+
+    __tablename__ = "reviews"
+    __table_args__ = (UniqueConstraint("user_id", "course_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    rating: Mapped[int] = mapped_column(Integer)  # 1..5
+    comment: Mapped[str] = mapped_column(Text, default="")
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False)
+    hidden_reason: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="reviews")
+    course: Mapped[Course] = relationship(back_populates="reviews")
 
 
 class QuizAttempt(Base):

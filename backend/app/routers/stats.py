@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from .. import schemas
 from ..database import get_db
 from ..models import Course, Enrollment
+from .reviews import rating_summaries
 
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
@@ -27,5 +28,6 @@ def public_stats(db: Session = Depends(get_db)):
 def course_stats(db: Session = Depends(get_db)):
     """Một dòng mỗi khóa: lượt xem và số học viên (số ghi danh). Frontend gọi một lần cho cả danh sách thẻ."""
     counts = dict(db.query(Enrollment.course_id, func.count(Enrollment.id)).group_by(Enrollment.course_id).all())
-    return [schemas.CourseStats(slug=c.slug, views=c.views, students=counts.get(c.id, 0))
+    ratings = rating_summaries(db)
+    return [schemas.CourseStats(slug=c.slug, views=c.views, students=counts.get(c.id, 0), rating=ratings.get(c.id, schemas.RatingSummary()))
             for c in db.query(Course.id, Course.slug, Course.views).all()]

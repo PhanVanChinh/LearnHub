@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from .. import audit, schemas, storage
 from ..config import settings
 from ..database import get_db
-from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, User
+from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
 from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
@@ -516,6 +516,50 @@ def delete_enrollment(enrollment_id: int, request: Request, db: Session = Depend
     db.delete(e)
     db.commit()
     audit.record(db, request, admin, "enrollment.delete", "enrollment", enrollment_id, summary)
+
+
+# ---------- reviews ----------
+def _admin_review_out(r: Review) -> schemas.AdminReviewOut:
+    return schemas.AdminReviewOut(id=r.id, rating=r.rating, comment=r.comment, created_at=r.created_at, updated_at=r.updated_at,
+                                  user_name=r.user.full_name, user_initial=(r.user.full_name[:1] or "?").upper(), user_id=r.user_id,
+                                  user_email=r.user.email, course_slug=r.course.slug, course_title=r.course.title,
+                                  hidden=r.hidden, hidden_reason=r.hidden_reason)
+
+
+@router.get("/reviews", response_model=schemas.PaginatedReviews)
+def list_all_reviews(
+    hidden: bool | None = None, course_id: int | None = None, rating: int | None = Query(None, ge=1, le=5),
+    q: str | None = Query(None, description="Tìm trong nhận xét / email"),
+    limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0), db: Session = Depends(get_db),
+):
+    query = db.query(Review).join(Review.user)
+    if hidden is not None:
+        query = query.filter(Review.hidden.is_(hidden))
+    if course_id is not None:
+        query = query.filter(Review.course_id == course_id)
+    if rating is not None:
+        query = query.filter(Review.rating == rating)
+    if q:
+        kw = f"%{q.strip()}%"
+        query = query.filter(or_(Review.comment.ilike(kw), User.email.ilike(kw)))
+    total = query.count()
+    items = query.order_by(Review.id.desc()).offset(offset).limit(limit).all()
+    return schemas.PaginatedReviews(total=total, limit=limit, offset=offset, items=[_admin_review_out(r) for r in items])
+
+
+@router.post("/reviews/{review_id}/hide", response_model=schemas.AdminReviewOut)
+def hide_review(review_id: int, payload: schemas.ReviewHideIn, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Ẩn đánh giá vi phạm (không xoá, không sửa nội dung). Gọi lại trên đánh giá đang ẩn → hiện lại."""
+    r = db.get(Review, review_id)
+    if not r:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy đánh giá")
+    r.hidden = not r.hidden
+    r.hidden_reason = (payload.reason or None) if r.hidden else None
+    db.commit()
+    db.refresh(r)
+    audit.record(db, request, admin, "review.hide" if r.hidden else "review.unhide", "review", r.id,
+                 f"{'Ẩn' if r.hidden else 'Hiện lại'} đánh giá {r.rating}★ của {r.user.email} cho «{r.course.title}»", {"reason": payload.reason})
+    return _admin_review_out(r)
 
 
 # ---------- audit log ----------

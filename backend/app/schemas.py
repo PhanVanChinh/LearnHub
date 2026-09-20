@@ -584,6 +584,61 @@ class OrderDetail(OrderOut):
     payment: PaymentInfo | None = Field(None, description="Chỉ có khi đơn đang chờ thanh toán")
 
 
+# ---- Reviews ----
+class RatingSummary(BaseModel):
+    count: int = 0
+    average: float | None = Field(None, description="Trung bình 1 chữ số; None khi chưa đủ MIN_REVIEWS đánh giá")
+    distribution: dict[int, int] = Field(default_factory=lambda: {5: 0, 4: 0, 3: 0, 2: 0, 1: 0})
+
+
+class ReviewIn(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    comment: str = Field("", max_length=2000)
+
+    @field_validator("comment")
+    @classmethod
+    def _strip(cls, v: str) -> str:
+        return re.sub(r"\s+", " ", v).strip()
+
+
+class ReviewOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    rating: int
+    comment: str
+    created_at: datetime
+    updated_at: datetime
+    user_name: str = ""
+    user_initial: str = ""
+    mine: bool = False
+
+
+class ReviewList(BaseModel):
+    summary: RatingSummary
+    total: int
+    items: list[ReviewOut]
+    mine: ReviewOut | None = Field(None, description="Đánh giá của người đang xem (kể cả khi bị ẩn)")
+    can_review: bool = Field(False, description="Đã ghi danh → được đánh giá")
+
+
+class AdminReviewOut(ReviewOut):
+    user_id: int
+    user_email: str = ""
+    course_slug: str = ""
+    course_title: str = ""
+    hidden: bool
+    hidden_reason: str | None = None
+
+
+class PaginatedReviews(Paginated):
+    items: list[AdminReviewOut]
+
+
+class ReviewHideIn(BaseModel):
+    reason: str | None = Field(None, max_length=300)
+
+
 # ---- Public stats ----
 class PublicStats(BaseModel):
     courses: int
@@ -598,6 +653,7 @@ class CourseStats(BaseModel):
     slug: str
     views: int
     students: int = Field(description="Số ghi danh của khóa (miễn phí + đã mua)")
+    rating: RatingSummary = Field(default_factory=RatingSummary)
 
 
 class AdminOrderOut(OrderOut):

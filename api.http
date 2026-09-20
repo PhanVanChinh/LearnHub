@@ -139,6 +139,17 @@ Content-Type: application/json
 GET {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz/attempts
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Đánh giá của khóa (tóm tắt sao + danh sách, kèm đánh giá của tôi và có được đánh giá không)
+GET {{api}}/api/courses/video-nhap-mon-machine-learning/reviews
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Tạo / sửa đánh giá của tôi (cần đã ghi danh)
+PUT {{api}}/api/courses/video-nhap-mon-machine-learning/reviews/me
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "rating": 5, "comment": "Giảng dễ hiểu, bài tập sát đề." }
+
 ### Ghi danh khóa miễn phí
 POST {{api}}/api/courses/video-nhap-mon-machine-learning/enroll
 Authorization: Bearer {{login.response.body.access_token}}
@@ -217,6 +228,17 @@ Authorization: Bearer {{login.response.body.access_token}}
 ### Đánh dấu đã trả lời (bấm lại → bỏ đánh dấu)
 POST {{api}}/api/admin/contacts/1/replied
 Authorization: Bearer {{login.response.body.access_token}}
+
+### Đánh giá (admin): lọc hidden / course_id / rating / tìm
+GET {{api}}/api/admin/reviews?hidden=false
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Ẩn (hoặc hiện lại) một đánh giá
+POST {{api}}/api/admin/reviews/1/hide
+Authorization: Bearer {{login.response.body.access_token}}
+Content-Type: application/json
+
+{ "reason": "Nội dung không liên quan khóa học" }
 
 ### Nhật ký hành động admin (lọc action tiền tố, actor email, tìm tóm tắt)
 GET {{api}}/api/admin/audit?action=order&limit=50
