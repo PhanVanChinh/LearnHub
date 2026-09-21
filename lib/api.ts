@@ -225,6 +225,7 @@ export type AdminContact = {
 };
 export type AdminOrder = Order & { user_id: number; user_email: string; user_name: string; note: string | null; confirmed_by_email: string | null };
 export type Paginated<T> = { total: number; limit: number; offset: number; items: T[] };
+export type AdminReview = Review & { user_id: number; user_email: string; course_slug: string; course_title: string; hidden: boolean; hidden_reason: string | null };
 export type AuditLog = {
   id: number; actor_id: number | null; actor_email: string | null; action: string; target_type: string; target_id: string | null;
   summary: string; detail: Record<string, unknown> | null; ip: string | null; created_at: string;
@@ -238,6 +239,9 @@ export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
   publishStatus: () => api<PublishStatus>("/api/admin/publish"),
   uploadStatus: () => api<UploadStatus>("/api/admin/uploads/status"),
+  reviews: (params: { hidden?: boolean | ""; course_id?: number | ""; rating?: number | ""; q?: string; limit?: number; offset?: number } = {}) =>
+    api<Paginated<AdminReview>>(`/api/admin/reviews${qs(params)}`),
+  toggleReviewHidden: (id: number, reason?: string) => api<AdminReview>(`/api/admin/reviews/${id}/hide`, json("POST", { reason: reason || null })),
   upload: (file: File, course_slug: string) => {
     const fd = new FormData(); fd.append("file", file); fd.append("course_slug", course_slug);
     return api<UploadOut>("/api/admin/uploads", { method: "POST", body: fd });

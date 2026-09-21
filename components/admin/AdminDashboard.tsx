@@ -11,6 +11,7 @@ import EnrollmentsPanel from "./EnrollmentsPanel";
 import OrdersPanel from "./OrdersPanel";
 import ContactsPanel from "./ContactsPanel";
 import AuditPanel from "./AuditPanel";
+import ReviewsPanel from "./ReviewsPanel";
 import UsersPanel from "./UsersPanel";
 
 const TABS = [
@@ -19,6 +20,7 @@ const TABS = [
   { key: "users", label: "Người dùng" },
   { key: "enrollments", label: "Ghi danh" },
   { key: "contacts", label: "Liên hệ" },
+  { key: "reviews", label: "Đánh giá" },
   { key: "audit", label: "Nhật ký" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
@@ -93,6 +95,7 @@ export default function AdminDashboard() {
         <div className="mt-6">
           {tab === "orders" && <OrdersPanel onChanged={loadStats} />}
           {tab === "contacts" && <ContactsPanel onChanged={loadStats} />}
+          {tab === "reviews" && <ReviewsPanel />}
           {tab === "audit" && <AuditPanel />}
           {tab === "courses" && <CoursesPanel onChanged={loadStats} />}
           {tab === "users" && <UsersPanel onChanged={loadStats} />}
