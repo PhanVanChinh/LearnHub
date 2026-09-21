@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import String, or_
+from sqlalchemy import String, Text, cast, or_
 from sqlalchemy.orm import Session
 
 from .. import schemas, storage
@@ -26,8 +26,10 @@ def list_courses(
 ):
     query = db.query(Course)
     if category and category != "all":
-        # tags lưu JSON; SQLite/Postgres đều hỗ trợ LIKE trên chuỗi JSON cho nhu cầu đơn giản này
-        query = query.filter(Course.tags.cast(String).like(f'%"{category}"%'))
+        # tags lưu JSON. Postgres: json không so sánh/cast trực tiếp được → ép sang text; SQLite: cast String.
+        from ..config import settings
+        tags_text = cast(Course.tags, String) if settings.is_sqlite else Course.tags.cast(Text)
+        query = query.filter(tags_text.like(f'%"{category}"%'))
     if q:
         kw = f"%{q.strip()}%"
         query = query.filter(or_(Course.title.ilike(kw), Course.short.ilike(kw)))

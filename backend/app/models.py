@@ -207,7 +207,7 @@ class AuditLog(Base):
     actor_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     action: Mapped[str] = mapped_column(String(50), index=True)  # vd course.create, order.confirm, account.delete
     target_type: Mapped[str] = mapped_column(String(30), default="")  # course | user | enrollment | order | contact | site | account
-    target_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    target_id: Mapped[str | None] = mapped_column(String(300), nullable=True)  # id số hoặc key S3 (courses/<slug>/<uuid>-<tên>)
     summary: Mapped[str] = mapped_column(String(500), default="")
     detail: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True)

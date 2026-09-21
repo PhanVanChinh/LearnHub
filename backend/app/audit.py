@@ -17,7 +17,7 @@ def record(db: Session, request: Request | None, actor: User | None, action: str
         actor_id=actor.id if actor else None,
         actor_email=actor.email if actor else None,
         action=action, target_type=target_type,
-        target_id=str(target_id) if target_id is not None else None,
+        target_id=str(target_id)[:300] if target_id is not None else None,
         summary=summary[:500], detail=detail or None,
         ip=client_ip(request) if request is not None else None,
     )

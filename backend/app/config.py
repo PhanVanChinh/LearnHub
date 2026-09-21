@@ -66,6 +66,20 @@ class Settings(BaseSettings):
     google_client_id: str = ""
 
     @property
+    def sqlalchemy_url(self) -> str:
+        """Render/Heroku/Neon cấp 'postgres://' hoặc 'postgresql://' → ép sang driver psycopg 3."""
+        url = self.database_url.strip()
+        if url.startswith("postgres://"):
+            url = "postgresql+psycopg://" + url[len("postgres://"):]
+        elif url.startswith("postgresql://"):
+            url = "postgresql+psycopg://" + url[len("postgresql://"):]
+        return url
+
+    @property
+    def is_sqlite(self) -> bool:
+        return self.sqlalchemy_url.startswith("sqlite")
+
+    @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 

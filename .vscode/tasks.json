@@ -3,19 +3,35 @@
   "tasks": [
     {
       "label": "▶ Chạy tất cả (FE + BE)",
-      "dependsOn": ["Backend: uvicorn", "Frontend: next dev"],
+      "dependsOn": [
+        "Backend: uvicorn",
+        "Frontend: next dev"
+      ],
       "dependsOrder": "parallel",
       "problemMatcher": [],
-      "group": { "kind": "build", "isDefault": true }
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     },
     {
       "label": "Backend: uvicorn",
       "type": "shell",
       "command": "${workspaceFolder}/backend/.venv/bin/uvicorn",
-      "args": ["app.main:app", "--reload", "--port", "8000"],
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--port",
+        "8000"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
       "isBackground": true,
-      "presentation": { "panel": "dedicated", "group": "dev" },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "dev"
+      },
       "problemMatcher": []
     },
     {
@@ -23,7 +39,10 @@
       "type": "npm",
       "script": "dev",
       "isBackground": true,
-      "presentation": { "panel": "dedicated", "group": "dev" },
+      "presentation": {
+        "panel": "dedicated",
+        "group": "dev"
+      },
       "problemMatcher": []
     },
     {
@@ -36,7 +55,21 @@
       "label": "Backend: pytest",
       "type": "shell",
       "command": "${workspaceFolder}/backend/.venv/bin/python -m pytest -q",
-      "options": { "cwd": "${workspaceFolder}/backend" },
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: pytest (Postgres)",
+      "type": "shell",
+      "command": "${workspaceFolder}/backend/.venv/bin/python -m pytest -q",
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "TEST_DB": "postgres"
+        }
+      },
       "problemMatcher": []
     }
   ]
