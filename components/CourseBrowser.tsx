@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
 import { useLiveCourses } from "@/lib/liveCourse";
+import { searchCourses, type Match } from "@/lib/search";
 
 export default function CourseBrowser({
   courses: staticCourses, initial = "all", pageSize = 8, showSearch = true,
@@ -12,12 +13,11 @@ export default function CourseBrowser({
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(pageSize);
 
-  const filtered = useMemo(() => {
-    const kw = q.trim().toLowerCase();
-    return courses.filter(
-      (c) => (cat === "all" || c.tags.includes(cat)) && (!kw || c.title.toLowerCase().includes(kw) || c.short.toLowerCase().includes(kw)),
-    );
-  }, [courses, cat, q]);
+  // Tìm trong tên khóa, mô tả, tên bài học và tên tài liệu (không phân biệt dấu)
+  const filtered = useMemo(
+    () => searchCourses(courses.filter((c) => cat === "all" || c.tags.includes(cat)), q),
+    [courses, cat, q],
+  );
 
   const visible = filtered.slice(0, limit);
   const countBy = (key: Category | "all") => (key === "all" ? courses.length : courses.filter((c) => c.tags.includes(key)).length);
@@ -41,17 +41,20 @@ export default function CourseBrowser({
           <input
             value={q}
             onChange={(e) => { setQ(e.target.value); setLimit(pageSize); }}
-            placeholder="Tìm khóa học…"
+            placeholder="Tìm khóa học, bài học, tài liệu…"
             className="input md:w-64"
           />
         )}
       </div>
 
+      {q.trim() && filtered.length > 0 && (
+        <p className="mt-4 text-sm text-slate-500">{filtered.length} kết quả cho “{q.trim()}”{filtered.some((h) => h.match.where === "lesson" || h.match.where === "attachment") && " · một số khớp ở bài học bên trong"}</p>
+      )}
       {visible.length === 0 ? (
-        <p className="mt-10 text-center text-slate-500">Không tìm thấy khóa học phù hợp.</p>
+        <p className="mt-10 text-center text-slate-500">Không tìm thấy khóa học phù hợp.{q.trim() && " Thử từ khoá ngắn hơn hoặc bỏ dấu."}</p>
       ) : (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {visible.map((c) => <CourseCard key={c.slug} course={c} />)}
+          {visible.map((h) => <CourseCard key={h.course.slug} course={h.course} match={q.trim() ? h.match : undefined} query={q} />)}
         </div>
       )}
 
