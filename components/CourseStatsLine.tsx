@@ -11,6 +11,7 @@ export default function CourseStatsLine({ slug, lessons, className = "" }: { slu
       <span>📚 {lessons} bài học</span>
       {stats && stats.views > 0 && <span>👁 {n(stats.views)} lượt xem</span>}
       {stats && stats.students > 0 && <span>👥 {n(stats.students)} học viên</span>}
+      {stats?.rating.average != null && <span title={`${stats.rating.count} đánh giá`}>⭐ {stats.rating.average.toFixed(1)} ({n(stats.rating.count)})</span>}
     </div>
   );
 }

@@ -174,7 +174,24 @@ export const ordersApi = {
 
 // ---- Public stats ----
 export type PublicStats = { courses: number; lessons: number; videos: number; students: number; enrollments: number; views: number };
-export type CourseStats = { slug: string; views: number; students: number };
+const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
+  const s = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") s.set(k, String(v)); });
+  const str = s.toString();
+  return str ? `?${str}` : "";
+};
+
+export type RatingSummary = { count: number; average: number | null; distribution: Record<string, number> };
+export type CourseStats = { slug: string; views: number; students: number; rating: RatingSummary };
+export type Review = { id: number; rating: number; comment: string; created_at: string; updated_at: string; user_name: string; user_initial: string; mine: boolean };
+export type ReviewList = { summary: RatingSummary; total: number; items: Review[]; mine: Review | null; can_review: boolean };
+export const reviewsApi = {
+  list: (slug: string, params: { limit?: number; offset?: number } = {}) =>
+    api<ReviewList>(`/api/courses/${slug}/reviews${qs(params)}`),
+  upsert: (slug: string, rating: number, comment: string) =>
+    api<Review>(`/api/courses/${slug}/reviews/me`, { method: "PUT", body: JSON.stringify({ rating, comment }) }),
+  remove: (slug: string) => api<void>(`/api/courses/${slug}/reviews/me`, { method: "DELETE" }),
+};
 
 export const statsApi = {
   summary: () => api<PublicStats>("/api/stats"),
@@ -215,12 +232,6 @@ export type AuditLog = {
 export type PublishStatus = { configured: boolean; repo: string; actions_url: string; site_url: string };
 export type PublishResult = PublishStatus & { detail: string };
 
-const qs = (params: Record<string, string | number | boolean | undefined | null>) => {
-  const s = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== "") s.set(k, String(v)); });
-  const str = s.toString();
-  return str ? `?${str}` : "";
-};
 const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
 
 export const adminApi = {

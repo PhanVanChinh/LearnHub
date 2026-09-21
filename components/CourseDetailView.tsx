@@ -4,6 +4,7 @@ import CourseCard from "@/components/CourseCard";
 import CourseStatsLine from "@/components/CourseStatsLine";
 import EnrollButton from "@/components/EnrollButton";
 import LessonList from "@/components/LessonList";
+import CourseReviews from "@/components/CourseReviews";
 import { youtubeThumb } from "@/components/VideoPlayer";
 import type { Course } from "@/data/courses";
 import { totalDuration } from "@/lib/duration";
@@ -45,6 +46,10 @@ export default function CourseDetailView({ course: initial, related }: { course:
           <section>
             <h2 className="text-xl font-bold text-slate-900">Nội dung</h2>
             <LessonList lessons={course.lessons} slug={course.slug} />
+          </section>
+          <section id="reviews">
+            <h2 className="text-xl font-bold text-slate-900">Đánh giá của học viên</h2>
+            <CourseReviews slug={course.slug} />
           </section>
         </div>
 

@@ -9,6 +9,7 @@ import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
 import LessonAttachments from "./LessonAttachments";
+import ReviewPrompt from "./ReviewPrompt";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
@@ -210,6 +211,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                   <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
                   </div>
+                  {progress.percent >= 50 && <ReviewPrompt slug={course.slug} completed={progress.percent === 100} />}
                 </div>
               )}
             </div>
