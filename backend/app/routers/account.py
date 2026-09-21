@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit, schemas
 from ..database import get_db
-from ..models import AiCheckRun, ContactMessage, EmailVerification, Enrollment, LessonProgress, Order, PasswordReset, QuizAttempt, User
+from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, verify_password
 from .orders import CANCELLED, PENDING
@@ -48,6 +48,12 @@ def export_user_data(db: Session, user: User) -> dict:
             {"code": o.code, "course_slug": o.course.slug, "course_title": o.course.title, "amount": o.amount, "status": o.status,
              "payment_method": o.payment_method, "created_at": _iso(o.created_at), "paid_at": _iso(o.paid_at)} for o in user.orders
         ],
+        "certificates": [
+            {"code": c.code, "course_title": c.course_title, "issued_at": _iso(c.issued_at)} for c in user.certificates
+        ],
+        "reviews": [
+            {"course_slug": r.course.slug, "rating": r.rating, "comment": r.comment, "at": _iso(r.updated_at)} for r in user.reviews
+        ],
         "ai_check_runs": [
             {"words": r.words, "chars": r.chars, "ai_score": r.ai_score, "confidence": r.confidence, "at": _iso(r.created_at)} for r in user.ai_checks
         ],
@@ -75,7 +81,7 @@ def anonymize_user(db: Session, user: User) -> None:
     """
     now = datetime.utcnow()
     uid = user.id
-    for model in (Enrollment, LessonProgress, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset):
+    for model in (Enrollment, LessonProgress, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
         db.query(model).filter(model.user_id == uid).delete(synchronize_session=False)
     db.query(Order).filter(Order.user_id == uid, Order.status == PENDING).update({"status": CANCELLED}, synchronize_session=False)
     db.query(ContactMessage).filter(ContactMessage.user_id == uid).update(

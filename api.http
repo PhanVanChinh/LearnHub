@@ -139,6 +139,17 @@ Content-Type: application/json
 GET {{api}}/api/courses/trac-nghiem-triet-hoc-mac-lenin/lessons/0/quiz/attempts
 Authorization: Bearer {{login.response.body.access_token}}
 
+### Nhận chứng nhận hoàn thành (cần 100% bài học)
+POST {{api}}/api/courses/video-nhap-mon-machine-learning/certificate
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Chứng nhận của tôi
+GET {{api}}/api/certificates/me
+Authorization: Bearer {{login.response.body.access_token}}
+
+### Xác thực công khai theo mã
+GET {{api}}/api/certificates/LH-CERT-XXXXXXXX
+
 ### Đánh giá của khóa (tóm tắt sao + danh sách, kèm đánh giá của tôi và có được đánh giá không)
 GET {{api}}/api/courses/video-nhap-mon-machine-learning/reviews
 Authorization: Bearer {{login.response.body.access_token}}

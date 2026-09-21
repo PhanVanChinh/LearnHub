@@ -584,6 +584,20 @@ class OrderDetail(OrderOut):
     payment: PaymentInfo | None = Field(None, description="Chỉ có khi đơn đang chờ thanh toán")
 
 
+# ---- Certificates ----
+class CertificateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    code: str
+    holder_name: str
+    course_title: str
+    course_slug: str = ""
+    lessons: int
+    issued_at: datetime
+    valid: bool = True
+    verify_url: str = ""
+
+
 # ---- Reviews ----
 class RatingSummary(BaseModel):
     count: int = 0

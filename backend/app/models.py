@@ -54,6 +54,7 @@ class User(Base):
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_checks: Mapped[list["AiCheckRun"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     reviews: Mapped[list["Review"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    certificates: Mapped[list["Certificate"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class Course(Base):
@@ -80,6 +81,7 @@ class Course(Base):
     orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     reviews: Mapped[list["Review"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    certificates: Mapped[list["Certificate"]] = relationship(back_populates="course", cascade="all, delete-orphan")
 
 
 class Enrollment(Base):
@@ -119,6 +121,25 @@ class Order(Base):
     user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="orders")
     course: Mapped[Course] = relationship(back_populates="orders")
     confirmed_by: Mapped[User | None] = relationship(foreign_keys=[confirmed_by_id])
+
+
+class Certificate(Base):
+    """Chứng nhận hoàn thành: cấp khi tiến độ 100%, mã công khai để bên thứ ba xác thực. Lưu tên tại thời điểm cấp."""
+
+    __tablename__ = "certificates"
+    __table_args__ = (UniqueConstraint("user_id", "course_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(String(20), unique=True, index=True)  # vd LH-CERT-7K3M9PQ2
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    holder_name: Mapped[str] = mapped_column(String(255))
+    course_title: Mapped[str] = mapped_column(String(500))
+    lessons: Mapped[int] = mapped_column(Integer, default=0)
+    issued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="certificates")
+    course: Mapped[Course] = relationship(back_populates="certificates")
 
 
 class Review(Base):

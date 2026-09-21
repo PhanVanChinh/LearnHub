@@ -185,6 +185,12 @@ export type RatingSummary = { count: number; average: number | null; distributio
 export type CourseStats = { slug: string; views: number; students: number; rating: RatingSummary };
 export type Review = { id: number; rating: number; comment: string; created_at: string; updated_at: string; user_name: string; user_initial: string; mine: boolean };
 export type ReviewList = { summary: RatingSummary; total: number; items: Review[]; mine: Review | null; can_review: boolean };
+export type Certificate = { code: string; holder_name: string; course_title: string; course_slug: string; lessons: number; issued_at: string; valid: boolean; verify_url: string };
+export const certificatesApi = {
+  issue: (slug: string) => api<Certificate>(`/api/courses/${slug}/certificate`, { method: "POST" }),
+  mine: () => api<Certificate[]>("/api/certificates/me"),
+  verify: (code: string) => api<Certificate>(`/api/certificates/${encodeURIComponent(code.trim().toUpperCase())}`),
+};
 export const reviewsApi = {
   list: (slug: string, params: { limit?: number; offset?: number } = {}) =>
     api<ReviewList>(`/api/courses/${slug}/reviews${qs(params)}`),

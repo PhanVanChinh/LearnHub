@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .database import Base, engine, migrate
-from .routers import account, admin, ai_check, auth, contact, courses, orders, reviews, stats
+from .routers import account, admin, ai_check, auth, certificates, contact, courses, orders, reviews, stats
 from .seed import seed_if_empty
 from .routers.account import purge_expired_tokens
 from .database import SessionLocal
@@ -78,6 +78,7 @@ app.include_router(contact.router)
 app.include_router(ai_check.router)
 app.include_router(account.router)
 app.include_router(reviews.router)
+app.include_router(certificates.router)
 
 
 @app.get("/api/health", tags=["meta"])
