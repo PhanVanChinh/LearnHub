@@ -21,7 +21,17 @@ export const tokenStore = {
 
 export type FieldErrors = Record<string, string>;
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public errors: FieldErrors = {}) { super(message); }
+  constructor(public status: number, message: string, public errors: FieldErrors = {}, public requestId: string | null = null) { super(message); }
+}
+
+/** Gửi lỗi JS chưa bắt về backend (→ log / Sentry). Không ném lỗi, không chờ. */
+export function reportClientError(payload: { message: string; stack?: string; source?: string }) {
+  try {
+    void fetch(`${API_URL}/api/client-errors`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+      body: JSON.stringify({ ...payload, url: location.href, user_agent: navigator.userAgent }),
+    });
+  } catch { /* bỏ qua */ }
 }
 
 let refreshing: Promise<boolean> | null = null;
@@ -65,7 +75,7 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
     // Backend trả errors: [{field, msg}] cho lỗi 422 → map theo trường để form tô đỏ đúng ô
     const errors: FieldErrors = {};
     if (Array.isArray(data.errors)) for (const e of data.errors) if (e?.field && !errors[e.field]) errors[e.field] = e.msg;
-    throw new ApiError(res.status, detail, errors);
+    throw new ApiError(res.status, detail, errors, res.headers.get("x-request-id"));
   }
   return data as T;
 }

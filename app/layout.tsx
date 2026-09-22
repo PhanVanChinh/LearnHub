@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { site } from "@/lib/site";
 import { AuthProvider } from "@/components/AuthProvider";
 import VerifyBanner from "@/components/VerifyBanner";
+import ErrorReporter from "@/components/ErrorReporter";
 
 export const metadata: Metadata = {
   title: { default: `${site.name} — Học tập online cho sinh viên`, template: `%s | ${site.name}` },
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body className="flex min-h-screen flex-col">
+        <ErrorReporter />
         <AuthProvider>
           <Header />
           <VerifyBanner />

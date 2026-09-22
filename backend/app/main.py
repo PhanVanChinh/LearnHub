@@ -1,12 +1,22 @@
 from contextlib import asynccontextmanager
 
+import logging
+
 from fastapi import Depends, FastAPI, Request
+from pydantic import BaseModel, Field
+
+from .ratelimit import rate_limit
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import settings
-from .database import Base, engine, migrate
+from . import observability
+
+observability.setup_logging()
+observability.setup_sentry()
+
+from .database import Base, engine, migrate  # noqa: E402 — sau khi logging đã cấu hình
 from .routers import account, admin, ai_check, auth, certificates, contact, courses, orders, reviews, stats
 from .seed import seed_if_empty
 from .routers.account import purge_expired_tokens
@@ -38,6 +48,8 @@ app = FastAPI(
     description="Backend cho nền tảng khóa học LearnHub — auth JWT, khóa học, CRUD admin.",
     lifespan=lifespan,
 )
+
+observability.install(app)
 
 app.add_middleware(
     CORSMiddleware,
@@ -85,6 +97,21 @@ app.include_router(ai_check.router)
 app.include_router(account.router)
 app.include_router(reviews.router)
 app.include_router(certificates.router)
+
+
+class ClientErrorIn(BaseModel):
+    message: str = Field(max_length=1000)
+    stack: str = Field("", max_length=4000)
+    url: str = Field("", max_length=1000)
+    user_agent: str = Field("", max_length=300)
+    source: str = Field("window", max_length=50)
+
+
+@app.post("/api/client-errors", status_code=204, tags=["meta"], dependencies=[rate_limit("client-error", 20, 600)])
+def client_error(payload: ClientErrorIn):
+    """Frontend gửi lỗi JS chưa bắt về đây → log ERROR (→ Sentry nếu bật). Không lưu DB."""
+    logging.getLogger("learnhub.client").error("JS %s: %s | %s | %s\n%s", payload.source, payload.message, payload.url,
+                                                payload.user_agent[:120], payload.stack[:2000])
 
 
 @app.get("/api/health", tags=["meta"])

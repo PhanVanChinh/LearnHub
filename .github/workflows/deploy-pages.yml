@@ -84,7 +84,7 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Smoke test image (khởi động, gọi /api/health)
         run: |
-          docker run -d --name api -p 8000:8000 -e SECRET_KEY=ci-only-secret-key-not-for-production learnhub-api:ci
+          docker run -d --name api -p 8000:8000 -e SECRET_KEY=ci-only-secret-key-not-for-production -e LOG_FORMAT=json learnhub-api:ci
           for i in $(seq 1 30); do
             if curl -fs http://localhost:8000/api/health; then echo; echo "OK"; exit 0; fi; sleep 1
           done

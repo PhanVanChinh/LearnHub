@@ -21,4 +21,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # --proxy-headers + forwarded-allow-ips: chạy sau reverse proxy (Render, Railway, nginx) đọc đúng IP khách cho rate limit
 # PORT do nền tảng cấp (Render đặt PORT), mặc định 8000
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*' --workers ${WEB_CONCURRENCY:-1}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*' --no-access-log --workers ${WEB_CONCURRENCY:-1}"]

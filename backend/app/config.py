@@ -4,6 +4,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # Quan sát hệ thống
+    log_level: str = "INFO"
+    log_format: str = "text"  # text | json (production nên dùng json để đưa vào Render Logs / Loki)
+    sentry_dsn: str = ""  # trống → không gửi lỗi lên Sentry
+    sentry_traces_sample_rate: float = 0.0  # 0 = chỉ lỗi, không đo hiệu năng (đỡ tốn quota)
+    app_version: str = ""  # gắn vào Sentry release (CI đặt = git sha)
+
     # development | production. production → từ chối khởi động nếu còn cấu hình mặc định (xem startup_checks.py)
     app_env: str = "development"
     secret_key: str = "dev-secret-change-me"

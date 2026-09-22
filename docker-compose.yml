@@ -37,7 +37,7 @@ services:
     # Dev: mount code để uvicorn --reload nhận thay đổi. Bỏ 2 dòng volumes/command để chạy như image production.
     volumes:
       - ./backend/app:/app/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --no-access-log
 
   web:
     image: node:20-alpine
