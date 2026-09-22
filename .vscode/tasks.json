@@ -71,6 +71,15 @@
         }
       },
       "problemMatcher": []
+    },
+    {
+      "label": "🐳 Docker: chạy tất cả (Postgres + BE + FE)",
+      "type": "shell",
+      "command": "docker compose up --build",
+      "problemMatcher": [],
+      "presentation": {
+        "panel": "dedicated"
+      }
     }
   ]
 }
