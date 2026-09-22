@@ -1,0 +1,112 @@
+# Render Blueprint: tạo Postgres + backend API + cron backup bằng một lần "New → Blueprint" trỏ vào repo này.
+# Frontend vẫn ở GitHub Pages (workflow deploy-pages.yml); sau khi API có URL, đặt biến NEXT_PUBLIC_API_URL
+# trong GitHub → Settings → Secrets and variables → Actions → Variables rồi bấm "Xuất bản" trong admin.
+#
+# Sau khi deploy lần đầu, vào Render Dashboard → learnhub-api → Environment, điền các biến sync: false bên dưới
+# (Render sẽ hỏi ngay khi tạo blueprint). Backend TỪ CHỐI khởi động nếu SECRET_KEY/ADMIN_PASSWORD còn mặc định.
+databases:
+  - name: learnhub-db
+    plan: free          # free: 1 GB, hết hạn sau 90 ngày → nâng lên 'basic-256mb' khi chạy thật để không mất DB
+    databaseName: learnhub
+    user: learnhub
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: learnhub-api
+    runtime: docker
+    plan: free          # free ngủ sau 15 phút không dùng (request đầu chậm ~30s); 'starter' để luôn thức
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    autoDeploy: true    # push lên main → Render build lại backend (song song với GitHub Actions deploy Pages)
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_FORMAT
+        value: json
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      - key: WEB_CONCURRENCY
+        value: "1"        # rate limit lưu trong tiến trình → 1 worker; tăng khi chuyển sang Redis
+      - key: DATABASE_URL
+        fromDatabase:
+          name: learnhub-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true   # Render tự sinh chuỗi ngẫu nhiên dài
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false           # đặt mật khẩu mạnh; chỉ dùng lần seed đầu, sau đó đổi trong trang Tài khoản
+      - key: CORS_ORIGINS
+        value: https://phanvanchinh.github.io
+      - key: FRONTEND_URL
+        value: https://phanvanchinh.github.io/LearnHub
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: TURNSTILE_SECRET_KEY
+        sync: false
+      - key: BANK_BIN
+        sync: false
+      - key: BANK_ACCOUNT_NUMBER
+        sync: false
+      - key: BANK_ACCOUNT_NAME
+        sync: false
+      - key: BANK_NAME
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  # Backup toàn bộ DB lên R2 (thư mục backups/) mỗi ngày 2:00 sáng giờ VN (19:00 UTC), giữ 14 bản.
+  # Khôi phục: Render Shell của learnhub-api → python restore_db.py --list → python restore_db.py <key> --yes
+  - type: cron
+    name: learnhub-backup
+    runtime: docker
+    plan: starter       # cron trên Render không có gói free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    schedule: "0 19 * * *"
+    dockerCommand: python backup_db.py
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_FORMAT
+        value: json
+      - key: BACKUP_KEEP
+        value: "14"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: learnhub-db
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: learnhub-api
+          envVarKey: SECRET_KEY
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false

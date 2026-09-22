@@ -10,6 +10,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY app ./app
+COPY backup_db.py restore_db.py ./
 
 # Không chạy bằng root
 RUN useradd -r -u 10001 learnhub && chown -R learnhub /app

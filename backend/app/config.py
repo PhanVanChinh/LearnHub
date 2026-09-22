@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     s3_region: str = "auto"
     s3_link_expire_seconds: int = 600  # link tải có hạn 10 phút
     upload_max_mb: int = 50
+    backup_keep: int = 14  # số bản backup giữ trên S3 (backup_db.py)
 
     # AI Check (gọi Claude). Trống ANTHROPIC_API_KEY → tính năng báo "chưa cấu hình", không trả kết quả giả.
     anthropic_api_key: str = ""
