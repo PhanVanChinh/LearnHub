@@ -236,6 +236,11 @@ export type AuditLog = {
   id: number; actor_id: number | null; actor_email: string | null; action: string; target_type: string; target_id: string | null;
   summary: string; detail: Record<string, unknown> | null; ip: string | null; created_at: string;
 };
+export type HealthConfig = {
+  env: string; database: "sqlite" | "postgres";
+  services: { mail: string; google_login: boolean; captcha: boolean; bank_qr: boolean; file_storage: boolean; ai_check: boolean; publish_button: boolean };
+  errors: string[]; warnings: string[];
+};
 export type PublishStatus = { configured: boolean; repo: string; actions_url: string; site_url: string };
 export type PublishResult = PublishStatus & { detail: string };
 
@@ -244,6 +249,7 @@ const json = (method: string, body: unknown): RequestInit => ({ method, body: JS
 export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
   publishStatus: () => api<PublishStatus>("/api/admin/publish"),
+  healthConfig: () => api<HealthConfig>("/api/health/config"),
   uploadStatus: () => api<UploadStatus>("/api/admin/uploads/status"),
   reviews: (params: { hidden?: boolean | ""; course_id?: number | ""; rating?: number | ""; q?: string; limit?: number; offset?: number } = {}) =>
     api<Paginated<AdminReview>>(`/api/admin/reviews${qs(params)}`),

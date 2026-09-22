@@ -15,7 +15,7 @@ def verify(client, token: str, email: str) -> None:
 
 
 def test_health(client):
-    assert client.get("/api/health").json() == {"status": "ok"}
+    assert client.get("/api/health").json()["status"] == "ok"
 
 
 def test_register_login_me(client):

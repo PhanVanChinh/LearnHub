@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # development | production. production → từ chối khởi động nếu còn cấu hình mặc định (xem startup_checks.py)
+    app_env: str = "development"
     secret_key: str = "dev-secret-change-me"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60  # access token ngắn; gia hạn bằng refresh token
@@ -64,6 +66,10 @@ class Settings(BaseSettings):
 
     # Đăng nhập Google (Google Identity Services): chỉ cần Client ID, bỏ trống → ẩn nút Google
     google_client_id: str = ""
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() in ("production", "prod")
 
     @property
     def sqlalchemy_url(self) -> str:

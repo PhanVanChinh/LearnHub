@@ -7,6 +7,7 @@ import { adminApi, AdminStats } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import CoursesPanel from "./CoursesPanel";
 import PublishButton from "./PublishButton";
+import SystemStatus from "./SystemStatus";
 import EnrollmentsPanel from "./EnrollmentsPanel";
 import OrdersPanel from "./OrdersPanel";
 import ContactsPanel from "./ContactsPanel";
@@ -75,7 +76,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div className="mt-6"><PublishButton /></div>
+        <div className="mt-6 grid gap-4 lg:grid-cols-2"><PublishButton /><SystemStatus /></div>
 
         <div className="mt-8 flex gap-1 border-b border-slate-200">
           {TABS.map((t) => (

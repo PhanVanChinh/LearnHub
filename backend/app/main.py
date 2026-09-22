@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,6 +11,11 @@ from .routers import account, admin, ai_check, auth, certificates, contact, cour
 from .seed import seed_if_empty
 from .routers.account import purge_expired_tokens
 from .database import SessionLocal
+from .startup_checks import find_problems, run_startup_checks
+from . import ai_check as ai_check_svc
+from . import captcha, google_auth, mailer, storage
+from .security import require_admin
+from sqlalchemy import text
 
 
 @asynccontextmanager
@@ -21,6 +26,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         purge_expired_tokens(db)
+        run_startup_checks(db)  # production: RuntimeError → tiến trình dừng, không chạy với cấu hình mặc định
     finally:
         db.close()
     yield
@@ -83,4 +89,30 @@ app.include_router(certificates.router)
 
 @app.get("/api/health", tags=["meta"])
 def health():
-    return {"status": "ok"}
+    """Docker/Render/uptime monitor gọi. Kiểm tra cả DB: DB chết → 503 để nền tảng khởi động lại / báo động."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:  # noqa: BLE001 — mọi lỗi DB đều là unhealthy
+        return JSONResponse(status_code=503, content={"status": "error", "db": "down", "detail": str(e)[:200]})
+    return {"status": "ok", "db": "ok", "env": settings.app_env}
+
+
+@app.get("/api/health/config", tags=["meta"], dependencies=[Depends(require_admin)])
+def health_config():
+    """Admin: dịch vụ nào đã cấu hình, cấu hình nào còn thiếu/nguy hiểm. Không lộ giá trị bí mật."""
+    db = SessionLocal()
+    try:
+        errors, warnings = find_problems(db)
+    finally:
+        db.close()
+    return {
+        "env": settings.app_env,
+        "database": "sqlite" if settings.is_sqlite else "postgres",
+        "services": {
+            "mail": mailer.provider(), "google_login": google_auth.enabled(), "captcha": captcha.enabled(),
+            "bank_qr": bool(settings.bank_bin and settings.bank_account_number), "file_storage": storage.enabled(),
+            "ai_check": ai_check_svc.enabled(), "publish_button": bool(settings.github_token and settings.github_repo),
+        },
+        "errors": errors, "warnings": warnings,
+    }
