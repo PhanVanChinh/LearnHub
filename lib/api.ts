@@ -1,6 +1,6 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const TOKEN_KEY = "learnhub_token";
-const REFRESH_KEY = "learnhub_refresh";
+const REFRESH_KEY = "learnhub_refresh";   // chỉ dùng khi backend REFRESH_TOKEN_IN_BODY=true (frontend khác site với API)
+const SESSION_FLAG = "learnhub_session";   // "1" = đã đăng nhập trên trình duyệt này → lúc tải trang thử refresh bằng cookie
 
 export type User = { id: number; email: string; full_name: string; role: "user" | "admin"; email_verified: boolean; avatar_url?: string | null; has_google?: boolean; has_password?: boolean; created_at: string;
   last_login_at?: string | null; password_changed_at?: string | null; sessions_revoked_at?: string | null };
@@ -9,14 +9,20 @@ export type Token = { access_token: string; refresh_token?: string | null; token
 export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number; google_client_id: string };
 
 const ls = (fn: () => string | null | void) => { try { return fn() ?? null; } catch { return null; } };
+// Access token CHỈ giữ trong bộ nhớ (mất khi tải lại trang → lấy lại bằng refresh cookie httpOnly). Không còn nằm trong
+// localStorage nên script lạ (XSS) không đọc được token dài hạn; refresh token nằm trong cookie httpOnly do backend đặt.
+let accessToken: string | null = null;
 export const tokenStore = {
-  get: () => (typeof window === "undefined" ? null : ls(() => localStorage.getItem(TOKEN_KEY))),
+  get: () => accessToken,
+  /** Refresh token legacy trong localStorage — chỉ có khi backend trả nó trong JSON */
   getRefresh: () => (typeof window === "undefined" ? null : ls(() => localStorage.getItem(REFRESH_KEY))),
+  hasSession: () => typeof window !== "undefined" && (ls(() => localStorage.getItem(SESSION_FLAG)) === "1" || !!tokenStore.getRefresh()),
   set: (t: string, refresh?: string | null) => {
-    ls(() => localStorage.setItem(TOKEN_KEY, t));
-    if (refresh) ls(() => localStorage.setItem(REFRESH_KEY, refresh));
+    accessToken = t;
+    ls(() => localStorage.setItem(SESSION_FLAG, "1"));
+    if (refresh) ls(() => localStorage.setItem(REFRESH_KEY, refresh)); else ls(() => localStorage.removeItem(REFRESH_KEY));
   },
-  clear: () => { ls(() => localStorage.removeItem(TOKEN_KEY)); ls(() => localStorage.removeItem(REFRESH_KEY)); },
+  clear: () => { accessToken = null; ls(() => localStorage.removeItem(REFRESH_KEY)); ls(() => localStorage.removeItem(SESSION_FLAG)); ls(() => localStorage.removeItem("learnhub_token")); },
 };
 
 export type FieldErrors = Record<string, string>;
@@ -35,14 +41,15 @@ export function reportClientError(payload: { message: string; stack?: string; so
 }
 
 let refreshing: Promise<boolean> | null = null;
-/** Đổi refresh token lấy access token mới. Gộp các lần gọi đồng thời thành một. */
-async function tryRefresh(): Promise<boolean> {
-  const rt = tokenStore.getRefresh();
-  if (!rt) return false;
+/** Lấy access token mới bằng cookie httpOnly (credentials: include) hoặc refresh token legacy. Gộp các lần gọi đồng thời. */
+export async function tryRefresh(): Promise<boolean> {
+  if (!tokenStore.hasSession()) return false;
   refreshing ??= (async () => {
     try {
+      const rt = tokenStore.getRefresh();
       const res = await fetch(`${API_URL}/api/auth/refresh`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ refresh_token: rt }),
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(rt ? { refresh_token: rt } : {}),
       });
       if (!res.ok) { tokenStore.clear(); return false; }
       const t = (await res.json()) as Token;
@@ -60,12 +67,13 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
   if (token) headers.Authorization = `Bearer ${token}`;
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { ...init, headers });
+    res = await fetch(`${API_URL}${path}`, { credentials: "include", ...init, headers });
   } catch {
     throw new ApiError(0, "Không kết nối được máy chủ. Backend đã chạy chưa?");
   }
   // Access token hết hạn → gia hạn bằng refresh token rồi gọi lại đúng 1 lần
-  if (res.status === 401 && token && !_retried && !path.startsWith("/api/auth/refresh") && (await tryRefresh())) {
+  // 401 → thử gia hạn (kể cả khi chưa có access token trong bộ nhớ, vd vừa tải lại trang) rồi gọi lại đúng 1 lần
+  if (res.status === 401 && !_retried && !path.startsWith("/api/auth/refresh") && !path.startsWith("/api/auth/login") && (await tryRefresh())) {
     return api<T>(path, init, true);
   }
   if (res.status === 204) return undefined as T;
@@ -83,6 +91,8 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
 export const authApi = {
   config: () => api<AuthConfig>("/api/auth/config"),
   logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
+  /** Xoá cookie refresh trên thiết bị này */
+  logout: () => api<void>("/api/auth/logout", { method: "POST" }),
   google: (credential: string) => api<Token>("/api/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
   linkGoogle: (credential: string) => api<User>("/api/auth/google/link", { method: "POST", body: JSON.stringify({ credential }) }),
   unlinkGoogle: () => api<User>("/api/auth/google", { method: "DELETE" }),

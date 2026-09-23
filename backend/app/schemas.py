@@ -118,7 +118,7 @@ class Token(BaseModel):
 
 
 class RefreshIn(BaseModel):
-    refresh_token: str
+    refresh_token: str | None = Field(None, description="Bỏ trống nếu dùng cookie httpOnly")
 
 
 class AuthConfig(BaseModel):

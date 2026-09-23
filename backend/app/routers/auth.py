@@ -2,7 +2,8 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -17,8 +18,26 @@ from ..security import create_access_token, create_refresh_token, get_current_us
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
-def _issue(user: User) -> schemas.Token:
-    return schemas.Token(access_token=create_access_token(user), refresh_token=create_refresh_token(user),
+REFRESH_COOKIE = "learnhub_refresh"
+
+
+def set_refresh_cookie(response: Response, token: str) -> None:
+    """Refresh token trong cookie httpOnly, chỉ gửi tới /api/auth (không kèm theo mọi request khác)."""
+    response.set_cookie(
+        REFRESH_COOKIE, token, max_age=settings.refresh_token_expire_days * 86400, httponly=True,
+        secure=settings.cookie_secure_effective, samesite=settings.cookie_samesite, path="/api/auth",
+    )
+
+
+def clear_refresh_cookie(response: Response) -> None:
+    response.delete_cookie(REFRESH_COOKIE, path="/api/auth", secure=settings.cookie_secure_effective, samesite=settings.cookie_samesite)
+
+
+def _issue(user: User, response: Response) -> schemas.Token:
+    """Cấp access + refresh token. Refresh luôn vào cookie; chỉ kèm trong JSON khi REFRESH_TOKEN_IN_BODY=true."""
+    refresh = create_refresh_token(user)
+    set_refresh_cookie(response, refresh)
+    return schemas.Token(access_token=create_access_token(user), refresh_token=refresh if settings.refresh_token_in_body else None,
                          user=schemas.UserOut.model_validate(user))
 
 
@@ -31,7 +50,7 @@ def auth_config():
 
 
 @router.post("/google", response_model=schemas.Token, dependencies=[rate_limit("google", 20, 60)])
-def google_login(payload: schemas.GoogleLoginIn, db: Session = Depends(get_db)):
+def google_login(payload: schemas.GoogleLoginIn, response: Response, db: Session = Depends(get_db)):
     """Đăng nhập / đăng ký bằng Google. Email Google đã xác minh nên bỏ qua OTP."""
     claims = google_auth.verify_id_token(payload.credential)
     email = claims["email"].strip().lower()
@@ -54,7 +73,7 @@ def google_login(payload: schemas.GoogleLoginIn, db: Session = Depends(get_db)):
     user.last_login_at = now
     db.commit()
     db.refresh(user)
-    return _issue(user)
+    return _issue(user, response)
 
 
 @router.post("/google/link", response_model=schemas.UserOut, dependencies=[rate_limit("google", 20, 60)])
@@ -90,7 +109,7 @@ def google_unlink(user: User = Depends(get_current_user), db: Session = Depends(
 
 @router.post("/register", response_model=schemas.Token, status_code=status.HTTP_201_CREATED,
              dependencies=[rate_limit("register", 5, 3600)])
-def register(payload: schemas.UserCreate, request: Request, db: Session = Depends(get_db)):
+def register(payload: schemas.UserCreate, request: Request, response: Response, db: Session = Depends(get_db)):
     captcha.verify_or_raise(payload.captcha_token, client_ip(request))
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status.HTTP_409_CONFLICT, "Email đã được đăng ký")
@@ -100,7 +119,7 @@ def register(payload: schemas.UserCreate, request: Request, db: Session = Depend
     db.commit()
     db.refresh(user)
     _send_verification(db, user)
-    return _issue(user)
+    return _issue(user, response)
 
 
 # ---------- xác thực email ----------
@@ -173,7 +192,7 @@ def confirm_verification(payload: schemas.VerifyEmailIn, user: User = Depends(ge
 
 
 @router.post("/login", response_model=schemas.Token, dependencies=[rate_limit("login", 10, 60)])
-def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
+def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
     if not user:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email hoặc mật khẩu không đúng")
@@ -201,31 +220,43 @@ def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
     user.locked_until = None
     user.last_login_at = now
     db.commit()
-    return _issue(user)
+    return _issue(user, response)
 
 
 @router.post("/refresh", response_model=schemas.Token, dependencies=[rate_limit("refresh", 30, 60)])
-def refresh(payload: schemas.RefreshIn, db: Session = Depends(get_db)):
-    """Đổi refresh token lấy access token mới (và refresh token mới)."""
-    user = user_from_token(payload.refresh_token, db, kind="refresh")
+def refresh(request: Request, response: Response, payload: schemas.RefreshIn | None = Body(None), db: Session = Depends(get_db)):
+    """Đổi refresh token lấy access token mới (và refresh token mới). Token lấy từ body (legacy) hoặc cookie httpOnly."""
+    token = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
+    if not token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Chưa đăng nhập")
+    user = user_from_token(token, db, kind="refresh")
     if not user:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại")
-    return _issue(user)
+        # Không raise HTTPException: header Set-Cookie trên `response` sẽ bị bỏ → trả JSONResponse riêng kèm lệnh xoá cookie hỏng
+        bad = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"})
+        clear_refresh_cookie(bad)
+        return bad
+    return _issue(user, response)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout(response: Response):
+    """Xoá cookie refresh trên thiết bị này. Access token còn hạn vẫn dùng được tới khi hết (tối đa 60 phút)."""
+    clear_refresh_cookie(response)
 
 
 @router.post("/logout-all", response_model=schemas.Token)
-def logout_all(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def logout_all(response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Thu hồi mọi token đã phát hành (mọi thiết bị); trả token mới cho thiết bị hiện tại."""
     user.sessions_revoked_at = datetime.utcnow()
     db.commit()
     db.refresh(user)
-    return _issue(user)
+    return _issue(user, response)
 
 
 @router.post("/token", response_model=schemas.Token, include_in_schema=False)
-def token(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def token(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """OAuth2 form endpoint để nút Authorize trong /docs hoạt động."""
-    return login(schemas.UserLogin(email=form.username, password=form.password), db)
+    return login(schemas.UserLogin(email=form.username, password=form.password), response, db)
 
 
 @router.get("/me", response_model=schemas.UserOut)
@@ -243,23 +274,23 @@ def update_me(payload: schemas.UserUpdate, user: User = Depends(get_current_user
 
 
 @router.post("/change-password", response_model=schemas.Token)
-def change_password(payload: schemas.PasswordChange, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def change_password(payload: schemas.PasswordChange, response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Đổi mật khẩu. Mọi token cũ bị vô hiệu; trả token mới cho phiên hiện tại."""
     if not verify_password(payload.current_password, user.hashed_password):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu hiện tại không đúng")
     _check_new_password(user, payload.new_password, payload.current_password)
     _set_password(db, user, payload.new_password)
-    return _issue(user)
+    return _issue(user, response)
 
 
 @router.post("/set-password", response_model=schemas.Token)
-def set_password(payload: schemas.PasswordSet, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def set_password(payload: schemas.PasswordSet, response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Đặt mật khẩu lần đầu cho tài khoản Google. Tài khoản đã có mật khẩu phải dùng /change-password."""
     if user.has_password:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản đã có mật khẩu, hãy dùng chức năng đổi mật khẩu")
     _check_new_password(user, payload.new_password)
     _set_password(db, user, payload.new_password)
-    return _issue(user)
+    return _issue(user, response)
 
 
 def _check_new_password(user: User, new_password: str, current: str | None = None) -> None:

@@ -21,6 +21,7 @@ else:
 os.environ["MAIL_PROVIDER"] = "console"  # không gửi mail thật khi test, kể cả khi .env có RESEND_API_KEY
 os.environ["RATE_LIMIT_ENABLED"] = "false"  # test rate limit tự bật riêng trong test_abuse.py
 os.environ["TURNSTILE_SECRET_KEY"] = ""
+os.environ["REFRESH_TOKEN_IN_BODY"] = "true"  # test cũ đọc refresh_token từ JSON; test_cookie_auth.py kiểm tra chế độ chỉ cookie
 
 import pytest
 from fastapi.testclient import TestClient

@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60  # access token ngắn; gia hạn bằng refresh token
     refresh_token_expire_days: int = 30
+    # Refresh token luôn được đặt vào cookie httpOnly (JS không đọc được → XSS không lấy được).
+    # true: vẫn trả thêm trong JSON để frontend lưu localStorage — cần khi frontend và API KHÁC site (GitHub Pages + Render)
+    # vì Safari chặn cookie bên thứ ba. false: chỉ cookie — an toàn nhất, dùng khi cùng domain (learnhub.vn + api.learnhub.vn).
+    refresh_token_in_body: bool = True
+    cookie_samesite: str = "lax"  # lax (cùng site) | none (khác site, bắt buộc Secure)
+    cookie_secure: bool | None = None  # None = tự động: False khi FRONTEND_URL là http://localhost
     database_url: str = "sqlite:///./learnhub.db"
     cors_origins: str = "http://localhost:3000"
     # Tài khoản admin được tạo lần chạy đầu (chỉ khi DB chưa có user nào)
@@ -74,6 +80,12 @@ class Settings(BaseSettings):
 
     # Đăng nhập Google (Google Identity Services): chỉ cần Client ID, bỏ trống → ẩn nút Google
     google_client_id: str = ""
+
+    @property
+    def cookie_secure_effective(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        return not self.frontend_url.startswith("http://localhost") and not self.frontend_url.startswith("http://127.")
 
     @property
     def is_production(self) -> bool:

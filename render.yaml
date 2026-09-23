@@ -30,6 +30,12 @@ services:
         value: "true"
       - key: WEB_CONCURRENCY
         value: "1"        # rate limit lưu trong tiến trình → 1 worker; tăng khi chuyển sang Redis
+      # Frontend (github.io) và API (onrender.com) khác site → cookie phải SameSite=None; Safari vẫn chặn nên giữ
+      # REFRESH_TOKEN_IN_BODY=true. Khi có domain riêng cho cả hai (learnhub.vn / api.learnhub.vn): lax + false.
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: REFRESH_TOKEN_IN_BODY
+        value: "true"
       - key: DATABASE_URL
         fromDatabase:
           name: learnhub-db

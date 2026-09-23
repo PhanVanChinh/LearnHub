@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { authApi, Token, tokenStore, User } from "@/lib/api";
+import { authApi, Token, tokenStore, tryRefresh, User } from "@/lib/api";
 
 type Ctx = {
   user: User | null;
@@ -27,8 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!tokenStore.get()) return setLoading(false);
-    authApi.me().then(setUser).catch(() => tokenStore.clear()).finally(() => setLoading(false));
+    // Access token không lưu trên đĩa → mỗi lần tải trang: có phiên thì lấy token mới từ cookie refresh rồi tải user
+    if (!tokenStore.hasSession()) return setLoading(false);
+    tryRefresh().then((ok) => (ok ? authApi.me().then(setUser) : Promise.resolve())).catch(() => tokenStore.clear()).finally(() => setLoading(false));
   }, []);
 
   const accept = (t: Token) => { tokenStore.set(t.access_token, t.refresh_token); setUser(t.user); };
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async (full_name: string, email: string, password: string, captcha_token?: string | null) =>
       accept(await authApi.register({ full_name, email, password, accept_terms: true, captcha_token })), []);
   const loginWithGoogle = useCallback(async (credential: string) => accept(await authApi.google(credential)), []);
-  const logout = useCallback(() => { tokenStore.clear(); setUser(null); }, []);
+  const logout = useCallback(() => { void authApi.logout().catch(() => {}); tokenStore.clear(); setUser(null); }, []);
   const logoutAll = useCallback(async () => accept(await authApi.logoutAll()), []);
   const changePassword = useCallback(async (current: string, next: string) => accept(await authApi.changePassword(current, next)), []);
   const setPassword = useCallback(async (next: string) => accept(await authApi.setPassword(next)), []);
