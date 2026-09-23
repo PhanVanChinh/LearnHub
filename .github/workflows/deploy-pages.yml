@@ -56,7 +56,7 @@ jobs:
           TEST_DATABASE_URL: ${{ matrix.db == 'postgres' && 'postgresql://postgres:postgres@localhost:5432/learnhub_test' || '' }}
 
   check-frontend:
-    name: Frontend typecheck
+    name: Frontend lint + typecheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx tsc --noEmit -p .
+      - run: npm run lint
+      - run: npm run typecheck
 
   docker-backend:
     name: Build backend image

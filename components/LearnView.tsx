@@ -153,7 +153,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                 ) : (
                   <Link href={`/courses/${course.slug}`} className="btn-primary mt-4">{course.price === 0 ? "Ghi danh miễn phí" : "Mua khóa học"}</Link>
                 )}
-                <p className="mt-3 text-xs text-slate-400">Bạn vẫn có thể xem các bài gắn nhãn "Xem thử" ở danh sách bên.</p>
+                <p className="mt-3 text-xs text-slate-400">Bạn vẫn có thể xem các bài gắn nhãn “Xem thử” ở danh sách bên.</p>
               </div>
             </div>
           )}

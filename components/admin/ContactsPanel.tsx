@@ -39,7 +39,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
         ))}
         <input value={q} onChange={(e) => { setQ(e.target.value); setOffset(0); }} placeholder="Tìm tên, email, nội dung…" className="input ml-auto sm:w-64" />
       </div>
-      <p className="mt-3 text-xs text-slate-500">Bấm "Trả lời" để mở email soạn sẵn, gửi xong bấm "Đã trả lời" để đánh dấu.</p>
+      <p className="mt-3 text-xs text-slate-500">Bấm “Trả lời” để mở email soạn sẵn, gửi xong bấm “Đã trả lời” để đánh dấu.</p>
       <div className="mt-3"><ErrorBox message={error} /></div>
 
       <ul className="mt-4 space-y-2">

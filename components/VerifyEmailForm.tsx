@@ -49,7 +49,8 @@ export default function VerifyEmailForm() {
     }
   };
   // tự gửi khi đủ 6 số
-  useEffect(() => { if (code.length === 6) void submit(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [code]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- chỉ chạy khi code đổi; submit đọc state mới nhất qua closure
+  useEffect(() => { if (code.length === 6) void submit(); }, [code]);
 
   const resend = async () => {
     if (cooldown > 0 || busy) return;
