@@ -29,7 +29,9 @@ export default function MyCourses({ courses }: { courses: Course[] }) {
         subtitle={user ? `Xin chào ${user.full_name}!${mine.length ? ` Bạn đã hoàn thành ${doneCount}/${mine.length} khóa.` : ""}` : undefined} />
       <div className="container-x py-10">
         {enrolled === null ? (
-          <p className="text-slate-500">Đang tải…</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-busy="true" aria-label="Đang tải">
+            {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />)}
+          </div>
         ) : mine.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center">
             <p className="text-slate-600">Bạn chưa ghi danh khóa học nào.</p>
