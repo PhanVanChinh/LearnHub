@@ -3,6 +3,7 @@ import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
 import { getCourses } from "@/lib/courses.server";
 import { site } from "@/lib/site";
+import { absUrl } from "@/lib/seo";
 
 const features = [
   { icon: "🎯", t: "Bám sát chương trình", d: "Nội dung biên soạn theo đề cương từng môn, ưu tiên phần hay ra thi." },
@@ -12,8 +13,13 @@ const features = [
 
 export default async function Home() {
   const courses = await getCourses();
+  const jsonLd = {
+    "@context": "https://schema.org", "@type": "EducationalOrganization", name: site.name, url: absUrl("/"), description: site.description,
+    email: site.contact.email, telephone: site.contact.phone, address: { "@type": "PostalAddress", addressLocality: site.contact.address, addressCountry: "VN" },
+  };
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-indigo-700 text-white">
         <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />

@@ -114,6 +114,8 @@ jobs:
           STATIC_EXPORT: "1"
           # Repo tên LearnHub → site ở https://phanvanchinh.github.io/LearnHub/
           NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # URL tuyệt đối của site cho canonical / sitemap / Open Graph
+          NEXT_PUBLIC_SITE_URL: ${{ steps.pages.outputs.base_url }}
           # URL backend công khai (Render, Railway, ...). Lúc build, lib/courses.server.ts gọi /api/courses/export
           # để lấy khóa học từ DB; không gọi được → dùng data/courses.ts, build vẫn thành công.
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
