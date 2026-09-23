@@ -117,7 +117,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         <div>
                             <input
                                 className={`input ${fieldError("full_name") ? "!border-rose-400" : ""}`}
-                                placeholder="Họ và tên"
+                                placeholder="Họ và tên" aria-label="Họ và tên"
                                 value={form.full_name}
                                 onChange={set("full_name")}
                                 onBlur={blur("full_name")}
@@ -131,7 +131,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         <input
                             className={`input ${fieldError("email") ? "!border-rose-400" : ""}`}
                             type="email"
-                            placeholder="Email"
+                            placeholder="Email" aria-label="Email"
                             value={form.email}
                             onChange={set("email")}
                             onBlur={blur("email")}
@@ -183,7 +183,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         <div>
                             <PasswordInput
                                 invalid={!!fieldError("confirm")}
-                                placeholder="Nhập lại mật khẩu"
+                                placeholder="Nhập lại mật khẩu" aria-label="Nhập lại mật khẩu"
                                 value={form.confirm}
                                 onChange={set("confirm")}
                                 onBlur={blur("confirm")}

@@ -30,7 +30,7 @@ export default function CertificateView() {
       <div className="mx-auto max-w-3xl">
         <h1 className="text-2xl font-bold text-slate-900">Chứng nhận hoàn thành</h1>
         <form onSubmit={submit} className="mt-4 flex gap-2">
-          <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Nhập mã, ví dụ LH-CERT-7K3M9PQ2" className="input font-mono uppercase" />
+          <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Nhập mã, ví dụ LH-CERT-7K3M9PQ2" aria-label="Mã chứng nhận" className="input font-mono uppercase" />
           <button type="submit" className="btn-primary shrink-0">Xác thực</button>
         </form>
         {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}

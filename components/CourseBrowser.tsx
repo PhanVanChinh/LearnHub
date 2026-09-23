@@ -39,6 +39,7 @@ export default function CourseBrowser({
         </div>
         {showSearch && (
           <input
+            type="search" aria-label="Tìm khóa học, bài học, tài liệu"
             value={q}
             onChange={(e) => { setQ(e.target.value); setLimit(pageSize); }}
             placeholder="Tìm khóa học, bài học, tài liệu…"

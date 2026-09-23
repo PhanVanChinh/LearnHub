@@ -9,6 +9,7 @@ export default function PasswordInput({ invalid, className = "", ...props }: Pro
     return (
         <div className="relative">
             <input
+                aria-label={typeof props.placeholder === "string" && !props.id ? props.placeholder : undefined}
                 {...props}
                 type={show ? "text" : "password"}
                 className={`input pr-16 ${invalid ? "!border-rose-400 !ring-rose-100" : ""} ${className}`}

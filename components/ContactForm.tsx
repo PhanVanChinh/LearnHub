@@ -62,17 +62,17 @@ export default function ContactForm() {
     <form onSubmit={submit} noValidate className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <input className={cls("name")} placeholder="Họ và tên" value={form.name} onChange={set("name")} autoComplete="name" />
+          <input className={cls("name")} placeholder="Họ và tên" aria-label="Họ và tên" value={form.name} onChange={set("name")} autoComplete="name" />
           {err("name") && <p className="mt-1 text-xs text-rose-600">{err("name")}</p>}
         </div>
         <div>
-          <input className={cls("email")} type="email" placeholder="Email" value={form.email} onChange={set("email")} autoComplete="email" />
+          <input className={cls("email")} type="email" placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} autoComplete="email" />
           {err("email") && <p className="mt-1 text-xs text-rose-600">{err("email")}</p>}
         </div>
       </div>
-      <input className="input" placeholder="Chủ đề (tuỳ chọn)" value={form.subject} onChange={set("subject")} maxLength={255} />
+      <input className="input" placeholder="Chủ đề (tuỳ chọn)" aria-label="Chủ đề" value={form.subject} onChange={set("subject")} maxLength={255} />
       <div>
-        <textarea className={`${cls("message")} resize-y`} rows={6} placeholder="Nội dung…" value={form.message} onChange={set("message")} maxLength={5000} />
+        <textarea className={`${cls("message")} resize-y`} rows={6} placeholder="Nội dung…" aria-label="Nội dung tin nhắn" value={form.message} onChange={set("message")} maxLength={5000} />
         <div className="mt-1 flex justify-between text-xs">
           <span className="text-rose-600">{err("message")}</span>
           <span className="text-slate-400">{form.message.length}/5000</span>

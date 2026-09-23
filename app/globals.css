@@ -4,6 +4,8 @@
 
 :root { color-scheme: light; }
 html { scroll-behavior: smooth; }
+a:focus-visible, button:focus-visible, [role="button"]:focus-visible { outline: 2px solid #3366ff; outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 body { @apply bg-slate-50 text-slate-800 antialiased; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
 
 .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }

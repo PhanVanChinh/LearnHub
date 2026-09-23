@@ -11,15 +11,17 @@ export default function Header() {
   const pathname = usePathname();
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">Bỏ qua tới nội dung chính</a>
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <Logo />
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Điều hướng chính" className="hidden items-center gap-1 lg:flex">
           {site.nav.map((item) => {
             const active = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
                   active ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
@@ -31,7 +33,7 @@ export default function Header() {
         </nav>
         <div className="hidden lg:block"><UserMenu /></div>
         <button
-          aria-label="Mở menu"
+          aria-label={open ? "Đóng menu" : "Mở menu"} aria-expanded={open} aria-controls="mobile-nav"
           onClick={() => setOpen(!open)}
           className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
         >
@@ -41,8 +43,8 @@ export default function Header() {
         </button>
       </div>
       {open && (
-        <div className="border-t border-slate-200 bg-white lg:hidden">
-          <nav className="container-x flex flex-col gap-1 py-3">
+        <div id="mobile-nav" className="border-t border-slate-200 bg-white lg:hidden">
+          <nav aria-label="Điều hướng chính (di động)" className="container-x flex flex-col gap-1 py-3">
             {site.nav.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">
                 {item.label}

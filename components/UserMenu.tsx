@@ -45,13 +45,14 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
 
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-slate-100">
+      <button onClick={() => setOpen(!open)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} aria-haspopup="menu" aria-expanded={open} aria-label={`Tài khoản ${user.full_name}`}
+        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium hover:bg-slate-100">
         <Avatar cls="h-8 w-8" />
         <span className="max-w-[10rem] truncate">{user.full_name}</span>
         {user.role === "admin" && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">admin</span>}
       </button>
       {open && (
-        <div onMouseLeave={() => setOpen(false)} className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div role="menu" tabIndex={-1} onMouseLeave={() => setOpen(false)} onKeyDown={(e) => e.key === "Escape" && setOpen(false)} className="absolute right-0 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="border-b border-slate-100 px-4 py-3 text-xs text-slate-500">{user.email}</div>
           <Link href="/my-courses" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-slate-50">Khóa học của tôi</Link>
           <Link href="/orders" onClick={() => setOpen(false)} className="block px-4 py-2.5 text-sm hover:bg-slate-50">Đơn hàng của tôi</Link>

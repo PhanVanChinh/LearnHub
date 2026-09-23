@@ -25,8 +25,8 @@ export default function CourseCard({ course, action, progress, match, query }: {
   const cta: Action = action ?? { href: `/courses/${course.slug}`, label: course.price === 0 ? "Bắt đầu học" : "Xem chi tiết" };
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
-      <Link href={`/courses/${course.slug}`} className={`relative grid aspect-[16/9] place-items-center bg-gradient-to-br ${course.color}`}>
-        <span className="text-6xl drop-shadow-md transition group-hover:scale-110">{course.emoji}</span>
+      <Link href={`/courses/${course.slug}`} aria-label={course.title} className={`relative grid aspect-[16/9] place-items-center bg-gradient-to-br ${course.color}`}>
+        <span aria-hidden="true" className="text-6xl drop-shadow-md transition group-hover:scale-110">{course.emoji}</span>
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800">
           {labels[course.category]}
         </span>

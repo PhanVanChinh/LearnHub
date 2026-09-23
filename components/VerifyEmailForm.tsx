@@ -93,7 +93,7 @@ export default function VerifyEmailForm() {
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            placeholder="••••••"
+            placeholder="••••••" aria-label="Mã xác thực 6 số"
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             disabled={busy}

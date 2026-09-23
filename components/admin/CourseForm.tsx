@@ -262,7 +262,9 @@ function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, less
         <div onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
           onDrop={(e) => { e.preventDefault(); setDrag(false); void addFiles(e.dataTransfer.files); }}
           onClick={() => inputRef.current?.click()}
-          className={`mt-2 cursor-pointer rounded-lg border-2 border-dashed p-4 text-center text-sm transition ${drag ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50 hover:border-brand-300"}`}>
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); } }}
+          role="button" tabIndex={0} aria-label="Chọn hoặc kéo thả file tài liệu để tải lên"
+          className={`mt-2 cursor-pointer rounded-lg border-2 border-dashed focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 p-4 text-center text-sm transition ${drag ? "border-brand-500 bg-brand-50" : "border-slate-300 bg-slate-50 hover:border-brand-300"}`}>
           {uploading.length ? <span className="text-brand-700">Đang tải lên {uploading.join(", ")}…</span>
             : <span className="text-slate-600">Kéo thả file vào đây hoặc <span className="font-medium text-brand-700">chọn file</span> · tối đa {status.max_mb} MB · {status.allowed.join(", ")}</span>}
           <input ref={inputRef} type="file" multiple className="hidden" onChange={(e) => { if (e.target.files) void addFiles(e.target.files); e.target.value = ""; }} />

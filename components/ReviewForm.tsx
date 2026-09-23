@@ -36,7 +36,7 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
         <span className={`text-sm ${rating ? text : sub}`}>{rating ? LABELS[rating] : "Chọn số sao"}</span>
       </div>
       <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={2000}
-        placeholder="Bạn thích điều gì? Điều gì nên cải thiện? (không bắt buộc)"
+        placeholder="Bạn thích điều gì? Điều gì nên cải thiện? (không bắt buộc)" aria-label="Nhận xét"
         className={`input resize-y ${dark ? "!border-white/15 !bg-white/5 !text-white placeholder:!text-slate-500" : ""}`} />
       {error && <p className="text-sm text-rose-500">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">

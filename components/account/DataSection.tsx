@@ -85,13 +85,13 @@ function DeleteAccount() {
         <form onSubmit={submit} className="mt-4 space-y-3">
           <p className="text-xs text-rose-700">Hành động không thể hoàn tác. Nên <b>tải dữ liệu</b> về trước.</p>
           <div>
-            <label className="text-xs font-medium text-slate-700">Gõ email của bạn để xác nhận: <span className="font-mono">{user.email}</span></label>
-            <input className="input mt-1" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" placeholder={user.email} />
+            <label htmlFor="delete-confirm" className="text-xs font-medium text-slate-700">Gõ email của bạn để xác nhận: <span className="font-mono">{user.email}</span></label>
+            <input id="delete-confirm" className="input mt-1" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" placeholder={user.email} />
           </div>
           {needPassword && (
             <div>
-              <label className="text-xs font-medium text-slate-700">Mật khẩu hiện tại</label>
-              <PasswordInput className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+              <label htmlFor="delete-password" className="text-xs font-medium text-slate-700">Mật khẩu hiện tại</label>
+              <PasswordInput id="delete-password" className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
             </div>
           )}
           <label className="flex items-start gap-2 text-xs text-slate-700">

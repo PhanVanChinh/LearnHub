@@ -41,7 +41,7 @@ export default function ForgotPasswordForm() {
           </div>
         ) : (
           <form onSubmit={submit} className="mt-6 space-y-4">
-            <input className="input" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoFocus />
+            <input className="input" type="email" placeholder="Email" aria-label="Email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoFocus />
             <Turnstile onToken={setCaptcha} resetKey={captchaKey} />
             {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
             <button type="submit" disabled={busy} className="btn-primary w-full !py-2.5 disabled:opacity-60">{busy ? "Đang gửi…" : "Gửi link đặt lại"}</button>
