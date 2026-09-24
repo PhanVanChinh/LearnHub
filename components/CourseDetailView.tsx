@@ -53,7 +53,8 @@ export default function CourseDetailView({ course: initial, related }: { course:
           </section>
         </div>
 
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* Mobile: thẻ giá + nút hành động lên ngay dưới hero (order-first); desktop: cột phải dính */}
+        <aside className="order-first lg:order-none lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
             {previewVideo ? (
               <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-900">

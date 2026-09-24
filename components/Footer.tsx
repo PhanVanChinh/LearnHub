@@ -1,8 +1,12 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
 import Logo from "./Logo";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith("/learn/")) return null; // trang học: nền tối toàn màn hình, không footer để tập trung
   return (
     <footer className="mt-16 border-t border-slate-200 bg-white">
       <div className="container-x grid gap-10 py-12 md:grid-cols-3">

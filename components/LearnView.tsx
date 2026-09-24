@@ -90,8 +90,37 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 
+  const lessonList = (
+    <ol className="max-h-[70vh] divide-y divide-white/10 overflow-y-auto">
+              {lessons.map((l, i) => {
+                const locked = !l.free && !enrolled;
+                const isActive = i === index;
+                return (
+                  <li key={`${i}-${l.title}`}>
+                    <button onClick={() => go(i)}
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/10 ${isActive ? "bg-brand-600/30" : ""}`}>
+                      <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${isActive ? "bg-brand-500 text-white" : isDone(i) ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
+                        {isActive ? "▶" : isDone(i) ? "✓" : i + 1}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
+                        <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
+                          {!!l.quizCount && <span>{l.quizCount} câu</span>}
+                          {!!l.attachments?.length && <span>📎 {l.attachments.length}</span>}
+                          {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
+                          {locked && <span>🔒</span>}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+    </ol>
+  );
+
   return (
-    <div className="bg-slate-950 text-slate-100">
+    <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-slate-100">
       {/* Thanh trên */}
       <div className="border-b border-white/10">
         <div className="container-x flex h-14 items-center gap-4">
@@ -176,6 +205,15 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
             </div>
           </div>
 
+          {/* Mobile: danh sách bài thu gọn ngay dưới tiêu đề — không phải cuộn qua video/quiz để chuyển bài */}
+          <details className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-white/5 lg:hidden">
+            <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-white marker:content-none">
+              <span>Nội dung khóa học <span className="font-normal text-slate-400">· {lessons.length} bài{progress ? ` · ${progress.percent}%` : ""}</span></span>
+              <span className="text-slate-400">▾</span>
+            </summary>
+            <div className="border-t border-white/10">{lessonList}</div>
+          </details>
+
           {!!lesson.attachments?.length && (access === "granted" || access === "enroll" || access === "login") && (
             <div className="mt-6">
               <LessonAttachments slug={course.slug} index={index} attachments={lesson.attachments} locked={access !== "granted"} />
@@ -188,14 +226,10 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
             </div>
           )}
 
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-5 text-sm leading-6 text-slate-300">
-            <p className="font-semibold text-white">Về khóa học</p>
-            <p className="mt-2">{course.description}</p>
-          </div>
         </div>
 
         {/* Danh sách bài */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:self-start">
           <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
             <div className="border-b border-white/10 px-4 py-3">
               <p className="font-semibold text-white">Nội dung khóa học</p>
@@ -217,32 +251,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                 </div>
               )}
             </div>
-            <ol className="max-h-[70vh] divide-y divide-white/10 overflow-y-auto">
-              {lessons.map((l, i) => {
-                const locked = !l.free && !enrolled;
-                const isActive = i === index;
-                return (
-                  <li key={`${i}-${l.title}`}>
-                    <button onClick={() => go(i)}
-                      className={`flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/10 ${isActive ? "bg-brand-600/30" : ""}`}>
-                      <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${isActive ? "bg-brand-500 text-white" : isDone(i) ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
-                        {isActive ? "▶" : isDone(i) ? "✓" : i + 1}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
-                        <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
-                          {!!l.quizCount && <span>{l.quizCount} câu</span>}
-                          {!!l.attachments?.length && <span>📎 {l.attachments.length}</span>}
-                          {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
-                          {locked && <span>🔒</span>}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
+            {lessonList}
           </div>
         </aside>
       </div>
