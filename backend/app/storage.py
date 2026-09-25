@@ -50,8 +50,8 @@ def safe_filename(name: str) -> str:
     return base[:100]
 
 
-def make_key(course_slug: str, filename: str) -> str:
-    return f"courses/{course_slug}/{uuid.uuid4().hex[:12]}-{safe_filename(filename)}"
+def make_key(course_slug: str, filename: str, prefix: str = "courses") -> str:
+    return f"{prefix}/{course_slug}/{uuid.uuid4().hex[:12]}-{safe_filename(filename)}"
 
 
 def put(key: str, data: bytes, content_type: str) -> None:
@@ -77,6 +77,18 @@ def presigned_get(key: str, filename: str, expires: int | None = None) -> str:
     except Exception as e:
         log.error("Ký link %s thất bại: %s", key, e)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Không tạo được link tải, thử lại sau")
+
+
+def get(key: str) -> tuple[bytes, str]:
+    """Đọc object về bộ nhớ (ảnh bìa nhỏ). Trả (bytes, content-type)."""
+    if not enabled():
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Kho lưu trữ file chưa được cấu hình")
+    try:
+        obj = _client().get_object(Bucket=settings.s3_bucket, Key=key)
+        return obj["Body"].read(), obj.get("ContentType") or "application/octet-stream"
+    except Exception as e:
+        log.warning("Không đọc được %s: %s", key, e)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy ảnh")
 
 
 def delete(key: str) -> None:

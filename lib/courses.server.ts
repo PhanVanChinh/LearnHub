@@ -10,7 +10,7 @@ type ApiCourse = Omit<Course, "lessons" | "tags" | "category"> & { category: str
 
 const fromApi = (c: ApiCourse): Course => ({
   slug: c.slug, title: c.title, category: c.category as Category, tags: c.tags as Category[], price: c.price,
-  color: c.color, emoji: c.emoji, short: c.short, description: c.description, includes: c.includes, featured: c.featured,
+  color: c.color, emoji: c.emoji, cover: c.cover || undefined, short: c.short, description: c.description, includes: c.includes, featured: c.featured,
   lessons: c.lessons.map((l) => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined, attachments: l.attachments?.length ? l.attachments : undefined })),
 });
 

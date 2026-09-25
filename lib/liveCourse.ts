@@ -33,7 +33,7 @@ const toLesson = (l: LessonOut): Lesson => ({ title: l.title, duration: l.durati
 /** Trộn bản API vào bản tĩnh (API thắng). */
 export function mergeCourse(base: Course, d: CoursePublic | CourseDetail): Course {
   return {
-    ...base, title: d.title, category: d.category as Category, tags: d.tags as Category[], price: d.price, color: d.color, emoji: d.emoji,
+    ...base, title: d.title, category: d.category as Category, tags: d.tags as Category[], price: d.price, color: d.color, emoji: d.emoji, cover: d.cover || undefined,
     short: d.short, featured: d.featured, description: d.description, includes: d.includes, lessons: d.lessons.map(toLesson),
   };
 }

@@ -165,12 +165,14 @@ def uploads_status():
 
 
 @router.post("/uploads", response_model=schemas.UploadOut, status_code=status.HTTP_201_CREATED)
-async def upload_file(request: Request, file: UploadFile = File(...), course_slug: str = Form(...),
+async def upload_file(request: Request, file: UploadFile = File(...), course_slug: str = Form(...), kind: str = Form("attachment"),
                       db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    """Tải file lên S3, trả `key` để admin gắn vào lesson.attachments khi lưu khóa học."""
+    """Tải file lên S3, trả `key`. kind=attachment → gắn vào lesson.attachments; kind=cover → ảnh bìa khóa học (chỉ ảnh)."""
     if not storage.enabled():
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Chưa cấu hình lưu trữ file (S3_*). Hiện chỉ đính kèm được link ngoài")
     ctype = (file.content_type or "").split(";")[0].strip().lower()
+    if kind == "cover" and not ctype.startswith("image/"):
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Ảnh bìa phải là file ảnh (PNG, JPG, WebP)")
     if ctype not in storage.ALLOWED_TYPES:
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Không hỗ trợ loại file {ctype or 'không rõ'}. Cho phép: PDF, Word, PowerPoint, Excel, ZIP, TXT, ảnh")
     data = await file.read()
@@ -179,7 +181,7 @@ async def upload_file(request: Request, file: UploadFile = File(...), course_slu
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "File rỗng")
     name = (file.filename or "tai-lieu").strip()[:200]
-    key = storage.make_key(course_slug, name)
+    key = storage.make_key(course_slug, name, prefix="covers" if kind == "cover" else "courses")
     storage.put(key, data, ctype)
     audit.record(db, request, admin, "upload.create", "upload", key, f"Tải lên «{name}» ({len(data) // 1024} KB) cho /{course_slug}")
     return schemas.UploadOut(key=key, name=name, size=len(data), content_type=ctype)

@@ -3,6 +3,7 @@ import { Course } from "@/data/courses";
 import { formatVND, isComingSoon } from "@/lib/site";
 import CourseStatsLine from "./CourseStatsLine";
 import { highlight, type Match } from "@/lib/search";
+import { coverUrl } from "@/lib/cover";
 
 const labels: Record<string, string> = {
   "ai-check": "AI Check", pdf: "PDF", quiz: "Trắc nghiệm", free: "Miễn phí", source: "Source code", video: "Video",
@@ -22,11 +23,17 @@ export default function CourseCard({ course, action, progress, match, query }: {
 }) {
   const percent = progress && progress.total ? Math.round((progress.completed * 100) / progress.total) : 0;
   const soon = isComingSoon(course.category);
+  const cover = coverUrl(course.cover);
   const cta: Action = action ?? { href: `/courses/${course.slug}`, label: course.price === 0 ? "Bắt đầu học" : "Xem chi tiết" };
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
       <Link href={`/courses/${course.slug}`} aria-label={course.title} className={`relative grid aspect-[16/9] place-items-center bg-gradient-to-br ${course.color}`}>
-        <span aria-hidden="true" className="text-6xl drop-shadow-md transition group-hover:scale-110">{course.emoji}</span>
+        {cover ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={cover} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition group-hover:scale-105" />
+        ) : (
+          <span aria-hidden="true" className="text-6xl drop-shadow-md transition group-hover:scale-110">{course.emoji}</span>
+        )}
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-slate-800">
           {labels[course.category]}
         </span>

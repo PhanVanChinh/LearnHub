@@ -243,6 +243,7 @@ class CourseOut(BaseModel):
     sold: int
     color: str
     emoji: str
+    cover: str = Field("", description="Key S3 (covers/...) hoặc URL ảnh ngoài; trống → dùng gradient + emoji")
     short: str
     featured: bool
 
@@ -359,6 +360,7 @@ class CourseBase(BaseModel):
     price: int = Field(0, ge=0)
     color: str = Field("from-brand-500 to-brand-700", max_length=100)
     emoji: str = Field("📘", max_length=10)
+    cover: str = Field("", max_length=1000)
     short: str = ""
     description: str = ""
     includes: list[str] = []
@@ -382,6 +384,7 @@ class CourseUpdate(BaseModel):
     views: int | None = Field(None, ge=0)
     sold: int | None = Field(None, ge=0)
     color: str | None = Field(None, max_length=100)
+    cover: str | None = Field(None, max_length=1000)
     emoji: str | None = Field(None, max_length=10)
     short: str | None = None
     description: str | None = None

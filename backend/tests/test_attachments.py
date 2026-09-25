@@ -93,3 +93,28 @@ def test_admin_upload(client, monkeypatch):
     _fake_storage(monkeypatch, enabled=False)
     assert client.get("/api/admin/uploads/status", headers=admin).json()["enabled"] is False
     assert client.post("/api/admin/uploads", data={"course_slug": "att-test"}, files=files, headers=admin).status_code == 503
+
+
+def test_course_cover(client, monkeypatch):
+    """Ảnh bìa: lưu key, upload kind=cover vào covers/, phục vụ qua /api/media, chặn key ngoài covers/."""
+    import io
+
+    store = _fake_storage(monkeypatch)
+    monkeypatch.setattr(storage, "get", lambda key: (store.get(key, (b"", ""))[0], store.get(key, (b"", "image/png"))[1]))
+    admin = _admin(client)
+
+    r = client.post("/api/admin/uploads", data={"course_slug": "att-test", "kind": "cover"},
+                    files={"file": ("bia.png", io.BytesIO(b"\x89PNG fake"), "image/png")}, headers=admin)
+    assert r.status_code == 201 and r.json()["key"].startswith("covers/att-test/")
+    key = r.json()["key"]
+    # kind=cover chỉ nhận ảnh
+    assert client.post("/api/admin/uploads", data={"course_slug": "att-test", "kind": "cover"},
+                       files={"file": ("a.pdf", io.BytesIO(b"%PDF"), "application/pdf")}, headers=admin).status_code == 415
+
+    cid = next(c["id"] for c in client.get("/api/admin/courses", params={"q": "att-test"}, headers=admin).json()["items"])
+    assert client.patch(f"/api/admin/courses/{cid}", json={"cover": key}, headers=admin).json()["cover"] == key
+    assert client.get("/api/courses/att-test").json()["cover"] == key  # public thấy key để dựng URL
+    r = client.get(f"/api/media/{key}")
+    assert r.status_code == 200 and r.content == b"\x89PNG fake" and "max-age=86400" in r.headers["cache-control"]
+    assert client.get("/api/media/courses/att-test/secret.pdf").status_code == 404  # chỉ phục vụ covers/
+    assert client.get("/api/media/covers/../../etc/passwd").status_code == 404

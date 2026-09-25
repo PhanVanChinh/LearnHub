@@ -29,6 +29,11 @@ def migrate() -> None:
 
     insp = inspect(engine)
     DT = "DATETIME" if settings.is_sqlite else "TIMESTAMP"  # Postgres không có kiểu DATETIME
+    if "courses" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("courses")}
+        if "cover" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE courses ADD COLUMN cover VARCHAR(1000) NOT NULL DEFAULT ''"))
     if "users" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("users")}
         with engine.begin() as conn:

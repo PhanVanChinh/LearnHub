@@ -8,6 +8,19 @@ from ..models import Course, Enrollment, LessonProgress, QuizAttempt, User
 from ..security import get_current_user, get_current_user_optional, require_verified
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
+# Router riêng: /api/media/... không được nằm sau /api/courses/{slug} (sẽ bị coi là slug)
+media_router = APIRouter(prefix="/api/media", tags=["courses"])
+
+
+@media_router.get("/{key:path}", include_in_schema=False)
+def media(key: str):
+    """Phục vụ ảnh bìa từ S3 qua backend (bucket không cần public). Chỉ thư mục covers/, cache 1 ngày."""
+    from fastapi import Response
+
+    if not key.startswith("covers/") or ".." in key:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy ảnh")
+    data, ctype = storage.get(key)
+    return Response(data, media_type=ctype, headers={"Cache-Control": "public, max-age=86400, immutable"})
 
 CATEGORY_LABELS = {
     "all": "Tất cả", "ai-check": "AI Check", "pdf": "PDF", "quiz": "Trắc nghiệm",

@@ -33,8 +33,9 @@ export type Course = {
   tags: Category[];
   price: number; // 0 = free
   // Lượt xem / số học viên KHÔNG nằm ở đây: lấy từ API /api/stats/courses (số thật, tăng theo hành vi người dùng)
-  color: string; // gradient cho thumbnail
+  color: string; // gradient cho thumbnail (dùng khi không có ảnh bìa)
   emoji: string;
+  cover?: string; // key S3 (covers/...) hoặc URL ảnh ngoài — xem lib/cover.ts
   short: string;
   description: string;
   includes: string[];

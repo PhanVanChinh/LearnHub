@@ -70,6 +70,8 @@ class Course(Base):
     sold: Mapped[int] = mapped_column(Integer, default=0)
     color: Mapped[str] = mapped_column(String(100), default="from-brand-500 to-brand-700")
     emoji: Mapped[str] = mapped_column(String(10), default="📘")
+    # Ảnh bìa: key trên S3 (covers/...) hoặc URL ngoài. Trống → dùng gradient + emoji như trước.
+    cover: Mapped[str] = mapped_column(String(1000), default="")
     short: Mapped[str] = mapped_column(Text, default="")
     description: Mapped[str] = mapped_column(Text, default="")
     includes: Mapped[list] = mapped_column(JSON, default=list)

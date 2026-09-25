@@ -10,11 +10,13 @@ import type { Course } from "@/data/courses";
 import { totalDuration } from "@/lib/duration";
 import { useLiveCourse } from "@/lib/liveCourse";
 import { formatVND } from "@/lib/site";
+import { coverUrl } from "@/lib/cover";
 
 /** Thân trang chi tiết. Nhận bản tĩnh (build) rồi tự làm mới giá / mô tả / bài học từ API. */
 export default function CourseDetailView({ course: initial, related }: { course: Course; related: Course[] }) {
   const { course } = useLiveCourse(initial);
   const previewVideo = course.lessons.find((l) => l.free && l.video)?.video;
+  const cover = coverUrl(course.cover);
 
   return (
     <>
@@ -24,7 +26,12 @@ export default function CourseDetailView({ course: initial, related }: { course:
             <Link href="/" className="hover:text-white">Trang chủ</Link> / <Link href="/courses" className="hover:text-white">Khóa học</Link>
           </nav>
           <div className="mt-4 flex items-start gap-5">
-            <span className="hidden text-6xl sm:block">{course.emoji}</span>
+            {cover ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={cover} alt="" className="hidden h-24 w-40 shrink-0 rounded-xl object-cover shadow-lg sm:block" />
+            ) : (
+              <span className="hidden text-6xl sm:block">{course.emoji}</span>
+            )}
             <div>
               <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{course.title}</h1>
               <p className="mt-3 max-w-2xl text-white/85">{course.short}</p>
@@ -65,6 +72,9 @@ export default function CourseDetailView({ course: initial, related }: { course:
                 </span>
                 <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">Có bài xem thử</span>
               </div>
+            ) : cover ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={cover} alt={course.title} className="aspect-video w-full rounded-xl object-cover" />
             ) : (
               <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} text-5xl`}>{course.emoji}</div>
             )}

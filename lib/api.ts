@@ -123,7 +123,7 @@ export type LessonOut = { title: string; duration: string; free: boolean; video:
 export type AttachmentLink = { name: string; url: string; expires_in: number | null };
 export type CourseDetail = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
-  color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[];
+  color: string; emoji: string; cover?: string; short: string; featured: boolean; description: string; includes: string[];
   lessons: LessonOut[]; enrolled: boolean;
 };
 export type CoursePublic = Omit<CourseDetail, "enrolled">;
@@ -233,7 +233,7 @@ export type UploadStatus = { enabled: boolean; max_mb: number; allowed: string[]
 export type UploadOut = { key: string; name: string; size: number; content_type: string };
 export type AdminCourse = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
-  color: string; emoji: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
+  color: string; emoji: string; cover?: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
   enrollment_count: number;
 };
 export type CourseInput = Omit<AdminCourse, "id" | "tags" | "enrollment_count" | "views" | "sold"> & { tags?: string[] };
@@ -274,8 +274,8 @@ export const adminApi = {
   reviews: (params: { hidden?: boolean | ""; course_id?: number | ""; rating?: number | ""; q?: string; limit?: number; offset?: number } = {}) =>
     api<Paginated<AdminReview>>(`/api/admin/reviews${qs(params)}`),
   toggleReviewHidden: (id: number, reason?: string) => api<AdminReview>(`/api/admin/reviews/${id}/hide`, json("POST", { reason: reason || null })),
-  upload: (file: File, course_slug: string) => {
-    const fd = new FormData(); fd.append("file", file); fd.append("course_slug", course_slug);
+  upload: (file: File, course_slug: string, kind: "attachment" | "cover" = "attachment") => {
+    const fd = new FormData(); fd.append("file", file); fd.append("course_slug", course_slug); fd.append("kind", kind);
     return api<UploadOut>("/api/admin/uploads", { method: "POST", body: fd });
   },
   deleteUpload: (key: string) => api<void>(`/api/admin/uploads?key=${encodeURIComponent(key)}`, { method: "DELETE" }),
