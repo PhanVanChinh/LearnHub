@@ -31,9 +31,11 @@ export default function Footer() {
             <li>📞 <a href={`tel:${site.contact.phone}`} className="hover:text-brand-700">{site.contact.phone}</a></li>
             <li>✉️ <a href={`mailto:${site.contact.email}`} className="hover:text-brand-700">{site.contact.email}</a></li>
           </ul>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Website đang trong quá trình hoàn thiện
-          </div>
+          {process.env.NEXT_PUBLIC_SHOW_WIP_BADGE === "1" && (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Website đang trong quá trình hoàn thiện
+            </div>
+          )}
         </div>
       </div>
       <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">

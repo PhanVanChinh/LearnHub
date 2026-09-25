@@ -34,6 +34,11 @@ export default function CourseReviews({ slug }: { slug: string }) {
 
   return (
     <div className="mt-4 space-y-5">
+      {summary.count === 0 ? (
+        <p className="rounded-2xl border border-dashed border-slate-300 px-5 py-4 text-sm text-slate-500">
+          Chưa có đánh giá nào. {can_review ? "Bạn là người đầu tiên?" : "Học viên đã ghi danh có thể đánh giá khóa học này."}
+        </p>
+      ) : (
       <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:grid-cols-[10rem_1fr]">
         <div className="text-center sm:text-left">
           {summary.average != null ? (
@@ -62,6 +67,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
           })}
         </ul>
       </div>
+      )}
 
       {/* Đánh giá của tôi */}
       {!loading && (

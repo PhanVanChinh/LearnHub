@@ -2,7 +2,7 @@ import Link from "next/link";
 import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
 import { getCourses } from "@/lib/courses.server";
-import { site } from "@/lib/site";
+import { isComingSoon, site } from "@/lib/site";
 import { absUrl } from "@/lib/seo";
 
 const features = [
@@ -13,6 +13,11 @@ const features = [
 
 export default async function Home() {
   const courses = await getCourses();
+  // Khóa nổi bật: bỏ danh mục sắp mở bán và khóa chưa có nội dung — vị trí đẹp nhất trang không quảng cáo thứ chưa bán được
+  const hasContent = (c: (typeof courses)[number]) => c.lessons.some((l) => l.video || l.hasVideo || l.quizCount || l.attachments?.length);
+  const pick = courses.filter((c) => !isComingSoon(c.category));
+  const featured = [...pick.filter((c) => c.featured && hasContent(c)), ...pick.filter((c) => hasContent(c) && !c.featured), ...pick.filter((c) => c.featured)]
+    .filter((c, i, a) => a.indexOf(c) === i).slice(0, 4);
   const jsonLd = {
     "@context": "https://schema.org", "@type": "EducationalOrganization", name: site.name, url: absUrl("/"), description: site.description,
     email: site.contact.email, telephone: site.contact.phone, address: { "@type": "PostalAddress", addressLocality: site.contact.address, addressCountry: "VN" },
@@ -29,7 +34,7 @@ export default async function Home() {
               🎓 Dành cho sinh viên {site.university}
             </span>
             <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-              Khám phá các khóa học <span className="text-yellow-300">nổi bật</span>
+              Khám phá các khóa học <span className="whitespace-nowrap text-yellow-300">nổi bật</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg text-white/85">{site.tagline}</p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -40,7 +45,7 @@ export default async function Home() {
           </div>
           <div className="hidden lg:block">
             <div className="grid grid-cols-2 gap-4">
-              {courses.filter((c) => c.featured).slice(0, 4).map((c, i) => (
+              {featured.map((c, i) => (
                 <Link key={c.slug} href={`/courses/${c.slug}`} className={`rounded-2xl bg-white/10 p-4 backdrop-blur transition hover:bg-white/20 ${i % 2 ? "translate-y-6" : ""}`}>
                   <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${c.color} text-4xl`}>{c.emoji}</div>
                   <p className="mt-3 line-clamp-2 text-sm font-semibold">{c.title}</p>

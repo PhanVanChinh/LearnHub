@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PublicStats, statsApi } from "@/lib/api";
 
 const n = (v: number) => v.toLocaleString("vi-VN");
+const MIN_STUDENTS = 10; // dưới ngưỡng này, "1 học viên" phản tác dụng → khoe số khóa miễn phí
 
 type Props = { courses: number; lessons: number; free: number };
 
@@ -16,8 +17,8 @@ export default function HeroStats(STATIC: Props) {
   const tiles: { v: string; l: string }[] = [
     { v: n(stats?.courses || STATIC.courses), l: "Khóa học & tài liệu" },
     { v: n(stats?.lessons || STATIC.lessons), l: stats && stats.videos > 0 ? `Bài học · ${n(stats.videos)} video` : "Bài học" },
-    // Chưa có học viên (site mới) hoặc backend chưa chạy → hiện số khóa miễn phí thay vì con số 0 kém thuyết phục
-    stats && stats.students > 0
+    // Ít học viên (site mới) hoặc backend chưa chạy → hiện số khóa miễn phí thay vì con số nhỏ kém thuyết phục
+    stats && stats.students >= MIN_STUDENTS
       ? { v: n(stats.students), l: "Học viên đã ghi danh" }
       : { v: n(STATIC.free), l: "Khóa học miễn phí" },
   ];
