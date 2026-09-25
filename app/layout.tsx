@@ -7,6 +7,8 @@ import { SITE_ORIGIN, absUrl } from "@/lib/seo";
 import { AuthProvider } from "@/components/AuthProvider";
 import VerifyBanner from "@/components/VerifyBanner";
 import ErrorReporter from "@/components/ErrorReporter";
+import MusicBar from "@/components/MusicBar";
+import { getTracks } from "@/lib/music.server";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
@@ -21,12 +23,14 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const tracks = getTracks(); // đọc public/music/ lúc build
   return (
     <html lang="vi">
       <body className="flex min-h-screen flex-col">
         <ErrorReporter />
         <AuthProvider>
-          <Header />
+          <MusicBar tracks={tracks} />
+          <Header offsetTop={tracks.length > 0} />
           <VerifyBanner />
           <main id="main" className="flex-1">{children}</main>
           <Footer />
