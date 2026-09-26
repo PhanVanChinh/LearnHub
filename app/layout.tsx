@@ -29,11 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <ErrorReporter />
         <AuthProvider>
-          <MusicBar tracks={tracks} />
-          <Header offsetTop={tracks.length > 0} />
+          <Header />
           <VerifyBanner />
           <main id="main" className="flex-1">{children}</main>
           <Footer />
+          <MusicBar tracks={tracks} />
         </AuthProvider>
       </body>
     </html>

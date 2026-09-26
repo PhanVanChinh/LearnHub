@@ -6,11 +6,11 @@ import { site } from "@/lib/site";
 import Logo from "./Logo";
 import UserMenu from "./UserMenu";
 
-export default function Header({ offsetTop = false }: { offsetTop?: boolean }) {
+export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   return (
-    <header className={`sticky z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur ${offsetTop ? "top-9" : "top-0"}`}>
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">Bỏ qua tới nội dung chính</a>
       <div className="container-x flex h-16 items-center justify-between gap-4">
         <Logo />
