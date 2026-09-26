@@ -246,6 +246,7 @@ class CourseOut(BaseModel):
     cover: str = Field("", description="Key S3 (covers/...) hoặc URL ảnh ngoài; trống → dùng gradient + emoji")
     short: str
     featured: bool
+    hidden: bool = Field(False, description="Ẩn khỏi danh sách/tìm kiếm/sitemap (vẫn mở được bằng link trực tiếp)")
 
 
 class LessonOut(LessonBase):
@@ -361,6 +362,7 @@ class CourseBase(BaseModel):
     color: str = Field("from-brand-500 to-brand-700", max_length=100)
     emoji: str = Field("📘", max_length=10)
     cover: str = Field("", max_length=1000)
+    hidden: bool = False
     short: str = ""
     description: str = ""
     includes: list[str] = []
@@ -385,6 +387,7 @@ class CourseUpdate(BaseModel):
     sold: int | None = Field(None, ge=0)
     color: str | None = Field(None, max_length=100)
     cover: str | None = Field(None, max_length=1000)
+    hidden: bool | None = None
     emoji: str | None = Field(None, max_length=10)
     short: str | None = None
     description: str | None = None
@@ -706,6 +709,13 @@ class AuditLogOut(BaseModel):
 
 class PaginatedAudit(Paginated):
     items: list[AuditLogOut]
+
+
+class HideEmptyResult(BaseModel):
+    hidden: int
+    slugs: list[str]
+    skipped_enrolled: list[str] = Field(default_factory=list, description="Khóa trống nhưng đã có người ghi danh — không tự ẩn")
+    dry_run: bool = False
 
 
 class PublishStatus(BaseModel):

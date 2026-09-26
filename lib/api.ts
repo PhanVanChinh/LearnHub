@@ -233,10 +233,11 @@ export type UploadStatus = { enabled: boolean; max_mb: number; allowed: string[]
 export type UploadOut = { key: string; name: string; size: number; content_type: string };
 export type AdminCourse = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;
-  color: string; emoji: string; cover?: string; short: string; featured: boolean; description: string; includes: string[]; lessons: Lesson[];
+  color: string; emoji: string; cover?: string; short: string; featured: boolean; hidden: boolean; description: string; includes: string[]; lessons: Lesson[];
   enrollment_count: number;
 };
-export type CourseInput = Omit<AdminCourse, "id" | "tags" | "enrollment_count" | "views" | "sold"> & { tags?: string[] };
+export type CourseInput = Omit<AdminCourse, "id" | "tags" | "enrollment_count" | "views" | "sold" | "hidden"> & { tags?: string[]; hidden?: boolean };
+export type HideEmptyResult = { hidden: number; slugs: string[]; skipped_enrolled: string[]; dry_run: boolean };
 export type AdminUser = User & { is_active: boolean; enrollment_count: number };
 export type AdminEnrollment = {
   id: number; user_id: number; course_id: number; created_at: string; user_email: string; course_slug: string; course_title: string;
@@ -283,8 +284,10 @@ export const adminApi = {
     api<Paginated<AuditLog>>(`/api/admin/audit${qs(params)}`),
   publish: () => api<PublishResult>("/api/admin/publish", { method: "POST" }),
 
-  courses: (params: { q?: string; category?: string; featured?: boolean; limit?: number; offset?: number } = {}) =>
+  courses: (params: { q?: string; category?: string; featured?: boolean; hidden?: boolean | ""; limit?: number; offset?: number } = {}) =>
     api<Paginated<AdminCourse>>(`/api/admin/courses${qs(params)}`),
+  toggleCourseHidden: (id: number) => api<AdminCourse>(`/api/admin/courses/${id}/hidden`, { method: "POST" }),
+  hideEmptyCourses: (dry_run = false) => api<HideEmptyResult>(`/api/admin/courses/hide-empty${qs({ dry_run })}`, { method: "POST" }),
   course: (id: number) => api<AdminCourse>(`/api/admin/courses/${id}`),
   createCourse: (body: CourseInput) => api<AdminCourse>("/api/admin/courses", json("POST", body)),
   updateCourse: (id: number, body: Partial<CourseInput & { views: number; sold: number }>) =>

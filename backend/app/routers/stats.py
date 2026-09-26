@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/stats", tags=["stats"])
 
 @router.get("", response_model=schemas.PublicStats)
 def public_stats(db: Session = Depends(get_db)):
-    courses = db.query(Course).all()
+    courses = db.query(Course).filter(Course.hidden.is_(False)).all()
     lessons = sum(len(c.lessons or []) for c in courses)
     videos = sum(1 for c in courses for l in (c.lessons or []) if l.get("video"))
     return schemas.PublicStats(
@@ -30,4 +30,4 @@ def course_stats(db: Session = Depends(get_db)):
     counts = dict(db.query(Enrollment.course_id, func.count(Enrollment.id)).group_by(Enrollment.course_id).all())
     ratings = rating_summaries(db)
     return [schemas.CourseStats(slug=c.slug, views=c.views, students=counts.get(c.id, 0), rating=ratings.get(c.id, schemas.RatingSummary()))
-            for c in db.query(Course.id, Course.slug, Course.views).all()]
+            for c in db.query(Course.id, Course.slug, Course.views).filter(Course.hidden.is_(False)).all()]

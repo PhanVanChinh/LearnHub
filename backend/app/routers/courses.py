@@ -37,7 +37,7 @@ def list_courses(
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Course)
+    query = db.query(Course).filter(Course.hidden.is_(False))
     if category and category != "all":
         # tags lưu JSON. Postgres: json không so sánh/cast trực tiếp được → ép sang text; SQLite: cast String.
         from ..config import settings
@@ -53,7 +53,7 @@ def list_courses(
 
 @router.get("/categories", response_model=list[schemas.CategoryCount])
 def categories(db: Session = Depends(get_db)):
-    courses = db.query(Course.tags).all()
+    courses = db.query(Course.tags).filter(Course.hidden.is_(False)).all()
     counts = {k: 0 for k in CATEGORY_LABELS}
     counts["all"] = len(courses)
     for (tags,) in courses:
@@ -67,7 +67,7 @@ def categories(db: Session = Depends(get_db)):
 def export_courses(db: Session = Depends(get_db)):
     """Toàn bộ khóa học ở dạng công khai, không phân trang. Frontend gọi lúc build tĩnh (CI) và khi cần đồng bộ danh sách.
     Video bài không free bị ẩn (chỉ còn has_video) — dữ liệu này nằm trong bundle công khai."""
-    return [_course_public(c) for c in db.query(Course).order_by(Course.id).all()]
+    return [_course_public(c) for c in db.query(Course).filter(Course.hidden.is_(False)).order_by(Course.id).all()]
 
 
 def _mark_lesson_flags(out_lessons: list[schemas.LessonOut], raw_lessons: list[dict]) -> None:

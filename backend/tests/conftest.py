@@ -21,6 +21,9 @@ else:
 os.environ["MAIL_PROVIDER"] = "console"  # không gửi mail thật khi test, kể cả khi .env có RESEND_API_KEY
 os.environ["RATE_LIMIT_ENABLED"] = "false"  # test rate limit tự bật riêng trong test_abuse.py
 os.environ["TURNSTILE_SECRET_KEY"] = ""
+# Test không phụ thuộc .env của máy dev: admin seed luôn là admin@example.com / admin123
+os.environ["ADMIN_EMAIL"] = "admin@example.com"
+os.environ["ADMIN_PASSWORD"] = "admin123"
 os.environ["REFRESH_TOKEN_IN_BODY"] = "true"  # test cũ đọc refresh_token từ JSON; test_cookie_auth.py kiểm tra chế độ chỉ cookie
 
 import pytest

@@ -77,6 +77,9 @@ class Course(Base):
     includes: Mapped[list] = mapped_column(JSON, default=list)
     lessons: Mapped[list] = mapped_column(JSON, default=list)
     featured: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Ẩn: không hiện trong danh sách / tìm kiếm / sitemap / build tĩnh. Dùng cho khóa chưa có nội dung.
+    # Vẫn mở được bằng link trực tiếp để admin xem trước và người đã ghi danh học tiếp.
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")

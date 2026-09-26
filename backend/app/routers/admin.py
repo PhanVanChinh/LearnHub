@@ -318,6 +318,7 @@ def list_courses(
     q: str | None = Query(None, description="Tìm theo tiêu đề / slug / mô tả ngắn"),
     category: str | None = None,
     featured: bool | None = None,
+    hidden: bool | None = Query(None, description="Lọc theo trạng thái ẩn"),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
@@ -330,6 +331,8 @@ def list_courses(
         query = query.filter(Course.tags.cast(String).like(f'%"{category}"%'))
     if featured is not None:
         query = query.filter(Course.featured == featured)
+    if hidden is not None:
+        query = query.filter(Course.hidden.is_(hidden))
     total = query.count()
     items = query.order_by(Course.id).offset(offset).limit(limit).all()
     return schemas.PaginatedCourses(total=total, limit=limit, offset=offset, items=[_course_out(c) for c in items])
@@ -518,6 +521,45 @@ def delete_enrollment(enrollment_id: int, request: Request, db: Session = Depend
     db.delete(e)
     db.commit()
     audit.record(db, request, admin, "enrollment.delete", "enrollment", enrollment_id, summary)
+
+
+# ---------- ẩn/hiện khóa học ----------
+def _has_content(course: Course) -> bool:
+    return any(l.get("video") or l.get("quiz") or l.get("attachments") for l in (course.lessons or []))
+
+
+@router.post("/courses/hide-empty", response_model=schemas.HideEmptyResult)
+def hide_empty_courses(request: Request, dry_run: bool = Query(False, description="true → chỉ đếm, không đổi gì"),
+                       db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Ẩn mọi khóa chưa có nội dung (không bài nào có video / trắc nghiệm / tài liệu). Khóa đã có ghi danh được giữ nguyên."""
+    hidden_now: list[str] = []
+    kept: list[str] = []
+    for c in db.query(Course).filter(Course.hidden.is_(False)).all():
+        if _has_content(c):
+            continue
+        if c.enrollments:
+            kept.append(c.slug)  # có người đang học → không tự ẩn, admin tự quyết
+            continue
+        if not dry_run:
+            c.hidden = True
+        hidden_now.append(c.slug)
+    if not dry_run and hidden_now:
+        db.commit()
+        audit.record(db, request, admin, "course.hide", "course", None,
+                     f"Ẩn {len(hidden_now)} khóa chưa có nội dung", {"slugs": hidden_now})
+    return schemas.HideEmptyResult(hidden=len(hidden_now), slugs=hidden_now, skipped_enrolled=kept, dry_run=dry_run)
+
+
+@router.post("/courses/{course_id}/hidden", response_model=schemas.AdminCourseOut)
+def toggle_course_hidden(course_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
+    """Ẩn / hiện lại một khóa. Khóa ẩn không xuất hiện trong danh sách, tìm kiếm, sitemap và bản build tĩnh."""
+    course = _get_course(db, course_id)
+    course.hidden = not course.hidden
+    db.commit()
+    db.refresh(course)
+    audit.record(db, request, admin, "course.hide" if course.hidden else "course.unhide", "course", course.id,
+                 f"{'Ẩn' if course.hidden else 'Hiện lại'} khóa «{course.title}»")
+    return _course_out(course)
 
 
 # ---------- reviews ----------
