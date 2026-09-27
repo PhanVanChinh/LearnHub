@@ -3,21 +3,39 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Track } from "@/lib/music.server";
 
 const KEY = "learnhub_music";
-const VOLUME = 0.35;
+const DEFAULT_VOLUME = 0.35;
+
+type Saved = { muted?: boolean; volume?: number };
+
+/** Đọc cài đặt đã lưu. Tương thích định dạng cũ ("muted" / "on"). */
+function load(): Saved {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw || raw === "on") return {};
+    if (raw === "muted") return { muted: true };
+    return JSON.parse(raw) as Saved;
+  } catch { return {}; }
+}
+function save(patch: Saved) {
+  try { localStorage.setItem(KEY, JSON.stringify({ ...load(), ...patch })); } catch { /* bỏ qua */ }
+}
 
 /** Nút nhạc nền nổi ở góc dưới phải: bấm để bật/tạm dừng, rê chuột (hoặc đang phát) thì mở rộng thành thanh
- *  có tên bài, nút đổi bài và tắt tiếng. Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
+ *  có tên bài, nút đổi bài, tắt tiếng và thanh trượt âm lượng (mức đã chọn được nhớ giữa các lần vào web). Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
  *  Nằm trong layout nên đổi trang không ngắt nhạc. Trình duyệt chặn tự phát có tiếng → chỉ phát sau khi người dùng bấm. */
 export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [index, setIndex] = useState(() => Math.floor(Math.random() * Math.max(1, tracks.length)));
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [hover, setHover] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    try { setMuted(localStorage.getItem(KEY) === "muted"); } catch { /* bỏ qua */ }
+    const s = load();
+    setMuted(!!s.muted);
+    if (typeof s.volume === "number" && s.volume >= 0 && s.volume <= 1) setVolume(s.volume);
   }, []);
 
   const pickNext = useCallback(() => {
@@ -30,19 +48,27 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     if (!el) return;
     if (playing) { el.pause(); setPlaying(false); return; }
     setError(false);
-    el.volume = VOLUME;
+    el.volume = volume;
     try { await el.play(); setPlaying(true); } catch { setError(true); }
   };
-  const toggleMute = () => {
-    const next = !muted;
+  const setMutedPersist = (next: boolean) => {
     setMuted(next);
     if (audioRef.current) audioRef.current.muted = next;
-    try { localStorage.setItem(KEY, next ? "muted" : "on"); } catch { /* bỏ qua */ }
+    save({ muted: next });
+  };
+  const toggleMute = () => setMutedPersist(!muted);
+  /** Kéo thanh trượt: đổi âm lượng ngay, đang tắt tiếng mà kéo lên thì tự bật tiếng. */
+  const changeVolume = (v: number) => {
+    setVolume(v);
+    if (audioRef.current) audioRef.current.volume = v;
+    if (muted && v > 0) setMutedPersist(false);
+    save({ volume: v });
   };
 
   if (!tracks.length) return null;
   const track = tracks[Math.min(index, tracks.length - 1)];
   const open = hover || playing; // đang phát thì luôn mở để thấy tên bài và nút điều khiển
+  const silent = muted || volume === 0;
 
   return (
     <div className="fixed bottom-4 right-4 z-40 print:hidden" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
@@ -53,7 +79,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
         </button>
 
         {/* Phần mở rộng: chiếm chỗ 0 khi thu gọn nên không che nội dung */}
-        <div className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ${open ? "max-w-[15rem] opacity-100" : "max-w-0 opacity-0"}`}>
+        <div className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ${open ? "max-w-[20rem] opacity-100" : "max-w-0 opacity-0"}`}>
           {playing && !muted && <Equalizer />}
           <span className="max-w-[8rem] truncate px-1 text-xs font-medium text-slate-700" title={track.title}>
             {error ? "Không phát được" : playing ? track.title : "Nhạc nền khi học"}
@@ -61,7 +87,10 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
           <button onClick={pickNext} aria-label="Bài khác" title="Bài khác"
             className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><NextIcon /></button>
           <button onClick={toggleMute} aria-label={muted ? "Bật tiếng" : "Tắt tiếng"} aria-pressed={muted} title={muted ? "Bật tiếng" : "Tắt tiếng"}
-            className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{muted ? <MutedIcon /> : <SoundIcon />}</button>
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{silent ? <MutedIcon /> : <SoundIcon />}</button>
+          <input type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume} onChange={(e) => changeVolume(Number(e.target.value))}
+            aria-label="Âm lượng" title={`Âm lượng ${Math.round((muted ? 0 : volume) * 100)}%`}
+            className="mr-1 h-1 w-16 shrink-0 cursor-pointer accent-brand-600" />
         </div>
       </div>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption -- nhạc nền không lời thoại, phụ đề không có nội dung để mô tả */}
