@@ -27,18 +27,21 @@ export default function UserMenu({ mobile = false }: { mobile?: boolean }) {
       <span className={`${cls} grid place-items-center rounded-full bg-brand-600 font-semibold text-white`}>{initial}</span>
     );
   if (mobile) {
+    const item = "block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"; // cùng kiểu các mục điều hướng mobile
     return (
-      <div className="mt-2 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-        <div className="flex items-center gap-2 text-sm">
+      <div className="mt-2 border-t border-slate-200 pt-2">
+        <div className="flex items-center gap-2 px-3 py-2 text-sm">
           <Avatar cls="h-8 w-8" />
-          <span className="font-medium">{user.full_name}</span>
+          <span className="min-w-0">
+            <span className="block truncate font-medium">{user.full_name}</span>
+            <span className="block truncate text-xs text-slate-500">{user.email}</span>
+          </span>
         </div>
-        <div className="flex items-center gap-3 text-sm font-medium">
-          <Link href="/orders" className="text-slate-700">Đơn hàng</Link>
-          <Link href="/account" className="text-slate-700">Tài khoản</Link>
-          {user.role === "admin" && <Link href="/admin" className="text-amber-700">Quản trị</Link>}
-          <button onClick={logout} className="text-rose-600">Đăng xuất</button>
-        </div>
+        <Link href="/my-courses" className={item}>Khóa học của tôi</Link>
+        <Link href="/orders" className={item}>Đơn hàng của tôi</Link>
+        <Link href="/account" className={item}>Tài khoản</Link>
+        {user.role === "admin" && <Link href="/admin" className={`${item} text-amber-700 hover:bg-amber-50`}>Quản trị</Link>}
+        <button onClick={logout} className={`${item} w-full text-left text-rose-600 hover:bg-rose-50`}>Đăng xuất</button>
       </div>
     );
   }
