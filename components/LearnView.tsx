@@ -119,6 +119,21 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
     </ol>
   );
 
+  // Tiến độ + nút chứng nhận + nhắc đánh giá: dùng chung cho sidebar desktop và khối riêng trên mobile
+  const progressBlock = progress && (
+    <div>
+      <div className="flex justify-between text-xs text-slate-300">
+        <span>{progress.percent === 100 ? "🎉 Đã hoàn thành khóa học" : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
+        <span className="font-semibold">{progress.percent}%</span>
+      </div>
+      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
+      </div>
+      {progress.percent === 100 && <CertificateButton slug={course.slug} />}
+      {progress.percent >= 50 && <ReviewPrompt slug={course.slug} completed={progress.percent === 100} />}
+    </div>
+  );
+
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-slate-100">
       {/* Thanh trên */}
@@ -205,6 +220,9 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
             </div>
           </div>
 
+          {/* Mobile: tiến độ, chứng nhận, nhắc đánh giá — sidebar bên phải chỉ có trên desktop */}
+          {progressBlock && <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-3 lg:hidden">{progressBlock}</div>}
+
           {/* Mobile: danh sách bài thu gọn ngay dưới tiêu đề — không phải cuộn qua video/quiz để chuyển bài */}
           <details className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-white/5 lg:hidden">
             <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-white marker:content-none">
@@ -237,19 +255,7 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                 {lessons.length} bài · {lessons.filter((_, i) => hasVideo(i)).length} video
                 {lessons.some((l) => l.quizCount) && <> · {lessons.filter((l) => l.quizCount).length} trắc nghiệm</>}
               </p>
-              {progress && (
-                <div className="mt-2">
-                  <div className="flex justify-between text-xs text-slate-300">
-                    <span>{progress.percent === 100 ? "🎉 Đã hoàn thành khóa học" : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
-                    <span className="font-semibold">{progress.percent}%</span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
-                    <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
-                  </div>
-                  {progress.percent === 100 && <CertificateButton slug={course.slug} />}
-                  {progress.percent >= 50 && <ReviewPrompt slug={course.slug} completed={progress.percent === 100} />}
-                </div>
-              )}
+              {progressBlock && <div className="mt-2">{progressBlock}</div>}
             </div>
             {lessonList}
           </div>
