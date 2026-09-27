@@ -5,6 +5,7 @@ import type { Track } from "@/lib/music.server";
 const KEY = "learnhub_music";
 const DEFAULT_VOLUME = 0.35;
 const PEEK_MS = 4000; // sau khi chạm/bấm, giữ thanh mở rộng bấy nhiêu lâu rồi tự thu gọn
+const FADE_MS = 600; // âm lượng tăng/giảm dần khi phát/dừng để không bị giật
 
 type Saved = { muted?: boolean; volume?: number };
 
@@ -21,8 +22,10 @@ function save(patch: Saved) {
   try { localStorage.setItem(KEY, JSON.stringify({ ...load(), ...patch })); } catch { /* bỏ qua */ }
 }
 
-/** Nút nhạc nền nổi ở góc dưới phải: bấm để bật/tạm dừng, rê chuột (hoặc đang phát) thì mở rộng thành thanh
- *  có tên bài, nút đổi bài, tắt tiếng và thanh trượt âm lượng (mức đã chọn được nhớ giữa các lần vào web). Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
+/** Nút nhạc nền nổi ở góc dưới phải: bấm để bật/tạm dừng, rê chuột / focus / chạm thì mở rộng thành thanh
+ *  có tên bài, nút đổi bài, tắt tiếng và thanh trượt âm lượng (mức đã chọn được nhớ giữa các lần vào web).
+ *  Đang phát mà thu gọn thì nút hiện sóng nhạc thay cho biểu tượng. Tên bài được đăng ký với hệ điều hành
+ *  (Media Session) nên hiện trên màn hình khoá và điều khiển được bằng phím media / tai nghe. Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
  *  Nằm trong layout nên đổi trang không ngắt nhạc. Trình duyệt chặn tự phát có tiếng → chỉ phát sau khi người dùng bấm. */
 export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -35,9 +38,31 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const [peek, setPeek] = useState(false);
   const [error, setError] = useState(false);
   const playingRef = useRef(false);
+  const volumeRef = useRef(DEFAULT_VOLUME);
   const failed = useRef(new Set<string>());
   const peekTimer = useRef<ReturnType<typeof setTimeout>>();
+  const fadeFrame = useRef<number | null>(null);
   playingRef.current = playing;
+  volumeRef.current = volume;
+
+  const cancelFade = useCallback(() => {
+    if (fadeFrame.current !== null) cancelAnimationFrame(fadeFrame.current);
+    fadeFrame.current = null;
+  }, []);
+  /** Đưa âm lượng của <audio> từ mức hiện tại về `to` trong FADE_MS, xong thì gọi onDone. */
+  const fade = useCallback((el: HTMLAudioElement, to: number, onDone?: () => void) => {
+    cancelFade();
+    const from = el.volume;
+    const start = performance.now();
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / FADE_MS);
+      el.volume = from + (to - from) * t;
+      if (t < 1) fadeFrame.current = requestAnimationFrame(step);
+      else { fadeFrame.current = null; onDone?.(); }
+    };
+    fadeFrame.current = requestAnimationFrame(step);
+  }, [cancelFade]);
+  useEffect(() => cancelFade, [cancelFade]);
 
   /** Mở rộng một lúc sau mỗi thao tác — cách duy nhất để chạm tới các nút phụ trên màn hình cảm ứng. */
   const showBriefly = useCallback(() => {
@@ -59,15 +84,22 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     setIndex((cur) => { let n = cur; while (n === cur) n = Math.floor(Math.random() * tracks.length); return n; });
   }, [tracks.length, showBriefly]);
 
-  const toggle = async () => {
+  const play = useCallback(async () => {
     const el = audioRef.current;
-    if (!el) return;
+    if (!el || playingRef.current) return;
     showBriefly();
-    if (playing) { el.pause(); setPlaying(false); return; }
     setError(false);
-    el.volume = volume;
-    try { await el.play(); setPlaying(true); } catch { setError(true); }
-  };
+    el.volume = 0;
+    try { await el.play(); setPlaying(true); fade(el, volumeRef.current); } catch { setError(true); }
+  }, [showBriefly, fade]);
+  const pause = useCallback(() => {
+    const el = audioRef.current;
+    if (!el || !playingRef.current) return;
+    showBriefly();
+    setPlaying(false);
+    fade(el, 0, () => { el.pause(); el.volume = volumeRef.current; });
+  }, [showBriefly, fade]);
+  const toggle = () => (playing ? pause() : play());
   const setMutedPersist = (next: boolean) => {
     setMuted(next);
     if (audioRef.current) audioRef.current.muted = next;
@@ -78,7 +110,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const changeVolume = (v: number) => {
     showBriefly();
     setVolume(v);
-    if (audioRef.current) audioRef.current.volume = v;
+    if (playing && audioRef.current) { cancelFade(); audioRef.current.volume = v; }
     if (muted && v > 0) setMutedPersist(false);
     save({ volume: v });
   };
@@ -93,6 +125,22 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     el.play().catch(() => setError(true));
   }, [src]);
 
+  // Media Session: tên bài trên màn hình khoá / trung tâm điều khiển, phím media và tai nghe điều khiển được.
+  const title = track?.title;
+  useEffect(() => {
+    if (!title || !("mediaSession" in navigator)) return;
+    navigator.mediaSession.metadata = new MediaMetadata({ title, artist: "Nhạc nền LearnHub" });
+    navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+  }, [title, playing]);
+  useEffect(() => {
+    if (!("mediaSession" in navigator)) return;
+    const ms = navigator.mediaSession;
+    ms.setActionHandler("play", play);
+    ms.setActionHandler("pause", pause);
+    ms.setActionHandler("nexttrack", pickNext);
+    return () => { ms.setActionHandler("play", null); ms.setActionHandler("pause", null); ms.setActionHandler("nexttrack", null); };
+  }, [play, pause, pickNext]);
+
   /** File hỏng hoặc không tải được: nhảy sang bài khác, chỉ báo lỗi khi mọi bài đều hỏng. */
   const onError = () => {
     if (!playingRef.current || !src) return;
@@ -102,7 +150,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   };
 
   if (!tracks.length) return null;
-  const open = hover || focus || peek || playing; // đang phát thì luôn mở để thấy tên bài và nút điều khiển
+  const open = hover || focus || peek; // đang phát vẫn thu gọn để không che nội dung; nút hiện sóng nhạc thay biểu tượng
   const tab = open ? 0 : -1; // thu gọn thì các nút phụ không nhận Tab (đang ẩn, không nên focus vào)
   const silent = muted || volume === 0;
 
@@ -112,12 +160,12 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
       <div className={`flex items-center gap-1 rounded-full border border-slate-200/70 bg-white/85 py-1 pl-1 shadow-lg shadow-slate-900/10 backdrop-blur-md transition-all duration-300 ${open ? "pr-2" : "pr-1"}`}>
         <button onClick={toggle} aria-label={playing ? "Tạm dừng nhạc nền" : "Phát nhạc nền"} aria-pressed={playing}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
-          {playing ? <PauseIcon /> : <PlayIcon />}
+          {playing ? (open ? <PauseIcon /> : <Equalizer className="bg-white" />) : <PlayIcon />}
         </button>
 
         {/* Phần mở rộng: chiếm chỗ 0 khi thu gọn nên không che nội dung */}
         <div className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ${open ? "max-w-[20rem] opacity-100" : "max-w-0 opacity-0"}`}>
-          {playing && !muted && <Equalizer />}
+          {playing && !silent && <Equalizer className="bg-brand-500" />}
           <span className="max-w-[8rem] truncate px-1 text-xs font-medium text-slate-700" title={track.title}>
             {error ? "Không phát được" : playing ? track.title : "Nhạc nền khi học"}
           </span>
@@ -157,10 +205,10 @@ const PauseIcon = () => (
 );
 
 /** Ba cột sóng nhạc nhún nhảy khi đang phát (tắt theo cài đặt giảm chuyển động của hệ điều hành). */
-const Equalizer = () => (
-  <span className="flex h-4 shrink-0 items-end gap-[2px] pl-1" aria-hidden="true">
+const Equalizer = ({ className }: { className: string }) => (
+  <span className="flex h-4 shrink-0 items-end gap-[2px] px-1" aria-hidden="true">
     {[0, 1, 2].map((i) => (
-      <span key={i} className="w-[3px] rounded-full bg-brand-500 animate-eq" style={{ animationDelay: `${i * 0.18}s`, height: "60%" }} />
+      <span key={i} className={`w-[3px] rounded-full animate-eq ${className}`} style={{ animationDelay: `${i * 0.18}s`, height: "60%" }} />
     ))}
   </span>
 );
