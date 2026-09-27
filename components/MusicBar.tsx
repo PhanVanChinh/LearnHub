@@ -7,7 +7,9 @@ const DEFAULT_VOLUME = 0.35;
 const PEEK_MS = 4000; // sau khi chạm/bấm, giữ thanh mở rộng bấy nhiêu lâu rồi tự thu gọn
 const FADE_MS = 600; // âm lượng tăng/giảm dần khi phát/dừng để không bị giật
 
-type Saved = { muted?: boolean; volume?: number };
+type Saved = { muted?: boolean; volume?: number; index?: number; time?: number };
+const SAVE_EVERY_S = 5; // lưu vị trí đang nghe mỗi bấy nhiêu giây
+const RESUME_MIN_S = 10; // nghe được ít hơn thì lần sau phát lại từ đầu
 
 /** Đọc cài đặt đã lưu. Tương thích định dạng cũ ("muted" / "on"). */
 function load(): Saved {
@@ -29,7 +31,9 @@ function save(patch: Saved) {
  *  Nằm trong layout nên đổi trang không ngắt nhạc. Trình duyệt chặn tự phát có tiếng → chỉ phát sau khi người dùng bấm. */
 export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [index, setIndex] = useState(() => Math.floor(Math.random() * Math.max(1, tracks.length)));
+  // Bắt đầu ở 0 cho server và client giống nhau; bài thật (đã lưu hoặc ngẫu nhiên) chọn sau khi mount để không lệch hydration.
+  const [index, setIndex] = useState(0);
+  const [resume, setResume] = useState(false); // có vị trí đã lưu để "Tiếp tục nghe"
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
@@ -41,6 +45,8 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const volumeRef = useRef(DEFAULT_VOLUME);
   const failed = useRef(new Set<string>());
   const peekTimer = useRef<ReturnType<typeof setTimeout>>();
+  const resumeAt = useRef(0); // giây cần tua tới khi bài được tải (0 = từ đầu)
+  const lastSaved = useRef(0);
   const fadeFrame = useRef<number | null>(null);
   playingRef.current = playing;
   volumeRef.current = volume;
@@ -76,13 +82,43 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     const s = load();
     setMuted(!!s.muted);
     if (typeof s.volume === "number" && s.volume >= 0 && s.volume <= 1) setVolume(s.volume);
-  }, []);
+    if (typeof s.index === "number" && Number.isInteger(s.index) && s.index >= 0 && s.index < tracks.length) {
+      setIndex(s.index);
+      if (typeof s.time === "number" && s.time >= RESUME_MIN_S) { resumeAt.current = s.time; setResume(true); }
+    } else if (tracks.length) {
+      const n = Math.floor(Math.random() * tracks.length);
+      setIndex(n);
+      save({ index: n, time: 0 });
+    }
+  }, [tracks.length]);
 
   const pickNext = useCallback(() => {
     showBriefly();
-    if (tracks.length < 2) return setIndex(0);
-    setIndex((cur) => { let n = cur; while (n === cur) n = Math.floor(Math.random() * tracks.length); return n; });
+    resumeAt.current = 0;
+    lastSaved.current = 0;
+    setResume(false);
+    setIndex((cur) => {
+      let n = 0;
+      if (tracks.length > 1) while (n === cur) n = Math.floor(Math.random() * tracks.length);
+      save({ index: n, time: 0 });
+      return n;
+    });
   }, [tracks.length, showBriefly]);
+
+  /** Bài vừa tải xong: tua tới vị trí đã lưu (nếu có và chưa gần hết bài). */
+  const onLoadedMetadata = () => {
+    const el = audioRef.current;
+    if (el && resumeAt.current > 0 && resumeAt.current < el.duration - RESUME_MIN_S) el.currentTime = resumeAt.current;
+    resumeAt.current = 0;
+  };
+  const saveTime = (el: HTMLAudioElement) => {
+    lastSaved.current = el.currentTime;
+    save({ index, time: el.currentTime });
+  };
+  const onTimeUpdate = () => {
+    const el = audioRef.current;
+    if (el && playingRef.current && Math.abs(el.currentTime - lastSaved.current) >= SAVE_EVERY_S) saveTime(el);
+  };
 
   const play = useCallback(async () => {
     const el = audioRef.current;
@@ -90,7 +126,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     showBriefly();
     setError(false);
     el.volume = 0;
-    try { await el.play(); setPlaying(true); fade(el, volumeRef.current); } catch { setError(true); }
+    try { await el.play(); setPlaying(true); setResume(false); fade(el, volumeRef.current); } catch { setError(true); }
   }, [showBriefly, fade]);
   const pause = useCallback(() => {
     const el = audioRef.current;
@@ -99,6 +135,9 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     setPlaying(false);
     fade(el, 0, () => { el.pause(); el.volume = volumeRef.current; });
   }, [showBriefly, fade]);
+  // Lưu vị trí lúc dừng (sự kiện pause của <audio> nổ sau fade, và cả khi hệ điều hành dừng nhạc).
+  // currentTime = 0 là lúc vừa đổi src (trình duyệt tự dừng), không phải người dùng dừng — bỏ qua để không ghi đè bài mới chọn.
+  const onPause = () => { const el = audioRef.current; if (el && !el.ended && el.currentTime > 0) saveTime(el); };
   const toggle = () => (playing ? pause() : play());
   const setMutedPersist = (next: boolean) => {
     setMuted(next);
@@ -167,7 +206,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
         <div className={`flex items-center gap-1 overflow-hidden transition-all duration-300 ${open ? "max-w-[20rem] opacity-100" : "max-w-0 opacity-0"}`}>
           {playing && !silent && <Equalizer className="bg-brand-500" />}
           <span className="max-w-[8rem] truncate px-1 text-xs font-medium text-slate-700" title={track.title}>
-            {error ? "Không phát được" : playing ? track.title : "Nhạc nền khi học"}
+            {error ? "Không phát được" : playing ? track.title : resume ? "Tiếp tục nghe" : "Nhạc nền khi học"}
           </span>
           <button onClick={pickNext} aria-label="Bài khác" title="Bài khác" tabIndex={tab}
             className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><NextIcon /></button>
@@ -179,7 +218,8 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
         </div>
       </div>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption -- nhạc nền không lời thoại, phụ đề không có nội dung để mô tả */}
-      <audio ref={audioRef} src={track.src} muted={muted} preload="none" onEnded={pickNext} onError={onError} onPlaying={() => failed.current.clear()} />
+      <audio ref={audioRef} src={track.src} muted={muted} preload="none" onEnded={pickNext} onError={onError} onPlaying={() => failed.current.clear()}
+        onLoadedMetadata={onLoadedMetadata} onTimeUpdate={onTimeUpdate} onPause={onPause} />
     </div>
   );
 }
