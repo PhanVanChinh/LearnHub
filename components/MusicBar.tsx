@@ -4,6 +4,7 @@ import type { Track } from "@/lib/music.server";
 
 const KEY = "learnhub_music";
 const DEFAULT_VOLUME = 0.35;
+const PEEK_MS = 4000; // sau khi chạm/bấm, giữ thanh mở rộng bấy nhiêu lâu rồi tự thu gọn
 
 type Saved = { muted?: boolean; volume?: number };
 
@@ -30,7 +31,21 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [hover, setHover] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const [peek, setPeek] = useState(false);
   const [error, setError] = useState(false);
+  const playingRef = useRef(false);
+  const failed = useRef(new Set<string>());
+  const peekTimer = useRef<ReturnType<typeof setTimeout>>();
+  playingRef.current = playing;
+
+  /** Mở rộng một lúc sau mỗi thao tác — cách duy nhất để chạm tới các nút phụ trên màn hình cảm ứng. */
+  const showBriefly = useCallback(() => {
+    setPeek(true);
+    clearTimeout(peekTimer.current);
+    peekTimer.current = setTimeout(() => setPeek(false), PEEK_MS);
+  }, []);
+  useEffect(() => () => clearTimeout(peekTimer.current), []);
 
   useEffect(() => {
     const s = load();
@@ -39,13 +54,15 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   }, []);
 
   const pickNext = useCallback(() => {
+    showBriefly();
     if (tracks.length < 2) return setIndex(0);
     setIndex((cur) => { let n = cur; while (n === cur) n = Math.floor(Math.random() * tracks.length); return n; });
-  }, [tracks.length]);
+  }, [tracks.length, showBriefly]);
 
   const toggle = async () => {
     const el = audioRef.current;
     if (!el) return;
+    showBriefly();
     if (playing) { el.pause(); setPlaying(false); return; }
     setError(false);
     el.volume = volume;
@@ -56,22 +73,42 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     if (audioRef.current) audioRef.current.muted = next;
     save({ muted: next });
   };
-  const toggleMute = () => setMutedPersist(!muted);
+  const toggleMute = () => { showBriefly(); setMutedPersist(!muted); };
   /** Kéo thanh trượt: đổi âm lượng ngay, đang tắt tiếng mà kéo lên thì tự bật tiếng. */
   const changeVolume = (v: number) => {
+    showBriefly();
     setVolume(v);
     if (audioRef.current) audioRef.current.volume = v;
     if (muted && v > 0) setMutedPersist(false);
     save({ volume: v });
   };
 
-  if (!tracks.length) return null;
   const track = tracks[Math.min(index, tracks.length - 1)];
-  const open = hover || playing; // đang phát thì luôn mở để thấy tên bài và nút điều khiển
+  const src = track?.src;
+
+  // Đổi src của <audio> làm trình duyệt dừng phát, nên đang phát thì phải gọi play() lại cho bài mới.
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !src || !playingRef.current) return;
+    el.play().catch(() => setError(true));
+  }, [src]);
+
+  /** File hỏng hoặc không tải được: nhảy sang bài khác, chỉ báo lỗi khi mọi bài đều hỏng. */
+  const onError = () => {
+    if (!playingRef.current || !src) return;
+    failed.current.add(src);
+    if (tracks.length > 1 && failed.current.size < tracks.length) pickNext();
+    else { setPlaying(false); setError(true); }
+  };
+
+  if (!tracks.length) return null;
+  const open = hover || focus || peek || playing; // đang phát thì luôn mở để thấy tên bài và nút điều khiển
+  const tab = open ? 0 : -1; // thu gọn thì các nút phụ không nhận Tab (đang ẩn, không nên focus vào)
   const silent = muted || volume === 0;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 print:hidden" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+    <div className="fixed bottom-4 right-4 z-40 print:hidden" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      onFocus={() => setFocus(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(false); }}>
       <div className={`flex items-center gap-1 rounded-full border border-slate-200/70 bg-white/85 py-1 pl-1 shadow-lg shadow-slate-900/10 backdrop-blur-md transition-all duration-300 ${open ? "pr-2" : "pr-1"}`}>
         <button onClick={toggle} aria-label={playing ? "Tạm dừng nhạc nền" : "Phát nhạc nền"} aria-pressed={playing}
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-md transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
@@ -84,17 +121,17 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
           <span className="max-w-[8rem] truncate px-1 text-xs font-medium text-slate-700" title={track.title}>
             {error ? "Không phát được" : playing ? track.title : "Nhạc nền khi học"}
           </span>
-          <button onClick={pickNext} aria-label="Bài khác" title="Bài khác"
+          <button onClick={pickNext} aria-label="Bài khác" title="Bài khác" tabIndex={tab}
             className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><NextIcon /></button>
-          <button onClick={toggleMute} aria-label={muted ? "Bật tiếng" : "Tắt tiếng"} aria-pressed={muted} title={muted ? "Bật tiếng" : "Tắt tiếng"}
+          <button onClick={toggleMute} aria-label={muted ? "Bật tiếng" : "Tắt tiếng"} aria-pressed={muted} title={muted ? "Bật tiếng" : "Tắt tiếng"} tabIndex={tab}
             className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800">{silent ? <MutedIcon /> : <SoundIcon />}</button>
           <input type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume} onChange={(e) => changeVolume(Number(e.target.value))}
-            aria-label="Âm lượng" title={`Âm lượng ${Math.round((muted ? 0 : volume) * 100)}%`}
+            aria-label="Âm lượng" tabIndex={tab} title={`Âm lượng ${Math.round((muted ? 0 : volume) * 100)}%`}
             className="mr-1 h-1 w-16 shrink-0 cursor-pointer accent-brand-600" />
         </div>
       </div>
       {/* eslint-disable-next-line jsx-a11y/media-has-caption -- nhạc nền không lời thoại, phụ đề không có nội dung để mô tả */}
-      <audio ref={audioRef} src={track.src} muted={muted} preload="none" onEnded={pickNext} onError={() => { if (playing) setError(true); }} />
+      <audio ref={audioRef} src={track.src} muted={muted} preload="none" onEnded={pickNext} onError={onError} onPlaying={() => failed.current.clear()} />
     </div>
   );
 }
