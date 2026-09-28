@@ -15,7 +15,8 @@ import { coverUrl } from "@/lib/cover";
 /** Thân trang chi tiết. Nhận bản tĩnh (build) rồi tự làm mới giá / mô tả / bài học từ API. */
 export default function CourseDetailView({ course: initial, related }: { course: Course; related: Course[] }) {
   const { course } = useLiveCourse(initial);
-  const previewVideo = course.lessons.find((l) => l.free && l.video)?.video;
+  const previewIndex = course.lessons.findIndex((l) => l.free && l.video);
+  const previewVideo = previewIndex >= 0 ? course.lessons[previewIndex].video : undefined;
   const cover = coverUrl(course.cover);
 
   return (
@@ -64,14 +65,15 @@ export default function CourseDetailView({ course: initial, related }: { course:
         <aside className="order-first lg:order-none lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
             {previewVideo ? (
-              <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-900">
+              <Link href={`/learn/${course.slug}?lesson=${previewIndex}`} aria-label={`Xem thử bài ${previewIndex + 1}: ${course.lessons[previewIndex].title}`}
+                className="group relative block aspect-video overflow-hidden rounded-xl bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={youtubeThumb(previewVideo)} alt="" className="h-full w-full object-cover opacity-90" />
+                <img src={youtubeThumb(previewVideo)} alt="" className="h-full w-full object-cover opacity-90 transition group-hover:scale-105 group-hover:opacity-100" />
                 <span className="absolute inset-0 grid place-items-center">
-                  <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-2xl text-brand-700 shadow-lg">▶</span>
+                  <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-2xl text-brand-700 shadow-lg transition group-hover:scale-110">▶</span>
                 </span>
-                <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">Có bài xem thử</span>
-              </div>
+                <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">Xem thử miễn phí</span>
+              </Link>
             ) : cover ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={cover} alt={course.title} className="aspect-video w-full rounded-xl object-cover" />
