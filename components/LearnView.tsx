@@ -81,7 +81,10 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
   // Phím ← → chuyển bài
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return; // tổ hợp phím của trình duyệt / hệ điều hành
+      const t = e.target as HTMLElement | null;
+      // Đang gõ trong ô nhập (input, textarea, select, contenteditable) thì mũi tên là di chuyển con trỏ, không chuyển bài
+      if (t && (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) || t.isContentEditable)) return;
       if (e.key === "ArrowLeft") go(index - 1);
       if (e.key === "ArrowRight") go(index + 1);
     };
