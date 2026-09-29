@@ -18,7 +18,8 @@ def test_find_problems_defaults(client, monkeypatch):
     errors, warnings = find_problems(db)
     db.close()
     joined = " ".join(errors)
-    assert "SECRET_KEY" in joined and "ADMIN_PASSWORD" in joined and "SQLite" in joined or "Postgres" in joined
+    assert "SECRET_KEY" in joined and "ADMIN_PASSWORD" in joined
+    assert ("SQLite" in joined) == settings.is_sqlite  # lỗi SQLite chỉ có khi DB test là SQLite (CI chạy cả Postgres)
     assert any("admin@example.com" in e for e in errors)  # admin seed đang dùng admin123
     assert any("CORS" in w for w in warnings)
 
