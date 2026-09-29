@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import LearnView from "@/components/LearnView";
 import { getCourse, getCourses } from "@/lib/courses.server";
+import { pageMeta } from "@/lib/seo";
 
 export async function generateStaticParams() {
   return (await getCourses()).map((c) => ({ slug: c.slug }));
@@ -9,7 +10,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: { slug: string } }) {
   const c = await getCourse(params.slug);
-  return { title: c ? `Học: ${c.title}` : "Không tìm thấy" };
+  return pageMeta({ path: `/learn/${params.slug}`, title: c ? `Học: ${c.title}` : "Không tìm thấy", noindex: true });
 }
 
 export default async function LearnPage({ params }: { params: { slug: string } }) {

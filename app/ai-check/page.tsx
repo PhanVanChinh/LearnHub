@@ -1,7 +1,8 @@
 import PageHeader from "@/components/PageHeader";
 import AiCheckTool from "@/components/AiCheckTool";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = { title: "AI Check bài viết" };
+export const metadata = pageMeta({ path: "/ai-check", title: "AI Check bài viết", description: "Dán tiểu luận, báo cáo hoặc khóa luận để ước lượng dấu hiệu do AI viết, xem đoạn đáng chú ý và gợi ý chỉnh sửa trước khi nộp." });
 
 const steps = [
   ["1", "Dán nội dung", "Dán trực tiếp phần bài viết bạn muốn kiểm tra (từ 80 từ). Chưa hỗ trợ tải file .docx/.pdf."],

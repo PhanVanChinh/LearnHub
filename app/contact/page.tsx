@@ -1,8 +1,9 @@
 import ContactForm from "@/components/ContactForm";
 import PageHeader from "@/components/PageHeader";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = { title: "Liên hệ" };
+export const metadata = pageMeta({ path: "/contact", title: "Liên hệ", description: "Liên hệ LearnHub qua email, hotline hoặc gửi tin nhắn trực tiếp. Hỗ trợ thanh toán, mở khóa khóa học và góp ý nội dung." });
 
 export default function ContactPage() {
   return (

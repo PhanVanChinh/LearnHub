@@ -3,7 +3,9 @@ import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
 import { getCourses } from "@/lib/courses.server";
 import { isComingSoon, site } from "@/lib/site";
-import { absUrl } from "@/lib/seo";
+import { absUrl, pageMeta } from "@/lib/seo";
+
+export const metadata = pageMeta({ path: "/" });
 
 const features = [
   { icon: "🎯", t: "Bám sát chương trình", d: "Nội dung biên soạn theo đề cương từng môn, ưu tiên phần hay ra thi." },

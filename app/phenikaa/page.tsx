@@ -1,8 +1,9 @@
 import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata = { title: `Dành cho ${site.university}` };
+export const metadata = pageMeta({ path: "/phenikaa", title: `Dành cho ${site.university}`, description: `Khóa học và tài liệu ôn tập theo từng khoa cho sinh viên ${site.university}, bám sát đề cương từng môn.` });
 
 const faculties = [
   ["Công nghệ thông tin", "Lập trình C, CTDL&GT, CSDL, Mạng máy tính, Hệ điều hành"],

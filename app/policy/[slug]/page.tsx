@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { site } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
 
 type Section = { h: string; items: string[] };
 type Policy = { title: string; updated: string; intro?: string; sections: Section[]; actions?: { href: string; label: string }[] };
@@ -110,7 +111,9 @@ const policies: Record<string, Policy> = {
 export function generateStaticParams() { return Object.keys(policies).map((slug) => ({ slug })); }
 
 export function generateMetadata({ params }: { params: { slug: string } }) {
-  return { title: policies[params.slug]?.title ?? "Chính sách" };
+  const p = policies[params.slug];
+  if (!p) return { title: "Chính sách" };
+  return pageMeta({ path: `/policy/${params.slug}`, title: p.title, description: p.intro });
 }
 
 export default function PolicyPage({ params }: { params: { slug: string } }) {
