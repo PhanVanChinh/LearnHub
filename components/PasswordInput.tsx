@@ -17,9 +17,9 @@ export default function PasswordInput({ invalid, className = "", ...props }: Pro
             <button
                 type="button"
                 onClick={() => setShow(!show)}
-                tabIndex={-1}
                 aria-label={show ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                className="absolute inset-y-0 right-2 my-auto h-7 rounded px-2 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                aria-pressed={show}
+                className="absolute inset-y-0 right-2 my-auto h-7 rounded px-2 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
             >
                 {show ? "Ẩn" : "Hiện"}
             </button>
