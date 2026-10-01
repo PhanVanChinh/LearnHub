@@ -141,6 +141,8 @@ export type EnrolledCourse = { slug: string; title: string; progress: Progress }
 export const coursesApi = {
   enroll: (slug: string) => api<CourseDetail>(`/api/courses/${slug}/enroll`, { method: "POST" }),
   detail: (slug: string) => api<CourseDetail>(`/api/courses/${slug}`),
+  /** Đếm một lượt xem trang chi tiết (GET detail không đếm) */
+  view: (slug: string) => api<void>(`/api/courses/${slug}/view`, { method: "POST" }),
   /** Toàn bộ khóa học dạng công khai (bản mới nhất từ DB) — dùng để làm mới danh sách đã build tĩnh */
   exportAll: () => api<CoursePublic[]>("/api/courses/export"),
   mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),

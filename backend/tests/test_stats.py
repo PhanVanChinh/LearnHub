@@ -14,8 +14,11 @@ def test_stats_follow_real_activity(client):
     free = next(c for c in client.get("/api/courses").json() if c["price"] == 0)
     slug = free["slug"]
 
-    # xem trang chi tiết 2 lần → views = 2
+    # GET chi tiết không đếm (được gọi nhiều lần mỗi lượt mở trang); đếm qua POST /view, 2 lượt → views = 2
     client.get(f"/api/courses/{slug}"); client.get(f"/api/courses/{slug}")
+    assert client.post(f"/api/courses/{slug}/view").status_code == 204
+    assert client.post(f"/api/courses/{slug}/view").status_code == 204
+    assert client.post("/api/courses/khong-ton-tai/view").status_code == 404
     row = next(r for r in client.get("/api/stats/courses").json() if r["slug"] == slug)
     assert row["views"] == 2 and row["students"] == 0
 

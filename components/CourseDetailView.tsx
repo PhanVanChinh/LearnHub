@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import Link from "next/link";
 import CourseCard from "@/components/CourseCard";
 import CourseStatsLine from "@/components/CourseStatsLine";
@@ -10,11 +11,23 @@ import type { Course } from "@/data/courses";
 import { totalDuration } from "@/lib/duration";
 import { useLiveCourse } from "@/lib/liveCourse";
 import { formatVND } from "@/lib/site";
+import { coursesApi } from "@/lib/api";
 import { coverUrl } from "@/lib/cover";
 
 /** Thân trang chi tiết. Nhận bản tĩnh (build) rồi tự làm mới giá / mô tả / bài học từ API. */
 export default function CourseDetailView({ course: initial, related }: { course: Course; related: Course[] }) {
   const { course } = useLiveCourse(initial);
+
+  // Đếm lượt xem đúng 1 lần mỗi phiên trình duyệt cho mỗi khóa (tải lại trang / quay lại không đếm thêm)
+  useEffect(() => {
+    const key = `viewed:${initial.slug}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+    } catch { /* chế độ riêng tư chặn storage: vẫn đếm, có thể trùng khi tải lại */ }
+    coursesApi.view(initial.slug).catch(() => {});
+  }, [initial.slug]);
+
   const previewIndex = course.lessons.findIndex((l) => l.free && l.video);
   const previewVideo = previewIndex >= 0 ? course.lessons[previewIndex].video : undefined;
   const cover = coverUrl(course.cover);

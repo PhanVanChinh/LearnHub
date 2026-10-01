@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from .. import schemas, storage
 from ..database import get_db
 from ..models import Course, Enrollment, LessonProgress, QuizAttempt, User
+from ..ratelimit import rate_limit
 from ..security import get_current_user, get_current_user_optional, require_verified
 
 router = APIRouter(prefix="/api/courses", tags=["courses"])
@@ -96,9 +97,19 @@ def get_course(slug: str, db: Session = Depends(get_db), user: User | None = Dep
     course = db.query(Course).filter(Course.slug == slug).first()
     if not course:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
+    return _course_detail(course, db, user)
+
+
+@router.post("/{slug}/view", status_code=status.HTTP_204_NO_CONTENT, dependencies=[rate_limit("view", 60, 600)])
+def count_view(slug: str, db: Session = Depends(get_db)):
+    """Đếm một lượt xem trang chi tiết. Tách khỏi GET vì GET được gọi nhiều lần mỗi lượt mở trang
+    (EnrollButton, LessonList, trang học...) nên trước đây một lượt xem bị đếm 2-3 lần.
+    Frontend gọi đúng 1 lần cho mỗi phiên trình duyệt (sessionStorage)."""
+    course = db.query(Course).filter(Course.slug == slug).first()
+    if not course:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
     course.views += 1
     db.commit()
-    return _course_detail(course, db, user)
 
 
 def _is_enrolled(db: Session, user: User | None, course: Course) -> bool:
