@@ -4,6 +4,7 @@ import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
 import { useLiveCourses } from "@/lib/liveCourse";
 import { searchCourses, type Match } from "@/lib/search";
+import { isComingSoon } from "@/lib/site";
 
 export default function CourseBrowser({
   courses: staticCourses, initial = "all", pageSize = 8, showSearch = true,
@@ -13,9 +14,11 @@ export default function CourseBrowser({
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(pageSize);
 
-  // Tìm trong tên khóa, mô tả, tên bài học và tên tài liệu (không phân biệt dấu)
+  // Tìm trong tên khóa, mô tả, tên bài học và tên tài liệu (không phân biệt dấu).
+  // Khóa "Sắp mở bán" đẩy xuống cuối (sort ổn định, giữ thứ tự còn lại) — không quảng cáo thứ chưa bán ở vị trí đầu.
   const filtered = useMemo(
-    () => searchCourses(courses.filter((c) => cat === "all" || c.tags.includes(cat)), q),
+    () => searchCourses(courses.filter((c) => cat === "all" || c.tags.includes(cat)), q)
+      .sort((a, b) => Number(isComingSoon(a.course.category)) - Number(isComingSoon(b.course.category))),
     [courses, cat, q],
   );
 
