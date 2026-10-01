@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
 import { useLiveCourses } from "@/lib/liveCourse";
@@ -7,12 +7,35 @@ import { searchCourses, type Match } from "@/lib/search";
 import { isComingSoon } from "@/lib/site";
 
 export default function CourseBrowser({
-  courses: staticCourses, initial = "all", pageSize = 8, showSearch = true,
-}: { courses: Course[]; initial?: Category | "all"; pageSize?: number; showSearch?: boolean }) {
+  courses: staticCourses, initial = "all", pageSize = 8, showSearch = true, syncUrl = false,
+}: { courses: Course[]; initial?: Category | "all"; pageSize?: number; showSearch?: boolean; syncUrl?: boolean }) {
   const courses = useLiveCourses(staticCourses); // bản tĩnh hiện ngay, API cập nhật giá/tên sau
   const [cat, setCat] = useState<Category | "all">(initial);
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(pageSize);
+
+  // syncUrl: bộ lọc và từ khóa nằm trên URL (?cat=&q=) để chia sẻ được link, Back/F5 không mất bộ lọc.
+  // Trang xuất tĩnh nên đọc window.location sau khi mount (HTML tĩnh vẫn là danh sách đầy đủ, tốt cho SEO),
+  // và ghi bằng history.replaceState để không tạo thêm mục lịch sử mỗi lần gõ.
+  const urlRead = useRef(false);
+  useEffect(() => {
+    if (!syncUrl) return;
+    const sp = new URLSearchParams(window.location.search);
+    const c = sp.get("cat");
+    if (c && categories.some((k) => k.key === c)) setCat(c as Category | "all");
+    const kw = sp.get("q");
+    if (kw) setQ(kw);
+    urlRead.current = true;
+  }, [syncUrl]);
+  useEffect(() => {
+    if (!syncUrl || !urlRead.current) return;
+    const sp = new URLSearchParams(window.location.search);
+    if (cat !== initial) sp.set("cat", cat); else sp.delete("cat");
+    if (q.trim()) sp.set("q", q.trim()); else sp.delete("q");
+    const qs = sp.toString();
+    const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
+    if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) window.history.replaceState(window.history.state, "", next);
+  }, [syncUrl, cat, q, initial]);
 
   // Tìm trong tên khóa, mô tả, tên bài học và tên tài liệu (không phân biệt dấu).
   // Khóa "Sắp mở bán" đẩy xuống cuối (sort ổn định, giữ thứ tự còn lại) — không quảng cáo thứ chưa bán ở vị trí đầu.
