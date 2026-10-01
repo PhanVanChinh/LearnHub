@@ -5,6 +5,19 @@ import CourseCard from "./CourseCard";
 import { useLiveCourses } from "@/lib/liveCourse";
 import { searchCourses, type Match } from "@/lib/search";
 import { isComingSoon } from "@/lib/site";
+import { loadCourseStats } from "@/lib/useCourseStats";
+import type { CourseStats } from "@/lib/api";
+
+const SORTS = [
+  { key: "default", label: "Mặc định" },
+  { key: "rating", label: "Đánh giá cao" },
+  { key: "students", label: "Nhiều học viên" },
+  { key: "views", label: "Nhiều lượt xem" },
+  { key: "price-asc", label: "Giá thấp → cao" },
+  { key: "price-desc", label: "Giá cao → thấp" },
+] as const;
+type SortKey = (typeof SORTS)[number]["key"];
+const isSortKey = (v: string | null): v is SortKey => SORTS.some((s) => s.key === v);
 
 export default function CourseBrowser({
   courses: staticCourses, initial = "all", pageSize = 8, showSearch = true, syncUrl = false,
@@ -12,7 +25,16 @@ export default function CourseBrowser({
   const courses = useLiveCourses(staticCourses); // bản tĩnh hiện ngay, API cập nhật giá/tên sau
   const [cat, setCat] = useState<Category | "all">(initial);
   const [q, setQ] = useState("");
+  const [sort, setSort] = useState<SortKey>("default");
   const [limit, setLimit] = useState(pageSize);
+
+  // Số liệu thật (đánh giá, học viên, lượt xem) cho các kiểu sắp xếp; không có backend → null, các kiểu đó xếp như mặc định
+  const [stats, setStats] = useState<Map<string, CourseStats> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    loadCourseStats().then((m) => alive && setStats(m));
+    return () => { alive = false; };
+  }, []);
 
   // syncUrl: bộ lọc và từ khóa nằm trên URL (?cat=&q=) để chia sẻ được link, Back/F5 không mất bộ lọc.
   // Trang xuất tĩnh nên đọc window.location sau khi mount (HTML tĩnh vẫn là danh sách đầy đủ, tốt cho SEO),
@@ -25,6 +47,8 @@ export default function CourseBrowser({
     if (c && categories.some((k) => k.key === c)) setCat(c as Category | "all");
     const kw = sp.get("q");
     if (kw) setQ(kw);
+    const so = sp.get("sort");
+    if (isSortKey(so)) setSort(so);
     urlRead.current = true;
   }, [syncUrl]);
   useEffect(() => {
@@ -32,18 +56,29 @@ export default function CourseBrowser({
     const sp = new URLSearchParams(window.location.search);
     if (cat !== initial) sp.set("cat", cat); else sp.delete("cat");
     if (q.trim()) sp.set("q", q.trim()); else sp.delete("q");
+    if (sort !== "default") sp.set("sort", sort); else sp.delete("sort");
     const qs = sp.toString();
     const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
     if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) window.history.replaceState(window.history.state, "", next);
-  }, [syncUrl, cat, q, initial]);
+  }, [syncUrl, cat, q, sort, initial]);
 
   // Tìm trong tên khóa, mô tả, tên bài học và tên tài liệu (không phân biệt dấu).
-  // Khóa "Sắp mở bán" đẩy xuống cuối (sort ổn định, giữ thứ tự còn lại) — không quảng cáo thứ chưa bán ở vị trí đầu.
-  const filtered = useMemo(
-    () => searchCourses(courses.filter((c) => cat === "all" || c.tags.includes(cat)), q)
-      .sort((a, b) => Number(isComingSoon(a.course.category)) - Number(isComingSoon(b.course.category))),
-    [courses, cat, q],
-  );
+  // Khóa "Sắp mở bán" luôn ở cuối (sort ổn định) — không quảng cáo thứ chưa bán ở vị trí đầu. Trong phần còn lại xếp theo `sort`.
+  const filtered = useMemo(() => {
+    const metric = (c: Course): number => {
+      const st = stats?.get(c.slug);
+      switch (sort) {
+        case "rating": return st?.rating.average ?? 0;
+        case "students": return st?.students ?? 0;
+        case "views": return st?.views ?? 0;
+        case "price-asc": return -c.price;
+        case "price-desc": return c.price;
+        default: return 0;
+      }
+    };
+    return searchCourses(courses.filter((c) => cat === "all" || c.tags.includes(cat)), q)
+      .sort((a, b) => Number(isComingSoon(a.course.category)) - Number(isComingSoon(b.course.category)) || metric(b.course) - metric(a.course));
+  }, [courses, cat, q, sort, stats]);
 
   const visible = filtered.slice(0, limit);
   const countBy = (key: Category | "all") => (key === "all" ? courses.length : courses.filter((c) => c.tags.includes(key)).length);
@@ -64,13 +99,19 @@ export default function CourseBrowser({
           ))}
         </div>
         {showSearch && (
-          <input
-            type="search" aria-label="Tìm khóa học, bài học, tài liệu"
-            value={q}
-            onChange={(e) => { setQ(e.target.value); setLimit(pageSize); }}
-            placeholder="Tìm khóa học, bài học, tài liệu…"
-            className="input md:w-64"
-          />
+          <div className="flex gap-2">
+            <input
+              type="search" aria-label="Tìm khóa học, bài học, tài liệu"
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setLimit(pageSize); }}
+              placeholder="Tìm khóa học, bài học, tài liệu…"
+              className="input min-w-0 flex-1 md:w-64"
+            />
+            <select aria-label="Sắp xếp" value={sort} onChange={(e) => { setSort(e.target.value as SortKey); setLimit(pageSize); }}
+              className="input w-auto shrink-0 cursor-pointer pr-8">
+              {SORTS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+          </div>
         )}
       </div>
 
