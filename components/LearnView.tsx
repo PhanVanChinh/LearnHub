@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { Course } from "@/data/courses";
 import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
+import { formatVND } from "@/lib/site";
 import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
@@ -14,7 +15,7 @@ import CertificateButton from "./CertificateButton";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
-export default function LearnView({ course: staticCourse }: { course: Course }) {
+export default function LearnView({ course: staticCourse, related = [] }: { course: Course; related?: Course[] }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const params = useSearchParams();
@@ -70,13 +71,20 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
       const p = isDone(index) ? await coursesApi.uncomplete(course.slug, index) : await coursesApi.complete(course.slug, index);
       setProgress(p);
       if (!isDone(index) && index < lessons.length - 1) go(index + 1); // vừa hoàn thành → sang bài tiếp
+      else if (!isDone(index)) setSummary(true); // vừa hoàn thành bài cuối → màn tổng kết
     } catch { /* giữ trạng thái cũ */ } finally { setSaving(false); }
   };
 
   const go = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
+    setSummary(false);
     router.replace(`/learn/${course.slug}?lesson=${i}`, { scroll: false });
   };
+
+  // Màn tổng kết: mở khi bấm "Hoàn tất khóa học" ở bài cuối hoặc vừa đánh dấu xong bài cuối
+  const [summary, setSummary] = useState(false);
+  const isLast = index === lessons.length - 1;
+  const remaining = progress ? lessons.map((_, i) => i).filter((i) => !progress.completed.includes(i)) : [];
 
   // Phím ← → chuyển bài
   useEffect(() => {
@@ -151,6 +159,72 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
       <div className="container-x grid gap-6 py-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* Khu vực nội dung */}
         <div className="min-w-0">
+          {summary && enrolled && progress && (
+            <section aria-label="Tổng kết khóa học" className="mb-6 rounded-2xl border border-white/10 bg-gradient-to-br from-brand-900/60 to-slate-900 p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-400">Tổng kết</p>
+                  <h2 className="mt-1 text-2xl font-bold text-white">
+                    {progress.percent === 100 ? "🎉 Bạn đã hoàn thành khóa học!" : `Bạn đã tới bài cuối · còn ${remaining.length} bài chưa hoàn thành`}
+                  </h2>
+                </div>
+                <button onClick={() => setSummary(false)} aria-label="Đóng tổng kết" className="rounded-lg px-2 py-1 text-slate-400 hover:bg-white/10 hover:text-white">✕</button>
+              </div>
+              <div className="mt-4">
+                <div className="flex justify-between text-sm text-slate-300">
+                  <span>Đã học {progress.completed.length}/{progress.total} bài</span>
+                  <span className="font-semibold text-white">{progress.percent}%</span>
+                </div>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
+                </div>
+              </div>
+
+              {progress.percent < 100 ? (
+                <div className="mt-4">
+                  <p className="text-sm text-slate-300">Hoàn thành các bài sau để nhận chứng nhận:</p>
+                  <ul className="mt-2 flex flex-wrap gap-2">
+                    {remaining.map((i) => (
+                      <li key={i}>
+                        <button onClick={() => go(i)} className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-slate-200 hover:bg-white/10">
+                          Bài {i + 1}: <span className="font-medium text-white">{lessons[i].title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="mt-2 max-w-md">
+                  <CertificateButton slug={course.slug} />
+                  <ReviewPrompt slug={course.slug} completed />
+                </div>
+              )}
+
+              {related.length > 0 && (
+                <div className="mt-6 border-t border-white/10 pt-5">
+                  <p className="text-sm font-semibold text-white">Học tiếp khóa khác</p>
+                  <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {related.map((c) => (
+                      <li key={c.slug}>
+                        <Link href={`/courses/${c.slug}`} className="flex h-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3 transition hover:bg-white/10">
+                          <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gradient-to-br ${c.color} text-xl`} aria-hidden="true">{c.emoji}</span>
+                          <span className="min-w-0">
+                            <span className="line-clamp-2 text-sm font-medium text-white">{c.title}</span>
+                            <span className={`block text-xs ${c.price === 0 ? "text-emerald-300" : "text-slate-400"}`}>{formatVND(c.price)}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <Link href="/my-courses" className="btn-primary">Khóa học của tôi</Link>
+                <Link href={`/courses/${course.slug}`} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10">Trang khóa học</Link>
+              </div>
+            </section>
+          )}
           {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
           {access === "granted" && !video && !lesson.quizCount && !lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
@@ -219,7 +293,13 @@ export default function LearnView({ course: staticCourse }: { course: Course }) 
                 </button>
               )}
               <button onClick={() => go(index - 1)} disabled={index === 0} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-40">← Bài trước</button>
-              <button onClick={() => go(index + 1)} disabled={index === lessons.length - 1} className="btn-primary disabled:opacity-40">Bài tiếp →</button>
+              {isLast && enrolled ? (
+                <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn bg-emerald-600 text-white hover:bg-emerald-700">
+                  {progress?.percent === 100 ? "🎉 Hoàn tất khóa học" : "Tổng kết khóa học"}
+                </button>
+              ) : (
+                <button onClick={() => go(index + 1)} disabled={isLast} className="btn-primary disabled:opacity-40">Bài tiếp →</button>
+              )}
             </div>
           </div>
 
