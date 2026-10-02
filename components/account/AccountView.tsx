@@ -8,6 +8,7 @@ import PasswordSection from "./PasswordSection";
 import GoogleSection from "./GoogleSection";
 import SecuritySection from "./SecuritySection";
 import DataSection from "./DataSection";
+import CertificatesSection from "./CertificatesSection";
 
 /** Trang /account: khung chung, từng mục là một section riêng để dễ mở rộng. */
 export default function AccountView() {
@@ -33,6 +34,7 @@ export default function AccountView() {
       <div className="container-x grid gap-6 py-10 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <ProfileSection />
+          <CertificatesSection />
           <PasswordSection />
           <GoogleSection />
           <SecuritySection />
