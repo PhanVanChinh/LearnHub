@@ -6,6 +6,7 @@ import { fmtSize } from "@/components/LessonAttachments";
 import { coverUrl } from "@/lib/cover";
 import { parseQuizText, quizToText } from "@/lib/quizText";
 import { ErrorBox, Field } from "./ui";
+import LessonContent from "@/components/LessonContent";
 
 const COLORS = [
   "from-brand-500 to-brand-700", "from-violet-500 to-fuchsia-600", "from-sky-500 to-indigo-600", "from-emerald-500 to-teal-600",
@@ -55,6 +56,9 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   const [quizText, setQuizText] = useState<Record<number, string>>(() =>
     Object.fromEntries((initial?.lessons ?? []).map((l, i) => [i, quizToText(l.quiz)]).filter(([, t]) => t)));
   const [quizLesson, setQuizLesson] = useState(0);
+  // Nội dung bài đọc (Markdown) theo chỉ số bài
+  const [content, setContent] = useState<Record<number, string>>(() =>
+    Object.fromEntries((initial?.lessons ?? []).map((l, i) => [i, l.content ?? ""]).filter(([, c]) => c)));
   // Tài liệu đính kèm theo chỉ số bài — giữ nguyên qua các lần lưu (textarea "Bài học" không chứa chúng)
   const [attachments, setAttachments] = useState<Record<number, Attachment[]>>(() =>
     Object.fromEntries((initial?.lessons ?? []).map((l, i) => [i, l.attachments ?? []]).filter(([, a]) => (a as Attachment[]).length)));
@@ -79,6 +83,10 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
       for (const [i, atts] of Object.entries(attachments)) {
         const idx = Number(i);
         if (lessons[idx] && atts.length) lessons[idx].attachments = atts;
+      }
+      for (const [i, md] of Object.entries(content)) {
+        const idx = Number(i);
+        if (lessons[idx] && md.trim()) lessons[idx].content = md.trim();
       }
       await onSubmit({
         slug: f.slug, title: f.title.trim(), category: f.category, price: Number(f.price) || 0, emoji: f.emoji, color: f.color,
@@ -138,6 +146,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
             placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/aBcDeFgHiJk"} />
         </Field>
       </div>
+      <ContentEditor lessonsText={f.lessons} content={content} setContent={setContent} lesson={quizLesson} setLesson={setQuizLesson} />
       <QuizEditor lessonsText={f.lessons} quizText={quizText} setQuizText={setQuizText} lesson={quizLesson} setLesson={setQuizLesson} />
       <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} setLesson={setQuizLesson} />
       <label className="flex items-center gap-2 text-sm">
@@ -153,6 +162,57 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   );
 }
 
+
+const CONTENT_PLACEHOLDER = `## Mục tiêu bài học
+- Hiểu khái niệm con trỏ
+- Viết được hàm hoán đổi hai số
+
+Đoạn văn bình thường, **in đậm**, *in nghiêng*, [link](https://example.com).
+
+\`\`\`c
+void swap(int *a, int *b) { int t = *a; *a = *b; *b = t; }
+\`\`\`
+
+| Toán tử | Ý nghĩa |
+|---|---|
+| & | lấy địa chỉ |
+| * | trỏ tới |`;
+
+/** Soạn nội dung bài đọc (Markdown) cho từng bài, xem trước đúng như trang học. Cùng ô chọn bài với trắc nghiệm / tài liệu. */
+function ContentEditor({ lessonsText, content, setContent, lesson, setLesson }: {
+  lessonsText: string; content: Record<number, string>; setContent: (v: Record<number, string>) => void;
+  lesson: number; setLesson: (i: number) => void;
+}) {
+  const [preview, setPreview] = useState(false);
+  const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
+  const idx = Math.min(lesson, Math.max(0, titles.length - 1));
+  const text = content[idx] ?? "";
+  if (titles.length === 0) return null;
+  return (
+    <Field label="Nội dung bài đọc (Markdown)" hint="Chọn bài rồi soạn. Hỗ trợ tiêu đề #, danh sách, **đậm**, bảng, code ```. Bài khóa: người chưa ghi danh không thấy nội dung, chỉ thấy có bài đọc.">
+      <div className="flex flex-wrap gap-1.5">
+        {titles.map((t, i) => (
+          <button key={i} type="button" onClick={() => setLesson(i)}
+            className={`chip !py-1 text-xs ${i === idx ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}>
+            {i + 1}. {t.length > 24 ? t.slice(0, 24) + "…" : t}{(content[i] ?? "").trim() ? " · 📖" : ""}
+          </button>
+        ))}
+      </div>
+      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+        <span>{text.length.toLocaleString("vi-VN")} / 50.000 ký tự</span>
+        <button type="button" onClick={() => setPreview(!preview)} className="font-medium text-brand-700 hover:underline">{preview ? "Soạn thảo" : "Xem trước"}</button>
+      </div>
+      {preview ? (
+        <div className="mt-1 rounded-xl bg-slate-950 p-3">
+          {text.trim() ? <LessonContent markdown={text} /> : <p className="p-4 text-sm text-slate-400">Chưa có nội dung.</p>}
+        </div>
+      ) : (
+        <textarea className="input mt-1 font-mono text-xs" rows={10} value={text} placeholder={CONTENT_PLACEHOLDER} maxLength={50_000}
+          onChange={(e) => setContent({ ...content, [idx]: e.target.value })} />
+      )}
+    </Field>
+  );
+}
 
 const QUIZ_PLACEHOLDER = `đạt: 70
 1. Triết học Mác – Lênin ra đời vào thời gian nào?
