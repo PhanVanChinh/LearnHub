@@ -119,7 +119,7 @@ export const authApi = {
 };
 
 export type AttachmentOut = { name: string; kind: "file" | "link"; size: number; content_type: string };
-export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; has_quiz: boolean; quiz_count: number; attachments: AttachmentOut[] };
+export type LessonOut = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; has_quiz: boolean; quiz_count: number; content: string | null; has_content: boolean; attachments: AttachmentOut[] };
 export type AttachmentLink = { name: string; url: string; expires_in: number | null };
 export type CourseDetail = {
   id: number; slug: string; title: string; category: string; tags: string[]; price: number; views: number; sold: number;

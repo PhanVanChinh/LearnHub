@@ -10,6 +10,7 @@ import { useAuth } from "./AuthProvider";
 import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
 import LessonAttachments from "./LessonAttachments";
+import LessonContent from "./LessonContent";
 import ReviewPrompt from "./ReviewPrompt";
 import CertificateButton from "./CertificateButton";
 
@@ -116,7 +117,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
+                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.content || l.hasContent ? "📖" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
                           {!!l.quizCount && <span>{l.quizCount} câu</span>}
                           {!!l.attachments?.length && <span>📎 {l.attachments.length}</span>}
                           {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
@@ -226,7 +227,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
             </section>
           )}
           {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
-          {access === "granted" && !video && !lesson.quizCount && !lesson.attachments?.length && (
+          {access === "granted" && !video && !lesson.content && !lesson.quizCount && !lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
                 <p className="text-5xl">📄</p>
@@ -235,7 +236,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               </div>
             </div>
           )}
-          {access === "granted" && !video && !!lesson.attachments?.length && (
+          {access === "granted" && !video && !lesson.content && !!lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
                 <p className="text-5xl">📚</p>
@@ -314,6 +315,8 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
             </summary>
             <div className="border-t border-white/10">{lessonList}</div>
           </details>
+
+          {access === "granted" && lesson.content && <LessonContent markdown={lesson.content} className="mt-6" />}
 
           {!!lesson.attachments?.length && (access === "granted" || access === "enroll" || access === "login") && (
             <div className="mt-6">

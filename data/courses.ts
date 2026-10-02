@@ -23,6 +23,8 @@ export type Lesson = {
   video?: string; // YouTube ID (11 ký tự). CHỈ đặt cho bài free — video bài trả phí nằm ở data/videos.seed.ts
   hasVideo?: boolean; // từ API: bài (kể cả trả phí) có video hay không, không kèm ID
   quizCount?: number; // từ API: số câu trắc nghiệm của bài (0/undefined = không có). Đề và đáp án chỉ lấy qua API.
+  content?: string; // Markdown bài đọc. Như video: chỉ có với bài free hoặc khi đã ghi danh
+  hasContent?: boolean; // từ API: bài (kể cả khóa) có nội dung đọc hay không
   attachments?: { name: string; kind: "file" | "link"; size: number; content_type: string }[]; // từ API: metadata, link tải lấy qua API
 };
 

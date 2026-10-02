@@ -57,7 +57,7 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
                 {l.free && <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Xem thử</span>}
               </div>
               <div className="flex shrink-0 items-center gap-3 text-sm text-slate-500">
-                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : l.quizCount ? <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span> : <span title="Tài liệu đọc">📄</span>}
+                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : l.quizCount ? <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span> : l.content || l.hasContent ? <span title="Bài đọc">📖</span> : <span title="Tài liệu đọc">📄</span>}
                 {!!l.quizCount && hasVideo(i) && <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span>}
                 {!!l.attachments?.length && <span title={`${l.attachments.length} tài liệu`}>📎</span>}
                 {!l.free && <span title="Cần ghi danh">🔒</span>}

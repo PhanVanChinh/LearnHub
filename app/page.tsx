@@ -16,7 +16,7 @@ const features = [
 export default async function Home() {
   const courses = await getCourses();
   // Khóa nổi bật: bỏ danh mục sắp mở bán và khóa chưa có nội dung — vị trí đẹp nhất trang không quảng cáo thứ chưa bán được
-  const hasContent = (c: (typeof courses)[number]) => c.lessons.some((l) => l.video || l.hasVideo || l.quizCount || l.attachments?.length);
+  const hasContent = (c: (typeof courses)[number]) => c.lessons.some((l) => l.video || l.hasVideo || l.quizCount || l.content || l.hasContent || l.attachments?.length);
   const pick = courses.filter((c) => !isComingSoon(c.category));
   const featured = [...pick.filter((c) => c.featured && hasContent(c)), ...pick.filter((c) => hasContent(c) && !c.featured), ...pick.filter((c) => c.featured)]
     .filter((c, i, a) => a.indexOf(c) === i).slice(0, 4);

@@ -8,6 +8,30 @@ a:focus-visible, button:focus-visible, [role="button"]:focus-visible { outline: 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 body { @apply bg-slate-50 text-slate-800 antialiased; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
 
+/* Nội dung bài học Markdown trên nền tối của trang học (components/LessonContent.tsx) */
+.md { @apply text-[15px] leading-7 text-slate-200; }
+.md > :first-child { @apply mt-0; }
+.md h1 { @apply mt-8 text-2xl font-bold text-white; }
+.md h2 { @apply mt-8 border-b border-white/10 pb-2 text-xl font-bold text-white; }
+.md h3 { @apply mt-6 text-lg font-semibold text-white; }
+.md h4 { @apply mt-5 font-semibold text-white; }
+.md p { @apply mt-4; }
+.md a { @apply font-medium text-brand-300 underline decoration-brand-300/40 underline-offset-2 hover:text-brand-200; }
+.md strong { @apply font-semibold text-white; }
+.md ul { @apply mt-4 list-disc space-y-1 pl-6; }
+.md ol { @apply mt-4 list-decimal space-y-1 pl-6; }
+.md li > ul, .md li > ol { @apply mt-1; }
+.md li.task-list-item { @apply list-none; } .md li.task-list-item input { @apply mr-2 align-middle; }
+.md blockquote { @apply mt-4 border-l-4 border-brand-500/60 pl-4 italic text-slate-300; }
+.md code { @apply rounded bg-white/10 px-1.5 py-0.5 font-mono text-[0.9em] text-amber-200; }
+.md pre { @apply mt-4 overflow-x-auto rounded-xl border border-white/10 bg-slate-950 p-4 text-sm leading-6; }
+.md pre code { @apply bg-transparent p-0 text-slate-100; }
+.md table { @apply mt-4 w-full border-collapse text-sm; }
+.md th, .md td { @apply border border-white/15 px-3 py-2 text-left align-top; }
+.md th { @apply bg-white/10 font-semibold text-white; }
+.md hr { @apply my-8 border-white/10; }
+.md img { @apply mt-4 rounded-xl; }
+
 @keyframes eq { 0%, 100% { height: 30%; } 50% { height: 100%; } }
 .animate-eq { animation: eq 0.9s ease-in-out infinite; }
 
