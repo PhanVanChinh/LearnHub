@@ -226,6 +226,7 @@ class LessonBase(BaseModel):
 class Lesson(LessonBase):
     """Bản đầy đủ (admin ghi vào DB). `quiz` chứa đáp án, `attachments` chứa key/URL → KHÔNG trả ra public; dùng LessonOut."""
 
+    content: str | None = Field(None, max_length=50_000, description="Nội dung bài dạng Markdown (bài đọc, code, ghi chú)")
     quiz: Quiz | None = None
     attachments: list[Attachment] = Field(default_factory=list, max_length=20)
 
@@ -256,6 +257,8 @@ class LessonOut(LessonBase):
     has_video: bool = False
     has_quiz: bool = False
     quiz_count: int = 0
+    content: str | None = Field(None, description="Markdown; chỉ có khi bài free hoặc đã ghi danh, như video")
+    has_content: bool = False
     attachments: list[AttachmentOut] = Field(default_factory=list)
 
 

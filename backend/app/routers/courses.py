@@ -75,6 +75,7 @@ def _mark_lesson_flags(out_lessons: list[schemas.LessonOut], raw_lessons: list[d
     """Điền has_video / has_quiz / quiz_count từ dữ liệu gốc (LessonOut không chứa quiz nên không lộ đáp án)."""
     for lesson, raw in zip(out_lessons, raw_lessons or []):
         lesson.has_video = bool(lesson.video)
+        lesson.has_content = bool((raw.get("content") or "").strip())
         quiz = raw.get("quiz") or {}
         lesson.quiz_count = len(quiz.get("questions") or [])
         lesson.has_quiz = lesson.quiz_count > 0
@@ -89,6 +90,7 @@ def _course_public(course: Course) -> schemas.CoursePublic:
     for lesson in out.lessons:
         if not lesson.free:
             lesson.video = None
+            lesson.content = None
     return out
 
 
@@ -117,13 +119,14 @@ def _is_enrolled(db: Session, user: User | None, course: Course) -> bool:
 
 
 def _course_detail(course: Course, db: Session, user: User | None) -> schemas.CourseDetail:
-    """Ẩn video ID của bài không free với người chưa ghi danh (chỉ để lại cờ has_video)."""
+    """Ẩn video ID và nội dung của bài không free với người chưa ghi danh (chỉ để lại cờ has_video / has_content)."""
     out = schemas.CourseDetail.model_validate(course)
     out.enrolled = _is_enrolled(db, user, course)
     _mark_lesson_flags(out.lessons, course.lessons)
     for lesson in out.lessons:
         if not lesson.free and not out.enrolled:
             lesson.video = None
+            lesson.content = None
     return out
 
 
