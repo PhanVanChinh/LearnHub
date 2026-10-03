@@ -26,7 +26,7 @@ def test_export_my_data(client):
     assert d["profile"]["email"] == "export@example.com" and d["profile"]["id"] == uid
     assert "hashed_password" not in str(d) and "MatKhau2024" not in str(d)
     assert [e["course_slug"] for e in d["enrollments"]] == [free["slug"]]
-    assert d["lesson_progress"][0]["lesson_index"] == 0 and d["lesson_progress"][0]["lesson_title"]
+    assert d["lesson_progress"][0]["lesson_id"] and d["lesson_progress"][0]["lesson_title"]
     assert d["quiz_attempts"][0]["score"] == 5
     assert d["orders"][0]["course_slug"] == paid["slug"] and d["orders"][0]["status"] == "pending"
     assert d["contact_messages"][0]["subject"] == "Hỏi"

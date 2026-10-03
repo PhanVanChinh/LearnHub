@@ -7,7 +7,7 @@ import secrets
 
 from sqlalchemy.orm import Session
 
-from .models import Course
+from .models import Course, LessonCompletion, LessonProgress, QuizAttempt
 
 
 def new_lesson_id() -> str:
@@ -80,3 +80,36 @@ def ensure_lesson_ids(db: Session) -> int:
     if changed:
         db.commit()
     return changed
+
+
+def lesson_id_at(course: Course, index: int) -> str | None:
+    lessons = course.lessons or []
+    return lessons[index].get("id") if 0 <= index < len(lessons) else None
+
+
+def migrate_lesson_refs(db: Session) -> tuple[int, int]:
+    """Khởi động (sau ensure_lesson_ids): chuyển dữ liệu theo số thứ tự sang mã bài.
+    - lesson_progress (cũ) → lesson_completions: thêm dòng còn thiếu, bỏ qua chỉ số không còn bài.
+    - quiz_attempts.lesson_id NULL → điền từ vị trí lúc làm bài.
+    Chạy lại nhiều lần vô hại (idempotent) — khôi phục backup cũ rồi khởi động lại vẫn đúng.
+    Trả (số completion thêm, số attempt điền)."""
+    courses = {c.id: c for c in db.query(Course).all()}
+    have = {(r.user_id, r.course_id, r.lesson_id) for r in db.query(LessonCompletion).all()}
+    added = 0
+    for p in db.query(LessonProgress).all():
+        course = courses.get(p.course_id)
+        lid = lesson_id_at(course, p.lesson_index) if course else None
+        if lid and (p.user_id, p.course_id, lid) not in have:
+            db.add(LessonCompletion(user_id=p.user_id, course_id=p.course_id, lesson_id=lid, completed_at=p.completed_at))
+            have.add((p.user_id, p.course_id, lid))
+            added += 1
+    filled = 0
+    for a in db.query(QuizAttempt).filter(QuizAttempt.lesson_id.is_(None)).all():
+        course = courses.get(a.course_id)
+        lid = lesson_id_at(course, a.lesson_index) if course else None
+        if lid:
+            a.lesson_id = lid
+            filled += 1
+    if added or filled:
+        db.commit()
+    return added, filled

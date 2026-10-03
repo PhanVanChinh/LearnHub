@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit, schemas
 from ..database import get_db
-from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
+from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonCompletion, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, verify_password
 from .orders import CANCELLED, PENDING
@@ -18,6 +18,11 @@ router = APIRouter(prefix="/api/account", tags=["account"])
 
 def _iso(d: datetime | None) -> str | None:
     return d.isoformat() + "Z" if d else None
+
+
+def _lesson_title(course, lesson_id: str | None) -> str | None:
+    return next((l.get("title") for l in (course.lessons or []) if l.get("id") == lesson_id), None)
+
 
 
 def export_user_data(db: Session, user: User) -> dict:
@@ -36,13 +41,12 @@ def export_user_data(db: Session, user: User) -> dict:
             {"course_slug": e.course.slug, "course_title": e.course.title, "enrolled_at": _iso(e.created_at)} for e in user.enrollments
         ],
         "lesson_progress": [
-            {"course_slug": p.course.slug, "lesson_index": p.lesson_index,
-             "lesson_title": (p.course.lessons[p.lesson_index]["title"] if p.lesson_index < len(p.course.lessons or []) else None),
-             "completed_at": _iso(p.completed_at)} for p in user.progress
+            {"course_slug": p.course.slug, "lesson_id": p.lesson_id, "lesson_title": _lesson_title(p.course, p.lesson_id),
+             "completed_at": _iso(p.completed_at)} for p in user.completions
         ],
         "quiz_attempts": [
-            {"course_slug": a.course.slug, "lesson_index": a.lesson_index, "score": a.score, "total": a.total,
-             "percent": a.percent, "passed": a.passed, "at": _iso(a.created_at)} for a in user.quiz_attempts
+            {"course_slug": a.course.slug, "lesson_id": a.lesson_id, "lesson_title": _lesson_title(a.course, a.lesson_id),
+             "score": a.score, "total": a.total, "percent": a.percent, "passed": a.passed, "at": _iso(a.created_at)} for a in user.quiz_attempts
         ],
         "orders": [
             {"code": o.code, "course_slug": o.course.slug, "course_title": o.course.title, "amount": o.amount, "status": o.status,
@@ -81,7 +85,7 @@ def anonymize_user(db: Session, user: User) -> None:
     """
     now = datetime.utcnow()
     uid = user.id
-    for model in (Enrollment, LessonProgress, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
+    for model in (Enrollment, LessonCompletion, LessonProgress, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
         db.query(model).filter(model.user_id == uid).delete(synchronize_session=False)
     db.query(Order).filter(Order.user_id == uid, Order.status == PENDING).update({"status": CANCELLED}, synchronize_session=False)
     db.query(ContactMessage).filter(ContactMessage.user_id == uid).update(

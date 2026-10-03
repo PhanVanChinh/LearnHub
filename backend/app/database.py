@@ -37,6 +37,12 @@ def migrate() -> None:
             if "hidden" not in cols:
                 default = "0" if settings.is_sqlite else "false"
                 conn.execute(text(f"ALTER TABLE courses ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT {default}"))
+    if "quiz_attempts" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("quiz_attempts")}
+        with engine.begin() as conn:
+            if "lesson_id" not in cols:
+                conn.execute(text("ALTER TABLE quiz_attempts ADD COLUMN lesson_id VARCHAR(32)"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_quiz_attempts_lesson_id ON quiz_attempts (lesson_id)"))
     if "users" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("users")}
         with engine.begin() as conn:

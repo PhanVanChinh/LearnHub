@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, storage
 from ..database import get_db
-from ..models import Course, Enrollment, LessonProgress, QuizAttempt, User
+from ..lessons import lesson_id_at
+from ..models import Course, Enrollment, LessonCompletion, QuizAttempt, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, get_current_user_optional, require_verified
 
@@ -219,11 +220,11 @@ def submit_quiz(slug: str, index: int, payload: schemas.QuizSubmitIn, db: Sessio
     passed = percent >= quiz.pass_percent
     out = schemas.QuizResult(score=score, total=total, percent=percent, pass_percent=quiz.pass_percent, passed=passed, results=results)
     if user is not None:
-        db.add(QuizAttempt(user_id=user.id, course_id=course.id, lesson_index=index, score=score, total=total, percent=percent, passed=passed))
+        lid = lesson_id_at(course, index)
+        db.add(QuizAttempt(user_id=user.id, course_id=course.id, lesson_index=index, lesson_id=lid, score=score, total=total, percent=percent, passed=passed))
         out.saved = True
         if passed and user.email_verified and _is_enrolled(db, user, course):
-            if not db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first():
-                db.add(LessonProgress(user_id=user.id, course_id=course.id, lesson_index=index))
+            _mark_completed(db, user, course, lid)
             out.lesson_completed = True
         db.commit()
     return out
@@ -233,7 +234,7 @@ def submit_quiz(slug: str, index: int, payload: schemas.QuizSubmitIn, db: Sessio
 def quiz_attempts(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Lịch sử làm bài của tôi: số lần, lần tốt nhất, lần gần nhất."""
     course, _ = _lesson_for_access(slug, index, db, user)
-    rows = db.query(QuizAttempt).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).order_by(QuizAttempt.id).all()
+    rows = db.query(QuizAttempt).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson_id_at(course, index)).order_by(QuizAttempt.id).all()
     return schemas.QuizAttempts(count=len(rows), best=max(rows, key=lambda r: (r.percent, r.id)) if rows else None,
                                 last=rows[-1] if rows else None)
 
@@ -253,12 +254,19 @@ def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(requir
     return _course_detail(course, db, user)
 
 
+def _mark_completed(db: Session, user: User, course: Course, lesson_id: str | None) -> None:
+    """Ghi hoàn thành theo mã bài (idempotent). Không commit."""
+    if lesson_id and not db.query(LessonCompletion).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson_id).first():
+        db.add(LessonCompletion(user_id=user.id, course_id=course.id, lesson_id=lesson_id))
+
+
 def _progress(db: Session, user: User, course: Course) -> schemas.Progress:
-    total = len(course.lessons or [])
-    done = sorted(
-        r.lesson_index for r in db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id).all()
-        if r.lesson_index < total
-    )
+    """Tiến độ tính theo mã bài: bài đã xóa không còn tính, bài mới thêm làm % giảm. API vẫn trả chỉ số để frontend dùng."""
+    lessons = course.lessons or []
+    total = len(lessons)
+    index_of = {l.get("id"): i for i, l in enumerate(lessons) if l.get("id")}
+    done = sorted({index_of[r.lesson_id] for r in db.query(LessonCompletion).filter_by(user_id=user.id, course_id=course.id).all()
+                   if r.lesson_id in index_of})
     next_index = next((i for i in range(total) if i not in done), None)
     return schemas.Progress(completed=done, total=total, percent=round(len(done) * 100 / total) if total else 0, next_index=next_index)
 
@@ -292,9 +300,8 @@ def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: 
     course = _require_enrolled(db, user, slug)
     if index < 0 or index >= len(course.lessons or []):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy bài học")
-    if not db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first():
-        db.add(LessonProgress(user_id=user.id, course_id=course.id, lesson_index=index))
-        db.commit()
+    _mark_completed(db, user, course, lesson_id_at(course, index))
+    db.commit()
     return _progress(db, user, course)
 
 
@@ -302,7 +309,7 @@ def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: 
 def uncomplete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Bỏ đánh dấu hoàn thành."""
     course = _require_enrolled(db, user, slug)
-    row = db.query(LessonProgress).filter_by(user_id=user.id, course_id=course.id, lesson_index=index).first()
+    row = db.query(LessonCompletion).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson_id_at(course, index)).first()
     if row:
         db.delete(row)
         db.commit()

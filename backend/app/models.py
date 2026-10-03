@@ -49,7 +49,7 @@ class User(Base):
         """Token phát hành trước mốc này không còn hiệu lực (đổi mật khẩu hoặc thu hồi phiên)."""
         marks = [d for d in (self.password_changed_at, self.sessions_revoked_at) if d]
         return max(marks) if marks else None
-    progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    completions: Mapped[list["LessonCompletion"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_checks: Mapped[list["AiCheckRun"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -82,7 +82,7 @@ class Course(Base):
     hidden: Mapped[bool] = mapped_column(Boolean, default=False)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
-    progress: Mapped[list["LessonProgress"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    completions: Mapped[list["LessonCompletion"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     reviews: Mapped[list["Review"]] = relationship(back_populates="course", cascade="all, delete-orphan")
@@ -175,7 +175,8 @@ class QuizAttempt(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
-    lesson_index: Mapped[int] = mapped_column(Integer)
+    lesson_index: Mapped[int] = mapped_column(Integer)  # vị trí bài lúc làm (chỉ để tham khảo; bài có thể đã đổi chỗ)
+    lesson_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)  # mã cố định của bài (app/lessons.py)
     score: Mapped[int] = mapped_column(Integer)
     total: Mapped[int] = mapped_column(Integer)
     percent: Mapped[int] = mapped_column(Integer)
@@ -235,8 +236,26 @@ class ContactMessage(Base):
     replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
+class LessonCompletion(Base):
+    """Bài học người dùng đã hoàn thành, gắn với mã cố định của bài (`lesson_id`, xem app/lessons.py).
+    Thay cho LessonProgress (theo số thứ tự): admin chèn / xóa / đổi thứ tự bài không làm lệch tiến độ."""
+
+    __tablename__ = "lesson_completions"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", "lesson_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    lesson_id: Mapped[str] = mapped_column(String(32))
+    completed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="completions")
+    course: Mapped[Course] = relationship(back_populates="completions")
+
+
 class LessonProgress(Base):
-    """Bài học (theo chỉ số trong course.lessons) mà người dùng đã đánh dấu hoàn thành."""
+    """CŨ — tiến độ theo số thứ tự bài. Chỉ còn là nguồn chép sang LessonCompletion lúc khởi động
+    (app/lessons.py:migrate_lesson_refs) và để backup cũ khôi phục được. Không ghi thêm."""
 
     __tablename__ = "lesson_progress"
     __table_args__ = (UniqueConstraint("user_id", "course_id", "lesson_index"),)
@@ -246,9 +265,6 @@ class LessonProgress(Base):
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
     lesson_index: Mapped[int] = mapped_column(Integer)
     completed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-    user: Mapped[User] = relationship(back_populates="progress")
-    course: Mapped[Course] = relationship(back_populates="progress")
 
 
 class EmailVerification(Base):
