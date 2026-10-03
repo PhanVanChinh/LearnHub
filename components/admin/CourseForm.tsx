@@ -17,9 +17,11 @@ const slugify = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
-// Mỗi dòng: "Tiêu đề | Thời lượng | free | <YouTube ID hoặc link>" — hai token cuối tuỳ chọn, thứ tự tự do.
+// Mỗi dòng: "Tiêu đề | Thời lượng | free | <YouTube ID hoặc link> | #mã" — các token sau thời lượng tuỳ chọn, thứ tự tự do.
+// "#mã" là mã cố định của bài do server cấp: giữ nguyên trên dòng thì đổi tên / đổi chỗ bài vẫn giữ đúng tiến độ học viên.
+// Xoá mã cũng không sao — server tự khớp lại theo tiêu đề hoặc vị trí (backend/app/lessons.py).
 const lessonsToText = (l: Lesson[]) =>
-  l.map((x) => [x.title, x.duration, x.free ? "free" : null, x.video ?? null].filter(Boolean).join(" | ")).join("\n");
+  l.map((x) => [x.title, x.duration, x.free ? "free" : null, x.video ?? null, x.id ? `#${x.id}` : null].filter(Boolean).join(" | ")).join("\n");
 
 /** Chấp nhận ID 11 ký tự hoặc link youtube.com/watch?v=..., youtu.be/..., /shorts/..., /embed/... */
 export const parseYouTubeId = (input: string): string | null => {
@@ -36,6 +38,7 @@ const textToLessons = (t: string): Lesson[] =>
     for (const tok of rest) {
       if (!tok) continue;
       if (tok.toLowerCase() === "free") { lesson.free = true; continue; }
+      if (/^#[a-z0-9]{4,32}$/i.test(tok)) { lesson.id = tok.slice(1).toLowerCase(); continue; }
       const id = parseYouTubeId(tok);
       if (!id) throw new Error(`Không nhận ra video "${tok}" ở bài "${title}". Dán YouTube ID (11 ký tự) hoặc link video.`);
       lesson.video = id;
@@ -141,7 +144,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         <Field label="Khóa học bao gồm" hint="Mỗi dòng một mục">
           <textarea className="input font-mono text-xs" rows={5} value={f.includes} onChange={(e) => set("includes", e.target.value)} />
         </Field>
-        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link">
+        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link | #mã. Giữ nguyên #mã khi đổi tên hay đổi chỗ bài để học viên không mất tiến độ; chèn, xoá, đổi thứ tự dòng đều được.">
           <textarea className="input font-mono text-xs" rows={5} value={f.lessons} onChange={(e) => set("lessons", e.target.value)}
             placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/aBcDeFgHiJk"} />
         </Field>
