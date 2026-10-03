@@ -22,6 +22,7 @@ from .seed import seed_if_empty
 from .routers.account import purge_expired_tokens
 from .database import SessionLocal
 from .startup_checks import find_problems, run_startup_checks
+from .lessons import ensure_lesson_ids
 from . import ai_check as ai_check_svc
 from . import captcha, google_auth, mailer, storage
 from .security import require_admin
@@ -35,6 +36,7 @@ async def lifespan(app: FastAPI):
     seed_if_empty()
     db = SessionLocal()
     try:
+        ensure_lesson_ids(db)  # dữ liệu cũ (seed, backup) chưa có mã bài học
         purge_expired_tokens(db)
         run_startup_checks(db)  # production: RuntimeError → tiến trình dừng, không chạy với cấu hình mặc định
     finally:

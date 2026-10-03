@@ -217,6 +217,7 @@ class UploadOut(BaseModel):
 
 
 class LessonBase(BaseModel):
+    id: str | None = Field(None, pattern=r"^[a-z0-9]{4,32}$", description="Mã cố định do server sinh (app/lessons.py); tiến độ gắn với mã này")
     title: str
     duration: str
     free: bool = False

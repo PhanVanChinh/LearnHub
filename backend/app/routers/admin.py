@@ -11,6 +11,7 @@ from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
 from .. import audit, schemas, storage
+from ..lessons import assign_lesson_ids
 from ..config import settings
 from ..database import get_db
 from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review, User
@@ -343,6 +344,7 @@ def create_course(payload: schemas.CourseCreate, request: Request, db: Session =
     _ensure_slug_free(db, payload.slug)
     data = payload.model_dump()
     _normalize_tags(data)
+    data["lessons"] = assign_lesson_ids(data.get("lessons") or [])
     course = Course(**data)
     db.add(course)
     db.commit()
@@ -373,6 +375,8 @@ def update_course(course_id: int, payload: schemas.CourseUpdate, request: Reques
     if any(k in data for k in ("tags", "category", "price")):
         _normalize_tags(merged)
         data["tags"] = merged["tags"]
+    if "lessons" in data:
+        data["lessons"] = assign_lesson_ids(data["lessons"] or [], course.lessons or [])  # giữ mã bài cũ → tiến độ học viên không lệch
     changed = {k: {"from": getattr(course, k), "to": v} for k, v in data.items() if k in ("price", "title", "slug", "featured", "category")}
     for k, v in data.items():
         setattr(course, k, v)
