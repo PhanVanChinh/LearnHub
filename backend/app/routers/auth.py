@@ -328,7 +328,7 @@ def forgot_password(payload: schemas.ForgotPasswordIn, request: Request, db: Ses
             db.commit()
             link = f"{settings.frontend_url.rstrip('/')}/reset-password?token={token}"
             subject, html = mailer.reset_password_email(user.full_name, link, settings.reset_token_expire_minutes)
-            mailer.send_email(user.email, subject, html)
+            mailer.send_email_background(user.email, subject, html)  # phản hồi luôn giống nhau dù email có tồn tại hay không
     return schemas.Message(detail=GENERIC_FORGOT_MSG)
 
 

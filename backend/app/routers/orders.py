@@ -71,17 +71,23 @@ def notify_created(order: Order) -> None:
     fe = settings.frontend_url.rstrip("/")
     subject, html = mailer.order_created_email(order.user.full_name, order.code, order.course.title, order.amount, bank,
                                                settings.order_expire_hours, f"{fe}/checkout?order={order.code}")
-    mailer.send_email(order.user.email, subject, html)
+    mailer.send_email_background(order.user.email, subject, html)
     to_admin = (settings.order_notify_email or settings.admin_email).strip().lower()
     if to_admin and to_admin != order.user.email:
         subject, html = mailer.order_admin_notify_email(order.code, order.user.email, order.course.title, order.amount, f"{fe}/admin")
-        mailer.send_email(to_admin, subject, html)
+        mailer.send_email_background(to_admin, subject, html)
 
 
 def notify_paid(order: Order) -> None:
     fe = settings.frontend_url.rstrip("/")
     subject, html = mailer.order_paid_email(order.user.full_name, order.code, order.course.title, f"{fe}/learn/{order.course.slug}")
-    mailer.send_email(order.user.email, subject, html)
+    mailer.send_email_background(order.user.email, subject, html)
+
+
+def notify_cancelled(order: Order, note: str | None) -> None:
+    fe = settings.frontend_url.rstrip("/")
+    subject, html = mailer.order_cancelled_email(order.user.full_name, order.code, order.course.title, note, f"{fe}/checkout?course={order.course.slug}")
+    mailer.send_email_background(order.user.email, subject, html)
 
 
 def _my_order(db: Session, user: User, code: str) -> Order:

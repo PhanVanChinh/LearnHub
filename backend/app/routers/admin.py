@@ -17,7 +17,7 @@ from ..database import get_db
 from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
-from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
+from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_cancelled, notify_paid, order_out
 from .account import anonymize_user
 
 log = logging.getLogger("learnhub.admin")
@@ -311,6 +311,7 @@ def admin_cancel_order(order_id: int, payload: schemas.OrderAction, request: Req
     db.commit()
     db.refresh(o)
     audit.record(db, request, admin, "order.cancel", "order", o.id, f"Huỷ đơn {o.code} · {o.user.email}", {"code": o.code, "note": payload.note})
+    notify_cancelled(o, payload.note)
     return _admin_order_out(o)
 
 

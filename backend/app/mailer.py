@@ -1,9 +1,14 @@
 """Gửi email qua Resend (HTTP API). Không có RESEND_API_KEY → in ra log (chế độ dev), không gửi thật.
 
+- send_email: gửi ngay, trả True/False — dùng khi phản hồi cần biết kết quả (mã OTP).
+- send_email_background: gửi ở luồng nền, tự thử lại khi lỗi mạng / Resend 429-5xx — dùng cho thông báo
+  (đơn hàng, liên hệ, đặt lại mật khẩu) để request không bị chậm hay lỗi vì dịch vụ mail.
 Đổi nhà cung cấp sau này chỉ cần thêm một hàm _send_xxx và nhánh trong send_email.
 """
 import html as _html
 import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 
@@ -21,6 +26,11 @@ def provider() -> str:
     return "resend" if settings.resend_api_key else "console"
 
 
+RETRY_DELAYS = (1, 4)  # giây chờ trước lần thử 2 và 3
+
+_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="mail")
+
+
 def send_email(to: str, subject: str, html: str) -> bool:
     if provider() == "resend":
         return _send_resend(to, subject, html)
@@ -29,21 +39,36 @@ def send_email(to: str, subject: str, html: str) -> bool:
     return True
 
 
+def send_email_background(to: str, subject: str, html: str) -> None:
+    """Gửi ở luồng nền (không chặn request). Chế độ console gửi ngay để dev/test đọc được outbox tức thì."""
+    if provider() != "resend":
+        send_email(to, subject, html)
+        return
+    _pool.submit(_send_resend, to, subject, html)
+
+
 def _send_resend(to: str, subject: str, html: str) -> bool:
-    try:
-        r = httpx.post(
-            "https://api.resend.com/emails",
-            headers={"Authorization": f"Bearer {settings.resend_api_key}"},
-            json={"from": settings.mail_from, "to": [to], "subject": subject, "html": html},
-            timeout=10,
-        )
-        if r.status_code >= 400:
-            log.error("Resend %s: %s", r.status_code, r.text[:300])
-            return False
-        return True
-    except httpx.HTTPError as e:
-        log.error("Resend lỗi kết nối: %s", e)
-        return False
+    """Gửi qua Resend, thử lại tối đa len(RETRY_DELAYS) lần khi lỗi mạng hoặc 429 / 5xx. 4xx khác là lỗi dữ liệu, không thử lại."""
+    for attempt in range(len(RETRY_DELAYS) + 1):
+        try:
+            r = httpx.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={"from": settings.mail_from, "to": [to], "subject": subject, "html": html},
+                timeout=10,
+            )
+            if r.status_code < 400:
+                return True
+            retryable = r.status_code == 429 or r.status_code >= 500
+            log.error("Resend %s (lần %d): %s", r.status_code, attempt + 1, r.text[:300])
+            if not retryable:
+                return False
+        except httpx.HTTPError as e:
+            log.error("Resend lỗi kết nối (lần %d): %s", attempt + 1, e)
+        if attempt < len(RETRY_DELAYS):
+            time.sleep(RETRY_DELAYS[attempt])
+    log.error("Bỏ cuộc gửi mail tới %s: %s", to, subject)
+    return False
 
 
 def _strip_tags(html: str) -> str:
@@ -111,6 +136,18 @@ def order_paid_email(name: str, code: str, course_title: str, learn_link: str) -
 {_btn(learn_link, "Vào học ngay")}
 <p style="color:#64748b;font-size:13px">Cảm ơn bạn đã tin tưởng LearnHub. Cần hỗ trợ, hãy trả lời email này.</p>"""
     return subject, _layout("Thanh toán thành công 🎉", body)
+
+
+def order_cancelled_email(name: str, code: str, course_title: str, note: str | None, link: str) -> tuple[str, str]:
+    """Gửi người mua khi admin huỷ đơn đang chờ (vd. không nhận được tiền, sai nội dung chuyển khoản)."""
+    subject = f"Đơn {code} đã bị huỷ — {course_title}"
+    reason = f"<p>Lý do: {_html.escape(note)}</p>" if note else ""
+    body = f"""<p>Chào {name},</p>
+<p>Đơn <b>{code}</b> cho khóa học <b>{course_title}</b> đã được huỷ và không còn hiệu lực thanh toán.</p>
+{reason}
+<p>Nếu bạn đã chuyển khoản, hãy trả lời email này kèm ảnh giao dịch để chúng tôi đối soát và hoàn tiền hoặc mở khóa học.</p>
+{_btn(link, "Đặt lại đơn mới")}"""
+    return subject, _layout("Đơn hàng đã huỷ", body)
 
 
 def order_admin_notify_email(code: str, buyer_email: str, course_title: str, amount: int, admin_link: str) -> tuple[str, str]:
