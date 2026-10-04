@@ -86,12 +86,16 @@ export default function CourseBrowser({
   return (
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap gap-2">
-          {categories.map((c) => (
+        {/* Mobile: một hàng cuộn ngang tràn sát mép màn hình (7 chip xếp 3 dòng chiếm quá nhiều chỗ); desktop: xuống dòng như cũ.
+            Chip có 0 khóa ẩn đi (trừ "Tất cả" và chip đang chọn) — trang Miễn phí không hiện toàn chip 0. */}
+        <div role="group" aria-label="Lọc theo danh mục"
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:px-6 md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0">
+          {categories.filter((c) => c.key === "all" || c.key === cat || countBy(c.key) > 0).map((c) => (
             <button
               key={c.key}
               onClick={() => { setCat(c.key); setLimit(pageSize); }}
-              className={`chip ${cat === c.key ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}
+              aria-pressed={cat === c.key}
+              className={`chip shrink-0 whitespace-nowrap ${cat === c.key ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}
             >
               {c.label}
               <span className={`rounded-full px-1.5 text-xs ${cat === c.key ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>{countBy(c.key)}</span>
