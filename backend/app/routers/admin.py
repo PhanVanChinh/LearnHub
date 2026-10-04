@@ -18,6 +18,7 @@ from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
 from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_paid, order_out
+from .account import anonymize_user
 
 log = logging.getLogger("learnhub.admin")
 
@@ -390,8 +391,13 @@ def update_course(course_id: int, payload: schemas.CourseUpdate, request: Reques
 @router.delete("/courses/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_course(course_id: int, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     course = _get_course(db, course_id)
+    paid = db.query(Order).filter(Order.course_id == course.id, Order.status == PAID).count()
+    if paid:
+        # Đơn đã thanh toán là chứng từ kế toán, xoá khóa sẽ cascade xoá luôn → doanh thu biến mất. Ẩn khóa thay vì xoá.
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            f"Khóa học có {paid} đơn đã thanh toán nên không thể xoá. Hãy ẩn khóa học (người đã mua vẫn học tiếp).")
     summary = f"Xoá khóa học «{course.title}» (/{course.slug}), {len(course.enrollments)} ghi danh"
-    db.delete(course)  # cascade xoá enrollments
+    db.delete(course)  # cascade xoá enrollments và đơn chưa thanh toán
     db.commit()
     audit.record(db, request, admin, "course.delete", "course", course_id, summary)
 
@@ -473,8 +479,15 @@ def delete_user(user_id: int, request: Request, db: Session = Depends(get_db), m
     if user.id == me.id:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể xoá tài khoản của chính mình")
     summary = f"Xoá người dùng {user.email} ({len(user.enrollments)} ghi danh, {len(user.orders)} đơn)"
-    db.delete(user)  # cascade xoá enrollments
-    db.commit()
+    # Đơn do người này duyệt: gỡ liên kết trước, nếu không FK confirmed_by_id gây lỗi 500 trên Postgres
+    db.query(Order).filter(Order.confirmed_by_id == user.id).update({"confirmed_by_id": None}, synchronize_session=False)
+    if db.query(Order).filter(Order.user_id == user.id, Order.status == PAID).count():
+        # Có đơn đã thanh toán → ẩn danh hoá như khi tự xoá tài khoản: giữ chứng từ, xoá dữ liệu học, khoá đăng nhập
+        anonymize_user(db, user)
+        summary += " — có đơn đã thanh toán nên ẩn danh hoá, giữ đơn"
+    else:
+        db.delete(user)  # cascade xoá enrollments, đơn chưa thanh toán...
+        db.commit()
     audit.record(db, request, me, "user.delete", "user", user_id, summary)
 
 
