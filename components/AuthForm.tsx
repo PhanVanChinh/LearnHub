@@ -84,7 +84,9 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     };
     const blur = (k: string) => () => setTouched({ ...touched, [k]: true });
     const Err = ({ k }: { k: string }) =>
-        fieldError(k) ? <p className="mt-1 text-xs text-rose-600">{fieldError(k)}</p> : null;
+        fieldError(k) ? <p id={`err-${k}`} role="alert" className="mt-1 text-xs text-rose-600">{fieldError(k)}</p> : null;
+    // Input lỗi: viền đỏ + aria-invalid + trỏ tới dòng lỗi để trình đọc màn hình đọc kèm
+    const aria = (k: string) => ({ "aria-invalid": !!fieldError(k) || undefined, "aria-describedby": fieldError(k) ? `err-${k}` : undefined });
 
     return (
         <div className="container-x flex justify-center py-16">
@@ -117,6 +119,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         <div>
                             <input
                                 className={`input ${fieldError("full_name") ? "!border-rose-400" : ""}`}
+                                {...aria("full_name")}
                                 placeholder="Họ và tên" aria-label="Họ và tên"
                                 value={form.full_name}
                                 onChange={set("full_name")}
@@ -130,6 +133,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     <div>
                         <input
                             className={`input ${fieldError("email") ? "!border-rose-400" : ""}`}
+                                {...aria("email")}
                             type="email"
                             placeholder="Email" aria-label="Email"
                             value={form.email}
@@ -143,7 +147,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     </div>
                     <div>
                         <PasswordInput
-                            invalid={!!fieldError("password")}
+                            invalid={!!fieldError("password")} {...aria("password")}
                             placeholder={login ? "Mật khẩu" : "Mật khẩu (tối thiểu 8 ký tự, có chữ và số)"}
                             value={form.password}
                             onChange={set("password")}
@@ -231,7 +235,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                             </Link>
                         </div>
                     )}
-                    {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+                    {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
                     <button
                         type="submit"
                         disabled={busy || (!login && !canSubmit && Object.keys(touched).length > 0)}

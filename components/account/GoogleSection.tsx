@@ -46,7 +46,7 @@ export default function GoogleSection() {
       ) : (
         <p className="text-sm text-slate-500">Đăng nhập Google chưa được cấu hình trên hệ thống này.</p>
       )}
-      {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
     </Section>
   );
 }

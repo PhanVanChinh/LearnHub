@@ -36,7 +36,7 @@ export default function ProfileSection() {
           <label htmlFor="full_name" className="text-sm font-medium text-slate-700">Họ và tên</label>
           <input id="full_name" value={name} maxLength={255} onChange={(e) => { setName(e.target.value); setSaved(false); setError(""); }}
             className={`input mt-1 ${error ? "!border-rose-400 !ring-rose-100" : ""}`} />
-          {error && <p className="mt-1 text-sm text-rose-600">{error}</p>}
+          {error && <p role="alert" className="mt-1 text-sm text-rose-600">{error}</p>}
         </div>
         <div>
           <label htmlFor="email" className="text-sm font-medium text-slate-700">Email</label>

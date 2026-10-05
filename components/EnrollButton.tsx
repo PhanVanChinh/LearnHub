@@ -56,7 +56,7 @@ export default function EnrollButton({ slug, price, category = "" }: { slug: str
       <button onClick={enroll} disabled={busy} className="btn-primary mt-4 w-full !py-3 disabled:opacity-60">
         {busy ? "Đang ghi danh…" : "Bắt đầu học miễn phí"}
       </button>
-      {msg && <p className="mt-2 text-sm text-rose-600">{msg}</p>}
+      {msg && <p role="alert" className="mt-2 text-sm text-rose-600">{msg}</p>}
     </>
   );
 }

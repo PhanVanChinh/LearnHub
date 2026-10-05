@@ -32,7 +32,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 export function ErrorBox({ message }: { message: string }) {
   if (!message) return null;
-  return <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p>;
+  return <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{message}</p>;
 }
 
 export function Badge({ children, tone = "slate" }: { children: React.ReactNode; tone?: "slate" | "green" | "amber" | "rose" | "brand" }) {

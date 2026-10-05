@@ -110,14 +110,14 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
                 <li>Chúng tôi xác nhận trong giờ làm việc, thường dưới 30 phút. Khóa học tự mở khi được duyệt.</li>
               </ol>
               <p className="mt-3 text-xs text-slate-500">Người nhận tài liệu: <b>{user.full_name}</b> · {user.email}</p>
-              {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+              {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
               <button onClick={createOrder} disabled={busy} className="btn-primary mt-5 w-full !py-3 disabled:opacity-60">
                 {busy ? "Đang tạo đơn…" : `Xác nhận đặt hàng · ${formatVND(price)}`}
               </button>
             </div>
           )}
           {order && <PaymentInstructions order={order} onRefresh={refresh} onCancel={cancel} busy={busy} learnHref={learnHref} />}
-          {order && error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+          {order && error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         </div>
 
         <aside className="rounded-2xl border border-slate-200 bg-white p-6 lg:self-start">

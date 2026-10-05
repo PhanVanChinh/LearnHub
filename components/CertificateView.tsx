@@ -33,7 +33,7 @@ export default function CertificateView() {
           <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Nhập mã, ví dụ LH-CERT-7K3M9PQ2" aria-label="Mã chứng nhận" className="input font-mono uppercase" />
           <button type="submit" className="btn-primary shrink-0">Xác thực</button>
         </form>
-        {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         {cert === undefined && initial && <div className="mt-6 aspect-[1.414] animate-pulse rounded-2xl bg-slate-100" />}
         {cert && <CertificateCard cert={cert} />}
         {cert === null && !error && (

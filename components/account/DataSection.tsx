@@ -32,7 +32,7 @@ export default function DataSection() {
         <div className="text-sm text-slate-600">
           <p className="font-medium text-slate-800">Tải toàn bộ dữ liệu của tôi</p>
           <p className="mt-1">Gồm hồ sơ, khóa đã ghi danh, tiến độ học, kết quả trắc nghiệm, đơn hàng, lượt AI Check và tin nhắn liên hệ. Không gồm mật khẩu.</p>
-          {msg && <p className={`mt-2 text-sm ${msg.ok ? "text-emerald-600" : "text-rose-600"}`}>{msg.text}</p>}
+          {msg && <p role="status" className={`mt-2 text-sm ${msg.ok ? "text-emerald-600" : "text-rose-600"}`}>{msg.text}</p>}
         </div>
         <button onClick={download} disabled={busy} className="btn-outline shrink-0 disabled:opacity-60">{busy ? "Đang tạo file…" : "⬇ Tải JSON"}</button>
       </div>
@@ -98,7 +98,7 @@ function DeleteAccount() {
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
             Tôi hiểu rằng dữ liệu học tập sẽ bị xoá và không khôi phục được.
           </label>
-          {error && <p className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-800">{error}</p>}
+          {error && <p role="alert" className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-800">{error}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={!ready || busy} className="btn bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50">{busy ? "Đang xoá…" : "Xoá vĩnh viễn"}</button>
             <button type="button" onClick={() => { setOpen(false); setError(""); }} className="btn-outline">Huỷ</button>

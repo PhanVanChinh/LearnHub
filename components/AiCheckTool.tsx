@@ -85,7 +85,7 @@ export default function AiCheckTool() {
           </button>
         </div>
         {busy && <p className="mt-2 text-xs text-slate-500">Claude đang đọc toàn bộ văn bản, thường mất 15–60 giây tuỳ độ dài.</p>}
-        {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
       {result && <ResultView r={result} />}

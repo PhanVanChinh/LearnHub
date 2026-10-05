@@ -44,7 +44,7 @@ function SetPasswordForm() {
       <form onSubmit={submit} noValidate className="space-y-4">
         <NewPasswordFields password={pw} confirm={confirm} onPassword={(v) => { setPw(v); setError(""); }} onConfirm={setConfirm}
           touched={touched} onBlur={() => setTouched(true)} email={email} placeholder="Mật khẩu" />
-        {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : "Đặt mật khẩu"}</button>
       </form>
     </Section>
@@ -89,7 +89,7 @@ function ChangePasswordForm() {
           onChange={(e) => { setCurrent(e.target.value); setError(""); setDone(false); }} invalid={touched && !current} />
         <NewPasswordFields password={pw} confirm={confirm} onPassword={(v) => { setPw(v); setError(""); setDone(false); }} onConfirm={setConfirm}
           touched={touched} onBlur={() => setTouched(true)} email={email} />
-        {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         {done && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">✓ Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.</p>}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : "Đổi mật khẩu"}</button>

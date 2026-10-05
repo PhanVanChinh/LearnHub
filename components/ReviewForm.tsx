@@ -38,7 +38,7 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
       <textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={3} maxLength={2000}
         placeholder="Bạn thích điều gì? Điều gì nên cải thiện? (không bắt buộc)" aria-label="Nhận xét"
         className={`input resize-y ${dark ? "!border-white/15 !bg-white/5 !text-white placeholder:!text-slate-500" : ""}`} />
-      {error && <p className="text-sm text-rose-500">{error}</p>}
+      {error && <p role="alert" className="text-sm text-rose-500">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : initial ? "Lưu thay đổi" : "Gửi đánh giá"}</button>
         {onCancel && <button type="button" onClick={onCancel} className={`btn ${dark ? "border border-white/15 text-white hover:bg-white/10" : "btn-outline"}`}>Huỷ</button>}

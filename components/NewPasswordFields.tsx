@@ -38,7 +38,7 @@ export default function NewPasswordFields({ password, confirm, onPassword, onCon
       <div>
         <PasswordInput placeholder={`Nhập lại ${placeholder.toLowerCase()}`} value={confirm} onChange={(e) => onConfirm(e.target.value)} autoComplete="new-password"
           invalid={touched && confirm !== password} />
-        {touched && confirm !== password && <p className="mt-1 text-xs text-rose-600">Mật khẩu nhập lại không khớp</p>}
+        {touched && confirm !== password && <p role="alert" className="mt-1 text-xs text-rose-600">Mật khẩu nhập lại không khớp</p>}
       </div>
     </>
   );

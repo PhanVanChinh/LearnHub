@@ -67,7 +67,7 @@ export default function ResetPasswordForm() {
       <p className="mt-1 text-center text-sm text-slate-500">Chọn mật khẩu mới cho tài khoản của bạn.</p>
       <form onSubmit={submit} noValidate className="mt-6 space-y-4">
         <NewPasswordFields password={pw} confirm={confirm} onPassword={setPw} onConfirm={setConfirm} touched={touched} onBlur={() => setTouched(true)} autoFocus />
-        {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         <button type="submit" disabled={busy} className="btn-primary w-full !py-2.5 disabled:opacity-60">{busy ? "Đang lưu…" : "Đặt lại mật khẩu"}</button>
       </form>
     </Card>

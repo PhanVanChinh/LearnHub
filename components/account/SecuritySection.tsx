@@ -34,7 +34,7 @@ export default function SecuritySection() {
         <Stat k="Đổi mật khẩu lần cuối" v={user.password_changed_at ? fmt(user.password_changed_at) : "Chưa đổi"} />
         <Stat k="Đăng xuất mọi thiết bị lần cuối" v={user.sessions_revoked_at ? fmt(user.sessions_revoked_at) : "Chưa dùng"} />
       </dl>
-      {msg && <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{msg.text}</p>}
+      {msg && <p role="status" className={`mt-4 rounded-lg px-3 py-2 text-sm ${msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{msg.text}</p>}
       <div className="mt-5 flex flex-wrap gap-3">
         <button onClick={doLogoutAll} disabled={busy} className="btn-outline disabled:opacity-60">{busy ? "Đang xử lý…" : "Đăng xuất mọi thiết bị khác"}</button>
         <button onClick={doLogout} className="btn border border-rose-200 bg-white text-rose-600 hover:bg-rose-50">Đăng xuất thiết bị này</button>

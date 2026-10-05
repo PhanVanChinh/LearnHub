@@ -48,7 +48,7 @@ export default function ContactForm() {
 
   if (sent) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
+      <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
         <p className="text-5xl">📨</p>
         <p className="mt-3 text-lg font-semibold text-emerald-800">Đã gửi!</p>
         <p className="mt-1 text-sm text-emerald-700">{sent}</p>
@@ -62,24 +62,24 @@ export default function ContactForm() {
     <form onSubmit={submit} noValidate className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <input className={cls("name")} placeholder="Họ và tên" aria-label="Họ và tên" value={form.name} onChange={set("name")} autoComplete="name" />
-          {err("name") && <p className="mt-1 text-xs text-rose-600">{err("name")}</p>}
+          <input className={cls("name")} aria-invalid={!!err("name") || undefined} aria-describedby={err("name") ? "contact-err-name" : undefined} placeholder="Họ và tên" aria-label="Họ và tên" value={form.name} onChange={set("name")} autoComplete="name" />
+          {err("name") && <p id="contact-err-name" role="alert" className="mt-1 text-xs text-rose-600">{err("name")}</p>}
         </div>
         <div>
-          <input className={cls("email")} type="email" placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} autoComplete="email" />
-          {err("email") && <p className="mt-1 text-xs text-rose-600">{err("email")}</p>}
+          <input className={cls("email")} type="email" aria-invalid={!!err("email") || undefined} aria-describedby={err("email") ? "contact-err-email" : undefined} placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} autoComplete="email" />
+          {err("email") && <p id="contact-err-email" role="alert" className="mt-1 text-xs text-rose-600">{err("email")}</p>}
         </div>
       </div>
       <input className="input" placeholder="Chủ đề (tuỳ chọn)" aria-label="Chủ đề" value={form.subject} onChange={set("subject")} maxLength={255} />
       <div>
-        <textarea className={`${cls("message")} resize-y`} rows={6} placeholder="Nội dung…" aria-label="Nội dung tin nhắn" value={form.message} onChange={set("message")} maxLength={5000} />
+        <textarea className={`${cls("message")} resize-y`} rows={6} aria-invalid={!!err("message") || undefined} aria-describedby={err("message") ? "contact-err-message" : undefined} placeholder="Nội dung…" aria-label="Nội dung tin nhắn" value={form.message} onChange={set("message")} maxLength={5000} />
         <div className="mt-1 flex justify-between text-xs">
-          <span className="text-rose-600">{err("message")}</span>
+          <span id="contact-err-message" role="alert" className="text-rose-600">{err("message")}</span>
           <span className="text-slate-400">{form.message.length}/5000</span>
         </div>
       </div>
       <Turnstile onToken={setCaptcha} resetKey={captchaKey} />
-      {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       <button type="submit" disabled={busy} className="btn-primary w-full disabled:opacity-60">{busy ? "Đang gửi…" : "Gửi tin nhắn"}</button>
       <p className="text-center text-xs text-slate-500">Chúng tôi phản hồi qua email trong 24 giờ làm việc.</p>
     </form>

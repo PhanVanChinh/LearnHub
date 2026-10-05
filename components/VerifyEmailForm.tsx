@@ -98,8 +98,8 @@ export default function VerifyEmailForm() {
             onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             disabled={busy}
           />
-          {error && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
-          {info && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{info}</p>}
+          {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+          {info && <p role="status" className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">{info}</p>}
           <button type="submit" disabled={busy || code.length !== 6} className="btn-primary mt-4 w-full !py-2.5 disabled:opacity-60">
             {busy ? "Đang kiểm tra…" : "Xác nhận"}
           </button>

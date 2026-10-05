@@ -118,7 +118,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
       {!result && (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-slate-400">Đã trả lời {answered}/{quiz.total}</p>
-          {error && <p className="text-sm text-rose-300">{error}</p>}
+          {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
           <button onClick={submit} disabled={busy || answered === 0} className="btn-primary disabled:opacity-50">{busy ? "Đang chấm…" : "Nộp bài"}</button>
         </div>
       )}
