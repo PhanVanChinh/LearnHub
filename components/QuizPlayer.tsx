@@ -68,7 +68,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
       </div>
 
       {result && (
-        <div id="quiz-result" className={`mt-4 rounded-xl border p-4 ${result.passed ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"}`}>
+        <div id="quiz-result" role="status" className={`mt-4 rounded-xl border p-4 ${result.passed ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"}`}>
           <p className="text-2xl font-bold text-white">{result.passed ? "🎉 Đạt!" : "Chưa đạt"} <span className="text-lg font-semibold text-slate-200">{result.score}/{result.total} câu · {result.percent}%</span></p>
           <p className="mt-1 text-sm text-slate-300">
             {result.lesson_completed ? "Bài học đã được đánh dấu hoàn thành." : result.passed && !result.saved ? "Đăng nhập và ghi danh để lưu kết quả và tính tiến độ." : result.passed ? "Ghi danh khóa học để kết quả được tính vào tiến độ." : `Cần đạt ${result.pass_percent}% để hoàn thành bài. Xem giải thích bên dưới rồi làm lại.`}
@@ -82,10 +82,22 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
           const r = result?.results[qi];
           return (
             <li key={qi} className="rounded-xl bg-white/5 p-4">
-              <p className="font-medium text-white"><span className="mr-2 text-slate-400">{qi + 1}.</span>{q.q}</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <p id={`quiz-q-${qi}`} className="font-medium text-white"><span className="mr-2 text-slate-400">{qi + 1}.</span>{q.q}</p>
+              {/* Nhóm radio đúng chuẩn: trình đọc màn hình biết đáp án thuộc câu nào, câu nào đã chọn; mũi tên ↑↓←→ đổi lựa chọn như radio thật */}
+              <div role="radiogroup" aria-labelledby={`quiz-q-${qi}`} aria-describedby={result && r ? `quiz-q-${qi}-explain` : undefined}
+                className="mt-3 grid gap-2 sm:grid-cols-2">
                 {q.options.map((opt, oi) => {
+                  const onKey = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+                    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+                    if (!step || result) return;
+                    e.preventDefault();
+                    const next = (oi + step + q.options.length) % q.options.length;
+                    setAnswers((a) => a.map((v, i) => (i === qi ? next : v)));
+                    (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
+                  };
                   const chosen = answers[qi] === oi;
+                  // Roving tabindex: Tab vào nhóm dừng ở đáp án đã chọn (hoặc đáp án đầu), mũi tên di chuyển bên trong
+                  const tab = (answers[qi] == null ? oi === 0 : chosen) ? 0 : -1;
                   let cls = "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10";
                   if (result && r) {
                     if (oi === r.answer) cls = "border-emerald-400/60 bg-emerald-500/20 text-emerald-100";
@@ -93,19 +105,21 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
                     else cls = "border-white/10 bg-white/5 text-slate-400";
                   } else if (chosen) cls = "border-brand-400 bg-brand-500/30 text-white";
                   return (
-                    <button key={oi} type="button" disabled={!!result}
-                      onClick={() => setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))}
-                      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-left text-sm transition disabled:cursor-default ${cls}`}>
-                      <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-xs ${chosen || (r && oi === r.answer) ? "border-current" : "border-white/30"}`}>
+                    <button key={oi} type="button" disabled={!!result} role="radio" aria-checked={chosen} tabIndex={result ? undefined : tab}
+                      onClick={() => setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))} onKeyDown={onKey}
+                      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-left text-sm transition disabled:cursor-default focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${cls}`}>
+                      <span aria-hidden="true" className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border text-xs ${chosen || (r && oi === r.answer) ? "border-current" : "border-white/30"}`}>
                         {result && r ? (oi === r.answer ? "✓" : chosen ? "✕" : String.fromCharCode(65 + oi)) : String.fromCharCode(65 + oi)}
                       </span>
                       <span>{opt}</span>
+                      {result && r && oi === r.answer && <span className="sr-only"> (đáp án đúng)</span>}
+                      {result && r && chosen && oi !== r.answer && <span className="sr-only"> (bạn đã chọn, chưa đúng)</span>}
                     </button>
                   );
                 })}
               </div>
               {result && r && (
-                <p className={`mt-3 text-sm ${r.correct ? "text-emerald-300" : "text-amber-200"}`}>
+                <p id={`quiz-q-${qi}-explain`} className={`mt-3 text-sm ${r.correct ? "text-emerald-300" : "text-amber-200"}`}>
                   {r.correct ? "✓ Chính xác." : r.chosen === null ? "Bạn bỏ trống câu này." : "✕ Chưa đúng."}
                   {r.explain && <span className="text-slate-300"> {r.explain}</span>}
                 </p>
