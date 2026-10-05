@@ -104,8 +104,8 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
                   </button>
                 </td>
                 <td className={`${tdCls} whitespace-nowrap text-right`}>
-                  <button onClick={() => setModal(c)} className="btn-outline !px-2.5 !py-1">Sửa</button>
-                  <button onClick={() => remove(c)} className="btn-outline ml-1 !px-2.5 !py-1 !text-rose-600 hover:!border-rose-300">Xoá</button>
+                  <button onClick={() => setModal(c)} className="btn-outline btn-xs">Sửa</button>
+                  <button onClick={() => remove(c)} className="btn-outline-danger ml-1 btn-xs">Xoá</button>
                 </td>
               </tr>
             ))}

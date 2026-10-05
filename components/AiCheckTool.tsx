@@ -56,12 +56,12 @@ export default function AiCheckTool() {
       )}
       {status?.enabled && !loading && !user && (
         <Notice tone="brand" text="Đăng nhập để dùng AI Check. Mỗi tài khoản có hạn mức lượt kiểm tra mỗi ngày.">
-          <Link href="/login?next=/ai-check" className="btn-primary !px-3 !py-1.5">Đăng nhập</Link>
+          <Link href="/login?next=/ai-check" className="btn-primary btn-sm">Đăng nhập</Link>
         </Notice>
       )}
       {status?.enabled && user && !user.email_verified && (
         <Notice tone="amber" text="Xác thực email để bắt đầu kiểm tra.">
-          <Link href="/verify?next=/ai-check" className="btn-primary !px-3 !py-1.5">Nhập mã xác thực</Link>
+          <Link href="/verify?next=/ai-check" className="btn-primary btn-sm">Nhập mã xác thực</Link>
         </Notice>
       )}
 

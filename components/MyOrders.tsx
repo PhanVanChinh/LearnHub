@@ -64,9 +64,9 @@ export default function MyOrders() {
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <span className="font-bold text-brand-700">{formatVND(o.amount)}</span>
-                      {o.status === "pending" && <Link href={`/checkout?order=${o.code}`} className="btn-primary !px-3 !py-1.5">Thanh toán</Link>}
-                      {o.status === "paid" && <Link href={`/learn/${o.course_slug}`} className="btn !px-3 !py-1.5 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học</Link>}
-                      {(o.status === "cancelled" || o.status === "expired") && <Link href={`/checkout?course=${o.course_slug}`} className="btn-outline !px-3 !py-1.5">Đặt lại</Link>}
+                      {o.status === "pending" && <Link href={`/checkout?order=${o.code}`} className="btn-primary btn-sm">Thanh toán</Link>}
+                      {o.status === "paid" && <Link href={`/learn/${o.course_slug}`} className="btn-success btn-sm">▶ Vào học</Link>}
+                      {(o.status === "cancelled" || o.status === "expired") && <Link href={`/checkout?course=${o.course_slug}`} className="btn-outline btn-sm">Đặt lại</Link>}
                     </div>
                   </div>
                 </li>

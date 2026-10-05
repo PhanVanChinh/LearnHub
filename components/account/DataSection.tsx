@@ -79,7 +79,7 @@ function DeleteAccount() {
           </p>
           {isAdmin && <p className="mt-1 text-xs text-rose-700">Tài khoản quản trị không tự xoá được; hãy nhờ admin khác hạ quyền trước.</p>}
         </div>
-        {!open && <button onClick={() => setOpen(true)} disabled={isAdmin} className="btn shrink-0 border border-rose-300 bg-white text-rose-700 hover:bg-rose-100 disabled:opacity-50">Xoá tài khoản…</button>}
+        {!open && <button onClick={() => setOpen(true)} disabled={isAdmin} className="btn-outline-danger shrink-0 border-rose-300 disabled:opacity-50">Xoá tài khoản…</button>}
       </div>
       {open && (
         <form onSubmit={submit} className="mt-4 space-y-3">
@@ -100,7 +100,7 @@ function DeleteAccount() {
           </label>
           {error && <p role="alert" className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-800">{error}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={!ready || busy} className="btn bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50">{busy ? "Đang xoá…" : "Xoá vĩnh viễn"}</button>
+            <button type="submit" disabled={!ready || busy} className="btn-danger disabled:opacity-50">{busy ? "Đang xoá…" : "Xoá vĩnh viễn"}</button>
             <button type="button" onClick={() => { setOpen(false); setError(""); }} className="btn-outline">Huỷ</button>
           </div>
         </form>

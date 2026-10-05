@@ -78,8 +78,8 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4">
         <p className="text-xs text-slate-500">Trang này tự cập nhật khi được xác nhận. Bạn có thể đóng và xem lại ở <Link href="/orders" className="text-brand-700 hover:underline">Đơn hàng của tôi</Link>.</p>
         <div className="flex gap-2">
-          <button onClick={onRefresh} className="btn-outline !px-3 !py-1.5 text-sm">Kiểm tra lại</button>
-          <button onClick={onCancel} disabled={busy} className="btn !px-3 !py-1.5 text-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50">Huỷ đơn</button>
+          <button onClick={onRefresh} className="btn-outline btn-sm">Kiểm tra lại</button>
+          <button onClick={onCancel} disabled={busy} className="btn btn-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50">Huỷ đơn</button>
         </div>
       </div>
     </div>

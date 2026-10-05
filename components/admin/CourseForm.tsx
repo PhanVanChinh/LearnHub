@@ -381,7 +381,7 @@ function CoverField({ slug, value, onChange, color, emoji }: { slug: string; val
             <button type="button" onClick={() => ref.current?.click()} disabled={busy} className="btn-outline disabled:opacity-60">
               {busy ? "Đang tải…" : url ? "Đổi ảnh" : "⬆ Tải ảnh lên"}
             </button>
-            {value && <button type="button" onClick={() => onChange("")} className="btn-outline !text-rose-600 hover:!border-rose-300">Gỡ ảnh</button>}
+            {value && <button type="button" onClick={() => onChange("")} className="btn-outline-danger">Gỡ ảnh</button>}
             <input ref={ref} type="file" accept="image/*" className="hidden" aria-label="Chọn ảnh bìa"
               onChange={(e) => { const file = e.target.files?.[0]; if (file) void upload(file); e.target.value = ""; }} />
           </div>

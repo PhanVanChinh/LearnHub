@@ -289,13 +289,13 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
             <div className="flex shrink-0 flex-wrap gap-2">
               {enrolled && (
                 <button onClick={toggleDone} disabled={saving}
-                  className={`btn disabled:opacity-60 ${isDone(index) ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}>
+                  className={`btn disabled:opacity-60 ${isDone(index) ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" : "btn-success"}`}>
                   {isDone(index) ? "✓ Đã hoàn thành · Bỏ đánh dấu" : "✓ Hoàn thành bài này"}
                 </button>
               )}
               <button onClick={() => go(index - 1)} disabled={index === 0} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-40">← Bài trước</button>
               {isLast && enrolled ? (
-                <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn bg-emerald-600 text-white hover:bg-emerald-700">
+                <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-success">
                   {progress?.percent === 100 ? "🎉 Hoàn tất khóa học" : "Tổng kết khóa học"}
                 </button>
               ) : (

@@ -52,8 +52,8 @@ export default function CertificatesSection() {
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button onClick={() => copy(c)} className="btn-outline !px-3 !py-1.5 !text-xs">{copied === c.code ? "✓ Đã sao chép" : "Sao chép link"}</button>
-                  <Link href={`/certificate?code=${c.code}`} className="btn-primary !px-3 !py-1.5 !text-xs">Xem & tải</Link>
+                  <button onClick={() => copy(c)} className="btn-outline btn-sm text-xs">{copied === c.code ? "✓ Đã sao chép" : "Sao chép link"}</button>
+                  <Link href={`/certificate?code=${c.code}`} className="btn-primary btn-sm text-xs">Xem & tải</Link>
                 </div>
               </li>
             ))}

@@ -84,7 +84,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
                 {mine.comment && <p className="mt-1 text-sm text-slate-700">{mine.comment}</p>}
                 <p className="mt-1 text-xs text-slate-400">{fmt(mine.updated_at)}</p>
               </div>
-              <button onClick={() => setEditing(true)} className="btn-outline !px-3 !py-1.5">Sửa</button>
+              <button onClick={() => setEditing(true)} className="btn-outline btn-sm">Sửa</button>
             </div>
           ) : (
             <>

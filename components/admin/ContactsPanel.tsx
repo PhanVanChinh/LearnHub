@@ -68,11 +68,11 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
                 <div className="border-t border-slate-100 px-4 pb-4 pt-3">
                   <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{m.message}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
-                    <a href={replyHref(m)} className="btn-primary !px-3 !py-1.5">✉️ Trả lời qua email</a>
-                    <button onClick={() => toggle(m)} className={`btn-outline !px-3 !py-1.5 ${m.status === "new" ? "!border-emerald-300 !text-emerald-700" : ""}`}>
+                    <a href={replyHref(m)} className="btn-primary btn-sm">✉️ Trả lời qua email</a>
+                    <button onClick={() => toggle(m)} className={`${m.status === "new" ? "btn-outline-success" : "btn-outline"} btn-sm`}>
                       {m.status === "new" ? "✓ Đã trả lời" : "↩ Chưa trả lời"}
                     </button>
-                    <button onClick={() => remove(m)} className="btn-outline ml-auto !px-3 !py-1.5 !text-rose-600 hover:!border-rose-300">Xoá</button>
+                    <button onClick={() => remove(m)} className="btn-outline-danger ml-auto btn-sm">Xoá</button>
                     {m.replied_at && <span className="w-full text-xs text-slate-500">Đã trả lời lúc {fmt(m.replied_at)}</span>}
                   </div>
                 </div>

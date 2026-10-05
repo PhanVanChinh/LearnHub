@@ -69,7 +69,7 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
                 </td>
                 <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{new Date(en.created_at).toLocaleString("vi-VN")}</td>
                 <td className={`${tdCls} text-right`}>
-                  <button onClick={() => revoke(en)} className="btn-outline !px-2.5 !py-1 !text-rose-600 hover:!border-rose-300">Thu hồi</button>
+                  <button onClick={() => revoke(en)} className="btn-outline-danger btn-xs">Thu hồi</button>
                 </td>
               </tr>
             ))}

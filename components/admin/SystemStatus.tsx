@@ -33,7 +33,7 @@ export default function SystemStatus() {
             <span className="ml-2">· {enabled}/{SERVICES.length} dịch vụ đã cấu hình</span>
           </p>
         </div>
-        <button onClick={() => setOpen(!open)} className="btn-outline !px-3 !py-1.5 text-sm">{open ? "Thu gọn" : "Chi tiết"}</button>
+        <button onClick={() => setOpen(!open)} className="btn-outline btn-sm">{open ? "Thu gọn" : "Chi tiết"}</button>
       </div>
       {(d.errors.length > 0 || (open && d.warnings.length > 0)) && (
         <ul className="mt-3 space-y-1 text-xs">

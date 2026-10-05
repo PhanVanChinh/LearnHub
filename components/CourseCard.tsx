@@ -69,7 +69,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
         )}
         <div className="mt-auto flex items-center justify-between pt-4">
           <span className={`text-lg font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</span>
-          <Link href={cta.href} className="btn-primary !px-3 !py-1.5">{cta.label}</Link>
+          <Link href={cta.href} className="btn-primary btn-sm">{cta.label}</Link>
         </div>
       </div>
     </article>

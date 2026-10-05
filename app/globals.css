@@ -39,5 +39,12 @@ body { @apply bg-slate-50 text-slate-800 antialiased; font-family: ui-sans-serif
 .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400; }
 .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
 .btn-outline { @apply btn border border-slate-200 bg-white text-slate-700 hover:border-brand-300 hover:text-brand-700; }
+.btn-success { @apply btn bg-emerald-600 text-white hover:bg-emerald-700; }
+.btn-danger { @apply btn bg-rose-600 text-white hover:bg-rose-700; }
+.btn-outline-danger { @apply btn-outline text-rose-600 hover:border-rose-300 hover:text-rose-700; }
+.btn-outline-success { @apply btn-outline border-emerald-300 text-emerald-700 hover:border-emerald-400 hover:text-emerald-800; }
+/* Kích cỡ: khai báo sau các biến thể trên để ghi đè padding/chữ của .btn mà không cần ! */
+.btn-sm { @apply px-3 py-1.5; }
+.btn-xs { @apply px-2.5 py-1 text-xs; }
 .chip { @apply inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm font-medium transition; }
 .input { @apply w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-100; }

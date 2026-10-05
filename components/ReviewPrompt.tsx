@@ -30,7 +30,7 @@ export default function ReviewPrompt({ slug, completed }: { slug: string; comple
       <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-100">
         <p>{completed ? "🎉 Bạn đã hoàn thành! Khóa học này thế nào?" : "Bạn đã học được nửa khóa. Đánh giá giúp người sau chọn đúng khóa."}</p>
         <div className="mt-2 flex gap-2">
-          <button onClick={() => setOpen(true)} className="btn-primary !px-2.5 !py-1 !text-xs">Đánh giá ngay</button>
+          <button onClick={() => setOpen(true)} className="btn-primary btn-xs">Đánh giá ngay</button>
           {!completed && <button onClick={() => { setDismissed(true); try { localStorage.setItem(`review-dismissed-${slug}`, "1"); } catch { /* bỏ qua */ } }} className="text-amber-200/80 hover:underline">Để sau</button>}
         </div>
       </div>

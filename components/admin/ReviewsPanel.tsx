@@ -75,7 +75,7 @@ export default function ReviewsPanel() {
                 <p className="mt-1 text-xs text-slate-400">Gửi {fmt(r.created_at)}{r.updated_at !== r.created_at && <> · sửa {fmt(r.updated_at)}</>}</p>
               </div>
               <button onClick={() => toggle(r)} disabled={busyId === r.id}
-                className={`btn-outline shrink-0 !px-3 !py-1.5 disabled:opacity-60 ${r.hidden ? "!border-emerald-300 !text-emerald-700" : "!text-rose-600 hover:!border-rose-300"}`}>
+                className={`${r.hidden ? "btn-outline-success" : "btn-outline-danger"} shrink-0 btn-sm disabled:opacity-60`}>
                 {r.hidden ? "Hiện lại" : "Ẩn"}
               </button>
             </div>

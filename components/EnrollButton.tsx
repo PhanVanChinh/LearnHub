@@ -28,7 +28,7 @@ export default function EnrollButton({ slug, price, category = "" }: { slug: str
   }
   if (price > 0) {
     if (enrolled) {
-      return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;
+      return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3">▶ Vào học ngay</Link>;
     }
     return <Link href={`/checkout?course=${slug}`} className="btn-primary mt-4 w-full !py-3">Mua ngay</Link>;
   }
@@ -43,7 +43,7 @@ export default function EnrollButton({ slug, price, category = "" }: { slug: str
     );
   }
   if (enrolled) {
-    return <Link href={`/learn/${slug}`} className="btn mt-4 w-full !py-3 bg-emerald-600 text-white hover:bg-emerald-700">▶ Vào học ngay</Link>;
+    return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3">▶ Vào học ngay</Link>;
   }
   const enroll = async () => {
     setBusy(true); setMsg("");

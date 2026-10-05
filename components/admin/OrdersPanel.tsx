@@ -83,10 +83,10 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
                   </td>
                   <td className={`${tdCls} whitespace-nowrap text-right`}>
                     {(o.status === "pending" || o.status === "expired") && (
-                      <button onClick={() => act(o, "confirm")} disabled={busyId === o.id} className="btn-primary !px-2.5 !py-1 disabled:opacity-60">✓ Đã nhận tiền</button>
+                      <button onClick={() => act(o, "confirm")} disabled={busyId === o.id} className="btn-primary btn-xs disabled:opacity-60">✓ Đã nhận tiền</button>
                     )}
                     {o.status === "pending" && (
-                      <button onClick={() => act(o, "cancel")} disabled={busyId === o.id} className="btn-outline ml-1 !px-2.5 !py-1 !text-rose-600 hover:!border-rose-300 disabled:opacity-60">Huỷ</button>
+                      <button onClick={() => act(o, "cancel")} disabled={busyId === o.id} className="btn-outline-danger ml-1 btn-xs disabled:opacity-60">Huỷ</button>
                     )}
                   </td>
                 </tr>

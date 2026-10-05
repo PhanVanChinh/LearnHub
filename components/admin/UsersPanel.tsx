@@ -63,10 +63,10 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
                   <td className={`${tdCls} text-slate-600`}>{u.enrollment_count}</td>
                   <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{new Date(u.created_at).toLocaleDateString("vi-VN")}</td>
                   <td className={`${tdCls} whitespace-nowrap text-right`}>
-                    <button onClick={() => setModal(u)} className="btn-outline !px-2.5 !py-1">Sửa</button>
-                    <button disabled={self} onClick={() => toggleRole(u)} className="btn-outline ml-1 !px-2.5 !py-1 disabled:opacity-40">{u.role === "admin" ? "Hạ quyền" : "Cấp admin"}</button>
-                    <button disabled={self} onClick={() => toggleActive(u)} className="btn-outline ml-1 !px-2.5 !py-1 disabled:opacity-40">{u.is_active ? "Khoá" : "Mở khoá"}</button>
-                    <button disabled={self} onClick={() => remove(u)} className="btn-outline ml-1 !px-2.5 !py-1 !text-rose-600 hover:!border-rose-300 disabled:opacity-40">Xoá</button>
+                    <button onClick={() => setModal(u)} className="btn-outline btn-xs">Sửa</button>
+                    <button disabled={self} onClick={() => toggleRole(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.role === "admin" ? "Hạ quyền" : "Cấp admin"}</button>
+                    <button disabled={self} onClick={() => toggleActive(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.is_active ? "Khoá" : "Mở khoá"}</button>
+                    <button disabled={self} onClick={() => remove(u)} className="btn-outline-danger ml-1 btn-xs disabled:opacity-40">Xoá</button>
                   </td>
                 </tr>
               );
