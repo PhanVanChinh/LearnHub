@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Course } from "@/data/courses";
 import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
@@ -65,6 +65,19 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
     coursesApi.progress(course.slug).then(setProgress).catch(() => setProgress(null));
   }, [enrolled, course.slug]);
   const reloadProgress = () => { if (enrolled) coursesApi.progress(course.slug).then(setProgress).catch(() => {}); };
+
+  // Nhớ vị trí: mở đúng bài đang dở thì tua tới giây đã xem (chỉ lấy một lần lúc tiến độ tải xong, không tua lại sau khi người dùng tự tua)
+  const [resumeAt, setResumeAt] = useState(0);
+  const resumeTaken = useRef(false);
+  useEffect(() => {
+    if (!progress || resumeTaken.current) return;
+    resumeTaken.current = true;
+    if (progress.last_index === index && progress.last_seconds > 5) setResumeAt(progress.last_seconds);
+  }, [progress, index]);
+  // enrolled đọc qua ref: trình phát chụp hàm này lúc mở (bài free mở trước khi biết đã ghi danh hay chưa)
+  const enrolledRef = useRef(false);
+  enrolledRef.current = enrolled;
+  const savePosition = (seconds: number) => { if (enrolledRef.current) coursesApi.savePosition(course.slug, index, seconds).catch(() => {}); };
   const isDone = (i: number) => progress?.completed.includes(i) ?? false;
   const toggleDone = async () => {
     if (!enrolled || saving) return;
@@ -80,6 +93,8 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
   const go = (i: number) => {
     if (i < 0 || i >= lessons.length) return;
     setSummary(false);
+    setResumeAt(0);
+    if (enrolled) coursesApi.savePosition(course.slug, i, 0).catch(() => {}); // bài mới = "bài đang xem gần nhất" cho nút Học tiếp
     router.replace(`/learn/${course.slug}?lesson=${i}`, { scroll: false });
   };
 
@@ -227,7 +242,9 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               </div>
             </section>
           )}
-          {access === "granted" && video && <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" />}
+          {access === "granted" && video && (
+            <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" startSeconds={resumeAt} onProgress={savePosition} />
+          )}
           {access === "granted" && !video && !lesson.content && !lesson.quizCount && !lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
