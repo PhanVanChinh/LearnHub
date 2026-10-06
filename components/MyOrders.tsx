@@ -13,7 +13,7 @@ const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; cls: string }> = {
   pending: { label: "Chờ thanh toán", cls: "bg-amber-50 text-amber-700" },
   paid: { label: "Đã thanh toán", cls: "bg-emerald-50 text-emerald-700" },
-  cancelled: { label: "Đã huỷ", cls: "bg-slate-100 text-slate-600" },
+  cancelled: { label: "Đã hủy", cls: "bg-slate-100 text-slate-600" },
   expired: { label: "Hết hạn", cls: "bg-slate-100 text-slate-600" },
 };
 

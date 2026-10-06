@@ -7,7 +7,7 @@ import PasswordInput from "@/components/PasswordInput";
 import { ApiError, authApi } from "@/lib/api";
 import Section from "./Section";
 
-/** Quyền với dữ liệu cá nhân: tải về toàn bộ dữ liệu, xoá tài khoản. */
+/** Quyền với dữ liệu cá nhân: tải về toàn bộ dữ liệu, xóa tài khoản. */
 export default function DataSection() {
   const { user } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -27,7 +27,7 @@ export default function DataSection() {
   };
 
   return (
-    <Section title="Dữ liệu cá nhân" description="Bạn có quyền xem, tải về và xoá dữ liệu mà LearnHub lưu về mình. Chi tiết trong Chính sách bảo mật.">
+    <Section title="Dữ liệu cá nhân" description="Bạn có quyền xem, tải về và xóa dữ liệu mà LearnHub lưu về mình. Chi tiết trong Chính sách bảo mật.">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="text-sm text-slate-600">
           <p className="font-medium text-slate-800">Tải toàn bộ dữ liệu của tôi</p>
@@ -73,13 +73,13 @@ function DeleteAccount() {
     <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50/60 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="text-sm">
-          <p className="font-medium text-rose-800">Xoá tài khoản</p>
+          <p className="font-medium text-rose-800">Xóa tài khoản</p>
           <p className="mt-1 text-rose-700/80">
-            Xoá vĩnh viễn hồ sơ, khóa đã ghi danh, tiến độ, kết quả trắc nghiệm và lượt AI Check. Đơn hàng đã thanh toán được giữ ở dạng ẩn danh theo quy định kế toán.
+            Xóa vĩnh viễn hồ sơ, khóa đã ghi danh, tiến độ, kết quả trắc nghiệm và lượt AI Check. Đơn hàng đã thanh toán được giữ ở dạng ẩn danh theo quy định kế toán.
           </p>
-          {isAdmin && <p className="mt-1 text-xs text-rose-700">Tài khoản quản trị không tự xoá được; hãy nhờ admin khác hạ quyền trước.</p>}
+          {isAdmin && <p className="mt-1 text-xs text-rose-700">Tài khoản quản trị không tự xóa được; hãy nhờ admin khác hạ quyền trước.</p>}
         </div>
-        {!open && <button onClick={() => setOpen(true)} disabled={isAdmin} className="btn-outline-danger shrink-0 border-rose-300 disabled:opacity-50">Xoá tài khoản…</button>}
+        {!open && <button onClick={() => setOpen(true)} disabled={isAdmin} className="btn-outline-danger shrink-0 border-rose-300 disabled:opacity-50">Xóa tài khoản…</button>}
       </div>
       {open && (
         <form onSubmit={submit} className="mt-4 space-y-3">
@@ -96,12 +96,12 @@ function DeleteAccount() {
           )}
           <label className="flex items-start gap-2 text-xs text-slate-700">
             <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5" />
-            Tôi hiểu rằng dữ liệu học tập sẽ bị xoá và không khôi phục được.
+            Tôi hiểu rằng dữ liệu học tập sẽ bị xóa và không khôi phục được.
           </label>
           {error && <p role="alert" className="rounded-lg bg-rose-100 px-3 py-2 text-sm text-rose-800">{error}</p>}
           <div className="flex gap-2">
-            <button type="submit" disabled={!ready || busy} className="btn-danger disabled:opacity-50">{busy ? "Đang xoá…" : "Xoá vĩnh viễn"}</button>
-            <button type="button" onClick={() => { setOpen(false); setError(""); }} className="btn-outline">Huỷ</button>
+            <button type="submit" disabled={!ready || busy} className="btn-danger disabled:opacity-50">{busy ? "Đang xóa…" : "Xóa vĩnh viễn"}</button>
+            <button type="button" onClick={() => { setOpen(false); setError(""); }} className="btn-outline">Hủy</button>
           </div>
         </form>
       )}

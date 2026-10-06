@@ -30,7 +30,7 @@ export default function ReviewsPanel() {
   const toggle = async (r: AdminReview) => {
     let reason: string | null = "";
     if (!r.hidden) {
-      reason = prompt(`Ẩn đánh giá ${r.rating}★ của ${r.user_email}?\nLý do (tuỳ chọn, người dùng KHÔNG thấy):`, "");
+      reason = prompt(`Ẩn đánh giá ${r.rating}★ của ${r.user_email}?\nLý do (tùy chọn, người dùng KHÔNG thấy):`, "");
       if (reason === null) return;
     }
     setBusyId(r.id); setError("");

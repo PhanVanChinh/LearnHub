@@ -1,4 +1,4 @@
-"""Quyền của người dùng với dữ liệu cá nhân (Nghị định 13/2023): xuất dữ liệu, xoá tài khoản."""
+"""Quyền của người dùng với dữ liệu cá nhân (Nghị định 13/2023): xuất dữ liệu, xóa tài khoản."""
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -76,12 +76,12 @@ def export_my_data(db: Session = Depends(get_db), user: User = Depends(get_curre
 
 
 def anonymize_user(db: Session, user: User) -> None:
-    """Xoá tài khoản theo yêu cầu người dùng.
+    """Xóa tài khoản theo yêu cầu người dùng.
 
-    - Xoá hẳn: ghi danh, tiến độ, kết quả trắc nghiệm, lượt AI Check, mã OTP, token đặt lại mật khẩu.
-    - Ẩn danh hoá (không xoá): hồ sơ và đơn hàng — chứng từ thanh toán phải lưu theo pháp luật kế toán;
+    - Xóa hẳn: ghi danh, tiến độ, kết quả trắc nghiệm, lượt AI Check, mã OTP, token đặt lại mật khẩu.
+    - Ẩn danh hóa (không xóa): hồ sơ và đơn hàng — chứng từ thanh toán phải lưu theo pháp luật kế toán;
       tin nhắn liên hệ giữ nội dung để phục vụ hỗ trợ nhưng bỏ tên/email.
-    - Vô hiệu mọi token, khoá tài khoản, giải phóng email để có thể đăng ký lại.
+    - Vô hiệu mọi token, khóa tài khoản, giải phóng email để có thể đăng ký lại.
     """
     now = datetime.utcnow()
     uid = user.id
@@ -89,9 +89,9 @@ def anonymize_user(db: Session, user: User) -> None:
         db.query(model).filter(model.user_id == uid).delete(synchronize_session=False)
     db.query(Order).filter(Order.user_id == uid, Order.status == PENDING).update({"status": CANCELLED}, synchronize_session=False)
     db.query(ContactMessage).filter(ContactMessage.user_id == uid).update(
-        {"name": "Người dùng đã xoá", "email": f"deleted-{uid}@users.deleted", "user_id": None}, synchronize_session=False)
+        {"name": "Người dùng đã xóa", "email": f"deleted-{uid}@users.deleted", "user_id": None}, synchronize_session=False)
     user.email = f"deleted-{uid}@users.deleted"
-    user.full_name = "Người dùng đã xoá"
+    user.full_name = "Người dùng đã xóa"
     user.hashed_password = ""
     user.google_sub = None
     user.avatar_url = None
@@ -104,17 +104,17 @@ def anonymize_user(db: Session, user: User) -> None:
 
 @router.delete("", status_code=status.HTTP_204_NO_CONTENT, dependencies=[rate_limit("delete-account", 5, 3600)])
 def delete_my_account(payload: schemas.AccountDeleteIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """Tự xoá tài khoản: gõ đúng email + mật khẩu (nếu có). Admin phải được hạ quyền trước để không mất quyền quản trị."""
+    """Tự xóa tài khoản: gõ đúng email + mật khẩu (nếu có). Admin phải được hạ quyền trước để không mất quyền quản trị."""
     if user.role == "admin":
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản quản trị không tự xoá được. Hãy nhờ admin khác hạ quyền trước")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản quản trị không tự xóa được. Hãy nhờ admin khác hạ quyền trước")
     if payload.confirm.strip().lower() != user.email:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Email xác nhận không khớp")
     if user.has_password and not (payload.password and verify_password(payload.password, user.hashed_password)):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu không đúng")
     email, uid = user.email, user.id
     anonymize_user(db, user)
-    # actor=None: hồ sơ đã ẩn danh; giữ email gốc trong summary để đối soát yêu cầu xoá dữ liệu
-    audit.record(db, request, None, "account.delete", "account", uid, f"Người dùng {email} tự xoá tài khoản")
+    # actor=None: hồ sơ đã ẩn danh; giữ email gốc trong summary để đối soát yêu cầu xóa dữ liệu
+    audit.record(db, request, None, "account.delete", "account", uid, f"Người dùng {email} tự xóa tài khoản")
 
 
 def purge_expired_tokens(db: Session) -> int:

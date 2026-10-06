@@ -80,17 +80,17 @@ def test_enroll_flow(client):
 def test_lesson_video_access(client):
     """Video bài free: công khai. Bài khác: ẩn ID với người chưa ghi danh, endpoint trả 401/403."""
     admin = {"Authorization": f"Bearer {client.post('/api/auth/login', json={'email': 'admin@example.com', 'password': 'admin123'}).json()['access_token']}"}
-    # tạo khóa trả phí có video ở cả bài free và bài khoá
+    # tạo khóa trả phí có video ở cả bài free và bài khóa
     r = client.post("/api/admin/courses", json={
         "slug": "khoa-video-khoa", "title": "Khóa video", "category": "video", "price": 50000,
         "lessons": [{"title": "Xem thử", "duration": "1:00", "free": True, "video": "aircAruvnKk"},
-                    {"title": "Bài khoá", "duration": "2:00", "video": "IHZwWFHWa-w"},
+                    {"title": "Bài khóa", "duration": "2:00", "video": "IHZwWFHWa-w"},
                     {"title": "Chưa có video", "duration": "3:00"}],
     }, headers=admin)
     assert r.status_code == 201, r.text
     cid = r.json()["id"]
 
-    # public detail: bài free giữ video, bài khoá chỉ còn has_video
+    # public detail: bài free giữ video, bài khóa chỉ còn has_video
     d = client.get("/api/courses/khoa-video-khoa").json()
     assert d["lessons"][0]["video"] == "aircAruvnKk"
     assert d["lessons"][1]["video"] is None and d["lessons"][1]["has_video"] is True
@@ -179,7 +179,7 @@ def test_password_policy(client):
     r = reg("HopLe2024", email="khong-phai-email")
     assert r.status_code == 422 and r.json()["detail"] == "Email không hợp lệ"
 
-    # hợp lệ + chuẩn hoá email/họ tên
+    # hợp lệ + chuẩn hóa email/họ tên
     r = client.post("/api/auth/register", json={"email": "  PW-Test@Example.com ", "full_name": "  Nguyễn   Văn  A ", "password": "HopLe2024"})
     assert r.status_code == 201, r.text
     assert r.json()["user"]["email"] == "pw-test@example.com" and r.json()["user"]["full_name"] == "Nguyễn Văn A"

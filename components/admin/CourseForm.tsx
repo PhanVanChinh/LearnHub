@@ -17,9 +17,9 @@ const slugify = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
-// Mỗi dòng: "Tiêu đề | Thời lượng | free | <YouTube ID hoặc link> | #mã" — các token sau thời lượng tuỳ chọn, thứ tự tự do.
+// Mỗi dòng: "Tiêu đề | Thời lượng | free | <YouTube ID hoặc link> | #mã" — các token sau thời lượng tùy chọn, thứ tự tự do.
 // "#mã" là mã cố định của bài do server cấp: giữ nguyên trên dòng thì đổi tên / đổi chỗ bài vẫn giữ đúng tiến độ học viên.
-// Xoá mã cũng không sao — server tự khớp lại theo tiêu đề hoặc vị trí (backend/app/lessons.py).
+// Xóa mã cũng không sao — server tự khớp lại theo tiêu đề hoặc vị trí (backend/app/lessons.py).
 const lessonsToText = (l: Lesson[]) =>
   l.map((x) => [x.title, x.duration, x.free ? "free" : null, x.video ?? null, x.id ? `#${x.id}` : null].filter(Boolean).join(" | ")).join("\n");
 
@@ -76,7 +76,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
     setError(""); setBusy(true);
     try {
       const lessons = textToLessons(f.lessons);
-      if (lessons.some((l) => !l.title || !l.duration)) throw new Error("Mỗi dòng bài học cần dạng: Tiêu đề | Thời lượng | free (tuỳ chọn)");
+      if (lessons.some((l) => !l.title || !l.duration)) throw new Error("Mỗi dòng bài học cần dạng: Tiêu đề | Thời lượng | free (tùy chọn)");
       for (const [i, text] of Object.entries(quizText)) {
         const idx = Number(i);
         if (!text.trim() || !lessons[idx]) continue;
@@ -144,7 +144,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         <Field label="Khóa học bao gồm" hint="Mỗi dòng một mục">
           <textarea className="input font-mono text-xs" rows={5} value={f.includes} onChange={(e) => set("includes", e.target.value)} />
         </Field>
-        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link | #mã. Giữ nguyên #mã khi đổi tên hay đổi chỗ bài để học viên không mất tiến độ; chèn, xoá, đổi thứ tự dòng đều được.">
+        <Field label="Bài học" hint="Mỗi dòng: Tiêu đề | Thời lượng | free (học thử) | YouTube ID hoặc link | #mã. Giữ nguyên #mã khi đổi tên hay đổi chỗ bài để học viên không mất tiến độ; chèn, xóa, đổi thứ tự dòng đều được.">
           <textarea className="input font-mono text-xs" rows={5} value={f.lessons} onChange={(e) => set("lessons", e.target.value)}
             placeholder={"Giới thiệu | 05:20 | free | aircAruvnKk\nChương 1 | 18:45 | https://youtu.be/aBcDeFgHiJk"} />
         </Field>
@@ -158,7 +158,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
       </label>
       <ErrorBox message={error} />
       <div className="flex justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="btn-outline">Huỷ</button>
+        <button type="button" onClick={onCancel} className="btn-outline">Hủy</button>
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : initial ? "Lưu thay đổi" : "Tạo khóa học"}</button>
       </div>
     </form>
@@ -300,7 +300,7 @@ function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, less
   };
   const remove = async (i: number) => {
     const a = list[i];
-    if (!confirm(`Gỡ «${a.name}» khỏi bài này?${a.kind === "file" ? " File cũng bị xoá khỏi kho lưu trữ." : ""}`)) return;
+    if (!confirm(`Gỡ «${a.name}» khỏi bài này?${a.kind === "file" ? " File cũng bị xóa khỏi kho lưu trữ." : ""}`)) return;
     if (a.kind === "file" && a.key) { try { await adminApi.deleteUpload(a.key); } catch { /* file có thể đã mất; vẫn gỡ khỏi bài */ } }
     update(list.filter((_, j) => j !== i));
   };
@@ -340,7 +340,7 @@ function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, less
         </p>
       )}
       <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
-        <input className="input" placeholder="Tên hiển thị (tuỳ chọn)" value={link.name} onChange={(e) => setLink({ ...link, name: e.target.value })} />
+        <input className="input" placeholder="Tên hiển thị (tùy chọn)" value={link.name} onChange={(e) => setLink({ ...link, name: e.target.value })} />
         <input className="input" placeholder="https://drive.google.com/… hoặc link tài liệu ngoài" value={link.url} onChange={(e) => setLink({ ...link, url: e.target.value })}
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLink(); } }} />
         <button type="button" onClick={addLink} className="btn-outline">+ Thêm link</button>

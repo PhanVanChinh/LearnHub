@@ -1,4 +1,4 @@
-"""Xoá khóa học / người dùng không được làm mất đơn đã thanh toán (chứng từ doanh thu)."""
+"""Xóa khóa học / người dùng không được làm mất đơn đã thanh toán (chứng từ doanh thu)."""
 from tests.test_orders import _buyer, _paid_course
 
 
@@ -34,7 +34,7 @@ def test_delete_user_with_paid_orders_keeps_orders(client):
     uid = client.get("/api/auth/me", headers=h).json()["id"]
     revenue = client.get("/api/admin/stats", headers=admin).json()["revenue"]
     assert client.delete(f"/api/admin/users/{uid}", headers=admin).status_code == 204
-    # đơn còn nguyên trạng thái paid, doanh thu giữ; tài khoản bị ẩn danh và khoá, không đăng nhập được
+    # đơn còn nguyên trạng thái paid, doanh thu giữ; tài khoản bị ẩn danh và khóa, không đăng nhập được
     assert client.get("/api/admin/stats", headers=admin).json()["revenue"] == revenue
     rows = client.get("/api/admin/orders", params={"q": order["code"]}, headers=admin).json()["items"]
     assert rows and rows[0]["status"] == "paid" and "deleted" in rows[0]["user_email"]
@@ -42,7 +42,7 @@ def test_delete_user_with_paid_orders_keeps_orders(client):
 
 
 def test_delete_admin_who_confirmed_orders(client):
-    """Xoá admin đã duyệt đơn: FK confirmed_by_id phải được gỡ, không lỗi 500 (Postgres)."""
+    """Xóa admin đã duyệt đơn: FK confirmed_by_id phải được gỡ, không lỗi 500 (Postgres)."""
     admin = _admin(client)
     r = client.post("/api/admin/users", json={"email": "admin2@example.com", "full_name": "A2", "password": "MatKhau2024", "role": "admin"}, headers=admin)
     assert r.status_code == 201, r.text

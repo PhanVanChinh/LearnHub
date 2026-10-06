@@ -19,7 +19,7 @@ const limits = [
 export default function AiCheckPage() {
   return (
     <>
-      <PageHeader eyebrow="Công cụ" title="AI Check bài viết" subtitle="Rà soát dấu hiệu văn bản do AI viết trong tiểu luận, báo cáo, khoá luận và nhận gợi ý chỉnh sửa trước khi nộp." />
+      <PageHeader eyebrow="Công cụ" title="AI Check bài viết" subtitle="Rà soát dấu hiệu văn bản do AI viết trong tiểu luận, báo cáo, khóa luận và nhận gợi ý chỉnh sửa trước khi nộp." />
       <div className="container-x grid gap-8 py-12 lg:grid-cols-5">
         <div className="lg:col-span-3"><AiCheckTool /></div>
         <div className="space-y-4 lg:col-span-2">

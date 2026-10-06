@@ -1,4 +1,4 @@
-"""Nhật ký hành động: mọi thao tác ghi dữ liệu của admin + tự xoá tài khoản đều để lại dấu."""
+"""Nhật ký hành động: mọi thao tác ghi dữ liệu của admin + tự xóa tài khoản đều để lại dấu."""
 from tests.test_api import verify
 
 NEW = {"slug": "audit-course", "title": "Khóa audit", "category": "video", "price": 50000, "short": "s", "description": "d",
@@ -45,7 +45,7 @@ def test_admin_actions_are_logged(client):
     assert all(l["action"].startswith("course") for l in _logs(client, admin, action="course")["items"])
     assert _logs(client, admin, action="course.delete")["total"] >= 1
     assert _logs(client, admin, actor="admin@")["total"] == logs["total"]
-    assert _logs(client, admin, q="Khóa audit")["total"] == 5  # tạo, sửa, xoá khóa + cấp/thu hồi quyền có tên khóa
+    assert _logs(client, admin, q="Khóa audit")["total"] == 5  # tạo, sửa, xóa khóa + cấp/thu hồi quyền có tên khóa
 
 
 def test_order_contact_and_account_delete_logged(client):

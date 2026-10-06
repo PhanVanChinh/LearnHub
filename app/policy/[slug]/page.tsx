@@ -23,7 +23,7 @@ const policies: Record<string, Policy> = {
         "Giao dịch: mã đơn, khóa học, số tiền, trạng thái, thời điểm thanh toán. Chúng tôi không nhận hay lưu thông tin thẻ/tài khoản ngân hàng của bạn — bạn chuyển khoản trực tiếp qua ngân hàng.",
         "Liên hệ: tên, email và nội dung tin nhắn bạn gửi qua form Liên hệ.",
         "AI Check: chỉ lưu số từ, điểm và thời điểm mỗi lượt để tính hạn mức. Văn bản bạn dán KHÔNG được lưu.",
-        "Kỹ thuật: địa chỉ IP và thời điểm đăng nhập để chống lạm dụng (giới hạn tần suất, khoá tạm khi sai mật khẩu) và ghi nhật ký các thao tác quản trị.",
+        "Kỹ thuật: địa chỉ IP và thời điểm đăng nhập để chống lạm dụng (giới hạn tần suất, khóa tạm khi sai mật khẩu) và ghi nhật ký các thao tác quản trị.",
       ]},
       { h: "2. Mục đích sử dụng", items: [
         "Cung cấp dịch vụ: đăng nhập, mở khóa học, lưu tiến độ, chấm trắc nghiệm.",
@@ -47,24 +47,24 @@ const policies: Record<string, Policy> = {
         "Các bên này chỉ xử lý dữ liệu theo mục đích nêu trên và theo điều khoản dịch vụ của họ.",
       ]},
       { h: "5. Thời gian lưu trữ", items: [
-        "Dữ liệu tài khoản và học tập: cho đến khi bạn xoá tài khoản.",
-        "Đơn hàng đã thanh toán: giữ ở dạng ẩn danh sau khi bạn xoá tài khoản, theo thời hạn lưu chứng từ kế toán.",
-        "Mã OTP và link đặt lại mật khẩu: tự xoá sau khi hết hạn (tối đa 7 ngày).",
-        "Nhật ký thao tác quản trị: giữ để đối soát, chỉ ghi hành động của quản trị viên và yêu cầu xoá tài khoản.",
+        "Dữ liệu tài khoản và học tập: cho đến khi bạn xóa tài khoản.",
+        "Đơn hàng đã thanh toán: giữ ở dạng ẩn danh sau khi bạn xóa tài khoản, theo thời hạn lưu chứng từ kế toán.",
+        "Mã OTP và link đặt lại mật khẩu: tự xóa sau khi hết hạn (tối đa 7 ngày).",
+        "Nhật ký thao tác quản trị: giữ để đối soát, chỉ ghi hành động của quản trị viên và yêu cầu xóa tài khoản.",
       ]},
       { h: "6. Quyền của bạn và cách thực hiện", items: [
         "Truy cập & tải về: bấm 'Tải JSON' trong trang Tài khoản → Dữ liệu cá nhân để nhận toàn bộ dữ liệu.",
         "Chỉnh sửa: đổi họ tên, mật khẩu, liên kết/gỡ Google ngay trong trang Tài khoản.",
-        "Xoá: bấm 'Xoá tài khoản' trong trang Tài khoản. Dữ liệu học tập bị xoá ngay; đơn hàng đã thanh toán được ẩn danh hoá.",
+        "Xóa: bấm 'Xóa tài khoản' trong trang Tài khoản. Dữ liệu học tập bị xóa ngay; đơn hàng đã thanh toán được ẩn danh hóa.",
         "Rút lại đồng ý / khiếu nại: gửi email tới " + site.contact.email + ". Chúng tôi phản hồi trong 72 giờ làm việc.",
       ]},
       { h: "7. Cookie và lưu trữ trên trình duyệt", items: [
         "Chúng tôi không dùng cookie theo dõi hay phân tích hành vi.",
-        "Trình duyệt của bạn lưu token đăng nhập (localStorage) để giữ phiên; đăng xuất sẽ xoá token này.",
+        "Trình duyệt của bạn lưu token đăng nhập (localStorage) để giữ phiên; đăng xuất sẽ xóa token này.",
       ]},
       { h: "8. Bảo mật", items: [
         "Mật khẩu băm bcrypt; phiên đăng nhập bằng JWT có thời hạn, thu hồi được khi đổi mật khẩu hoặc bấm 'Đăng xuất mọi thiết bị'.",
-        "Giới hạn tần suất, khoá tạm sau nhiều lần sai mật khẩu, captcha ở các form công khai.",
+        "Giới hạn tần suất, khóa tạm sau nhiều lần sai mật khẩu, captcha ở các form công khai.",
         "Mọi thao tác của quản trị viên đều được ghi nhật ký.",
       ]},
       { h: "9. Trẻ em và thay đổi chính sách", items: [
@@ -79,7 +79,7 @@ const policies: Record<string, Policy> = {
     updated: UPDATED,
     sections: [
       { h: "Tài khoản", items: ["Tài khoản là cá nhân, không dùng chung hoặc chuyển nhượng.", "Bạn chịu trách nhiệm bảo mật mật khẩu và mọi hoạt động dưới tài khoản của mình."] },
-      { h: "Nội dung khóa học", items: ["Nội dung chỉ dùng cho mục đích học tập cá nhân. Không sao chép, chia sẻ lại video, tài liệu hay đề trắc nghiệm cho bên thứ ba.", "Chúng tôi có quyền tạm khoá tài khoản vi phạm sau khi thông báo qua email."] },
+      { h: "Nội dung khóa học", items: ["Nội dung chỉ dùng cho mục đích học tập cá nhân. Không sao chép, chia sẻ lại video, tài liệu hay đề trắc nghiệm cho bên thứ ba.", "Chúng tôi có quyền tạm khóa tài khoản vi phạm sau khi thông báo qua email."] },
       { h: "AI Check", items: ["Kết quả AI Check là ước lượng của mô hình ngôn ngữ, chỉ để bạn tự tham khảo và chỉnh sửa, không phải kết luận về đạo văn hay bằng chứng cho bất kỳ mục đích nào."] },
     ],
   },
@@ -95,7 +95,7 @@ const policies: Record<string, Policy> = {
     title: "Chính sách giao nhận",
     updated: UPDATED,
     sections: [
-      { h: "Sản phẩm số", items: ["Khóa học được mở khoá ngay trong tài khoản của bạn khi đơn được xác nhận; bạn nhận email thông báo kèm nút Vào học.", "Không có sản phẩm vật lý, không thu phí vận chuyển.", "Học trên mọi thiết bị có trình duyệt, không giới hạn số lần xem trong thời gian khóa học còn hoạt động."] },
+      { h: "Sản phẩm số", items: ["Khóa học được mở khóa ngay trong tài khoản của bạn khi đơn được xác nhận; bạn nhận email thông báo kèm nút Vào học.", "Không có sản phẩm vật lý, không thu phí vận chuyển.", "Học trên mọi thiết bị có trình duyệt, không giới hạn số lần xem trong thời gian khóa học còn hoạt động."] },
     ],
   },
   refund: {

@@ -70,7 +70,7 @@ export default function ContactForm() {
           {err("email") && <p id="contact-err-email" role="alert" className="mt-1 text-xs text-rose-600">{err("email")}</p>}
         </div>
       </div>
-      <input className="input" placeholder="Chủ đề (tuỳ chọn)" aria-label="Chủ đề" value={form.subject} onChange={set("subject")} maxLength={255} />
+      <input className="input" placeholder="Chủ đề (tùy chọn)" aria-label="Chủ đề" value={form.subject} onChange={set("subject")} maxLength={255} />
       <div>
         <textarea className={`${cls("message")} resize-y`} rows={6} aria-invalid={!!err("message") || undefined} aria-describedby={err("message") ? "contact-err-message" : undefined} placeholder="Nội dung…" aria-label="Nội dung tin nhắn" value={form.message} onChange={set("message")} maxLength={5000} />
         <div className="mt-1 flex justify-between text-xs">

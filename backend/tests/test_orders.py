@@ -50,7 +50,7 @@ def test_create_and_reuse_order(client, monkeypatch):
     other = _buyer(client, "buyer2@example.com")
     assert client.get(f"/api/orders/{o['code']}", headers=other).status_code == 404
 
-    # huỷ → cancelled, không có payment; huỷ lần 2 → 400; tạo lại → đơn mới
+    # hủy → cancelled, không có payment; hủy lần 2 → 400; tạo lại → đơn mới
     r = client.post(f"/api/orders/{o['code']}/cancel", headers=h)
     assert r.status_code == 200 and r.json()["status"] == "cancelled" and r.json()["payment"] is None
     assert client.post(f"/api/orders/{o['code']}/cancel", headers=h).status_code == 400
@@ -105,7 +105,7 @@ def test_admin_confirms_order_and_grants_access(client):
     assert client.get(f"/api/courses/{paid['slug']}", headers=h).json()["enrolled"] is True
     assert client.get(f"/api/orders/{o['code']}", headers=h).json()["status"] == "paid"
     assert paid["slug"] in [c["slug"] for c in client.get("/api/courses/me/enrolled", headers=h).json()]
-    # duyệt lần 2 → 400; huỷ đơn đã paid → 400
+    # duyệt lần 2 → 400; hủy đơn đã paid → 400
     assert client.post(f"/api/admin/orders/{o['id']}/confirm", json={}, headers=admin).status_code == 400
     assert client.post(f"/api/admin/orders/{o['id']}/cancel", json={}, headers=admin).status_code == 400
     # doanh thu thật tăng đúng số tiền đơn

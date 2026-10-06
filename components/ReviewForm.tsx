@@ -5,7 +5,7 @@ import Stars from "./Stars";
 
 const LABELS = ["", "Rất tệ", "Chưa tốt", "Bình thường", "Hay", "Rất hay"];
 
-/** Form đánh giá (tạo / sửa / xoá). `dark` cho trang học. */
+/** Form đánh giá (tạo / sửa / xóa). `dark` cho trang học. */
 export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel, dark = false }: {
   slug: string; initial?: Review | null; onSaved: (r: Review) => void; onDeleted?: () => void; onCancel?: () => void; dark?: boolean;
 }) {
@@ -22,7 +22,7 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
     catch (err) { setError((err as ApiError).message); } finally { setBusy(false); }
   };
   const remove = async () => {
-    if (!confirm("Xoá đánh giá của bạn?")) return;
+    if (!confirm("Xóa đánh giá của bạn?")) return;
     setBusy(true);
     try { await reviewsApi.remove(slug); onDeleted?.(); } catch (err) { setError((err as ApiError).message); } finally { setBusy(false); }
   };
@@ -41,8 +41,8 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
       {error && <p role="alert" className="text-sm text-rose-500">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : initial ? "Lưu thay đổi" : "Gửi đánh giá"}</button>
-        {onCancel && <button type="button" onClick={onCancel} className={`btn ${dark ? "border border-white/15 text-white hover:bg-white/10" : "btn-outline"}`}>Huỷ</button>}
-        {initial && onDeleted && <button type="button" onClick={remove} disabled={busy} className="ml-auto text-sm text-rose-500 hover:underline">Xoá đánh giá</button>}
+        {onCancel && <button type="button" onClick={onCancel} className={`btn ${dark ? "border border-white/15 text-white hover:bg-white/10" : "btn-outline"}`}>Hủy</button>}
+        {initial && onDeleted && <button type="button" onClick={remove} disabled={busy} className="ml-auto text-sm text-rose-500 hover:underline">Xóa đánh giá</button>}
       </div>
     </form>
   );

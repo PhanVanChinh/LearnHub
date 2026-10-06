@@ -12,7 +12,7 @@ COURSE = {
     "slug": "quiz-test", "title": "Khóa quiz", "category": "quiz", "price": 0, "short": "s", "description": "d", "includes": [],
     "lessons": [
         {"title": "Bài mở", "duration": "05:00", "free": True, "quiz": QUIZ},
-        {"title": "Bài khoá", "duration": "05:00", "quiz": QUIZ},
+        {"title": "Bài khóa", "duration": "05:00", "quiz": QUIZ},
         {"title": "Bài không quiz", "duration": "05:00", "free": True},
     ],
 }
@@ -48,7 +48,7 @@ def test_quiz_validation_and_no_leak(client):
     assert q["total"] == 3 and q["pass_percent"] == 60 and [x["q"] for x in q["questions"]][0] == "1 + 1 = ?"
     assert "answer" not in json.dumps(q) and "explain" not in json.dumps(q)
     assert client.get("/api/courses/quiz-test/lessons/2/quiz").status_code == 404
-    assert client.get("/api/courses/quiz-test/lessons/1/quiz").status_code == 401  # bài khoá: chưa đăng nhập
+    assert client.get("/api/courses/quiz-test/lessons/1/quiz").status_code == 401  # bài khóa: chưa đăng nhập
 
 
 def test_submit_scores_and_marks_progress(client):
@@ -59,14 +59,14 @@ def test_submit_scores_and_marks_progress(client):
     # sai số câu → 422
     assert client.post("/api/courses/quiz-test/lessons/0/quiz/submit", json={"answers": [1]}, headers=h).status_code == 422
 
-    # đã đăng nhập nhưng chưa ghi danh → bài khoá bị 403, bài free vẫn làm được và lưu nhưng không đánh dấu hoàn thành
+    # đã đăng nhập nhưng chưa ghi danh → bài khóa bị 403, bài free vẫn làm được và lưu nhưng không đánh dấu hoàn thành
     assert client.get("/api/courses/quiz-test/lessons/1/quiz", headers=h).status_code == 403
     r = client.post("/api/courses/quiz-test/lessons/0/quiz/submit", json={"answers": [1, 1, None]}, headers=h).json()
     assert r["score"] == 1 and r["percent"] == 33 and r["passed"] is False and r["saved"] is True and r["lesson_completed"] is False
     assert r["results"][1] == {"index": 1, "chosen": 1, "answer": 0, "correct": False, "explain": ""}
     assert r["results"][2]["chosen"] is None and r["results"][2]["explain"] == "Nhân"
 
-    # ghi danh → làm bài khoá, đạt → bài 1 hoàn thành trong progress
+    # ghi danh → làm bài khóa, đạt → bài 1 hoàn thành trong progress
     assert client.post("/api/courses/quiz-test/enroll", headers=h).status_code == 201
     r = client.post("/api/courses/quiz-test/lessons/1/quiz/submit", json={"answers": [1, 0, 9]}, headers=h).json()  # 9 ngoài phạm vi → coi như bỏ trống
     assert r["score"] == 2 and r["percent"] == 67 and r["passed"] is True and r["lesson_completed"] is True

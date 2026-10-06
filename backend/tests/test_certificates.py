@@ -1,4 +1,4 @@
-"""Chứng nhận: chỉ cấp khi 100%, idempotent, xác thực công khai, mất hiệu lực khi tài khoản xoá."""
+"""Chứng nhận: chỉ cấp khi 100%, idempotent, xác thực công khai, mất hiệu lực khi tài khoản xóa."""
 from tests.test_api import verify
 
 
@@ -37,7 +37,7 @@ def test_certificate_flow(client):
     # tên trên chứng nhận là tên lúc cấp
     client.patch("/api/auth/me", json={"full_name": "Tên Mới"}, headers=h)
     assert client.get(f"/api/certificates/{c['code']}").json()["holder_name"] == "Trần Thị Chứng Nhận"
-    # xuất dữ liệu có chứng nhận; xoá tài khoản → chứng nhận bị xoá
+    # xuất dữ liệu có chứng nhận; xóa tài khoản → chứng nhận bị xóa
     assert client.get("/api/account/export", headers=h).json()["certificates"][0]["code"] == c["code"]
     client.request("DELETE", "/api/account", json={"confirm": "cert@example.com", "password": "MatKhau2024"}, headers=h)
     assert client.get(f"/api/certificates/{c['code']}").status_code == 404

@@ -24,7 +24,7 @@ class User(Base):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     google_sub: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)  # id tài khoản Google đã liên kết
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # đã tự xoá: hồ sơ ẩn danh, giữ đơn hàng
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # đã tự xóa: hồ sơ ẩn danh, giữ đơn hàng
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -106,7 +106,7 @@ class Enrollment(Base):
 
 class Order(Base):
     """Đơn mua khóa học trả phí. Luồng: pending (chờ chuyển khoản) → paid (admin xác nhận, tự tạo Enrollment)
-    hoặc cancelled (người mua / admin huỷ) / expired (quá hạn chưa thanh toán)."""
+    hoặc cancelled (người mua / admin hủy) / expired (quá hạn chưa thanh toán)."""
 
     __tablename__ = "orders"
 
@@ -117,7 +117,7 @@ class Order(Base):
     amount: Mapped[int] = mapped_column(Integer)  # giá tại thời điểm đặt (VND)
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)  # pending | paid | cancelled | expired
     payment_method: Mapped[str] = mapped_column(String(30), default="bank_transfer")
-    note: Mapped[str | None] = mapped_column(Text, nullable=True)  # ghi chú của admin khi duyệt/huỷ
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)  # ghi chú của admin khi duyệt/hủy
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -204,7 +204,7 @@ class AiCheckRun(Base):
 
 
 class AuditLog(Base):
-    """Nhật ký hành động admin / thao tác nhạy cảm. Không FK cứng tới đối tượng để giữ được sau khi đối tượng bị xoá."""
+    """Nhật ký hành động admin / thao tác nhạy cảm. Không FK cứng tới đối tượng để giữ được sau khi đối tượng bị xóa."""
 
     __tablename__ = "audit_logs"
 

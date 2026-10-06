@@ -27,7 +27,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
     );
   }
   if (order.status !== "pending") {
-    const label = order.status === "cancelled" ? "Đơn đã huỷ" : "Đơn đã hết hạn thanh toán";
+    const label = order.status === "cancelled" ? "Đơn đã hủy" : "Đơn đã hết hạn thanh toán";
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-card">
         <p className="text-5xl">{order.status === "cancelled" ? "🗑️" : "⌛"}</p>
@@ -79,7 +79,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
         <p className="text-xs text-slate-500">Trang này tự cập nhật khi được xác nhận. Bạn có thể đóng và xem lại ở <Link href="/orders" className="text-brand-700 hover:underline">Đơn hàng của tôi</Link>.</p>
         <div className="flex gap-2">
           <button onClick={onRefresh} className="btn-outline btn-sm">Kiểm tra lại</button>
-          <button onClick={onCancel} disabled={busy} className="btn btn-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50">Huỷ đơn</button>
+          <button onClick={onCancel} disabled={busy} className="btn btn-sm text-rose-600 hover:bg-rose-50 disabled:opacity-50">Hủy đơn</button>
         </div>
       </div>
     </div>

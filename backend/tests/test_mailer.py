@@ -1,4 +1,4 @@
-"""Gửi mail: thử lại khi Resend lỗi tạm thời, không thử lại với lỗi dữ liệu; mail huỷ đơn tới người mua."""
+"""Gửi mail: thử lại khi Resend lỗi tạm thời, không thử lại với lỗi dữ liệu; mail hủy đơn tới người mua."""
 import httpx
 
 from app import mailer
@@ -52,4 +52,4 @@ def test_admin_cancel_sends_email(client):
     assert r.status_code == 200 and r.json()["status"] == "cancelled"
     mail = mailer.console_outbox[-1]
     assert len(mailer.console_outbox) == n + 1 and mail["to"] == "cancelmail@example.com"
-    assert o["code"] in mail["subject"] and "huỷ" in mail["subject"] and "Không nhận được tiền" in mail["html"]
+    assert o["code"] in mail["subject"] and "hủy" in mail["subject"] and "Không nhận được tiền" in mail["html"]

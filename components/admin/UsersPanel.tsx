@@ -25,7 +25,7 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
   const toggleActive = (u: AdminUser) => act(() => adminApi.updateUser(u.id, { is_active: !u.is_active }));
   const toggleRole = (u: AdminUser) => act(() => adminApi.updateUser(u.id, { role: u.role === "admin" ? "user" : "admin" }));
   const remove = (u: AdminUser) => {
-    if (!confirm(`Xoá người dùng ${u.email}?\n${u.enrollment_count} ghi danh của họ cũng sẽ bị xoá.`)) return;
+    if (!confirm(`Xóa người dùng ${u.email}?\n${u.enrollment_count} ghi danh của họ cũng sẽ bị xóa.`)) return;
     act(() => adminApi.deleteUser(u.id));
   };
 
@@ -59,14 +59,14 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
                     <div className="text-xs text-slate-500">{u.email}</div>
                   </td>
                   <td className={tdCls}><Badge tone={u.role === "admin" ? "amber" : "slate"}>{u.role}</Badge></td>
-                  <td className={tdCls}><Badge tone={u.is_active ? "green" : "rose"}>{u.is_active ? "Hoạt động" : "Đã khoá"}</Badge></td>
+                  <td className={tdCls}><Badge tone={u.is_active ? "green" : "rose"}>{u.is_active ? "Hoạt động" : "Đã khóa"}</Badge></td>
                   <td className={`${tdCls} text-slate-600`}>{u.enrollment_count}</td>
                   <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{new Date(u.created_at).toLocaleDateString("vi-VN")}</td>
                   <td className={`${tdCls} whitespace-nowrap text-right`}>
                     <button onClick={() => setModal(u)} className="btn-outline btn-xs">Sửa</button>
                     <button disabled={self} onClick={() => toggleRole(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.role === "admin" ? "Hạ quyền" : "Cấp admin"}</button>
-                    <button disabled={self} onClick={() => toggleActive(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.is_active ? "Khoá" : "Mở khoá"}</button>
-                    <button disabled={self} onClick={() => remove(u)} className="btn-outline-danger ml-1 btn-xs disabled:opacity-40">Xoá</button>
+                    <button disabled={self} onClick={() => toggleActive(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.is_active ? "Khóa" : "Mở khóa"}</button>
+                    <button disabled={self} onClick={() => remove(u)} className="btn-outline-danger ml-1 btn-xs disabled:opacity-40">Xóa</button>
                   </td>
                 </tr>
               );
@@ -126,7 +126,7 @@ function UserForm({ initial, isSelf, onSubmit, onCancel }: {
       </div>
       <ErrorBox message={error} />
       <div className="flex justify-end gap-2 pt-2">
-        <button type="button" onClick={onCancel} className="btn-outline">Huỷ</button>
+        <button type="button" onClick={onCancel} className="btn-outline">Hủy</button>
         <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : initial ? "Lưu thay đổi" : "Tạo người dùng"}</button>
       </div>
     </form>

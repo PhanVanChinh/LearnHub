@@ -24,8 +24,8 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
 
   const act = async (o: AdminOrder, kind: "confirm" | "cancel") => {
     const msg = kind === "confirm"
-      ? `Xác nhận ĐÃ NHẬN ${formatVND(o.amount)} cho đơn ${o.code} của ${o.user_email}?\nKhóa "${o.course_title}" sẽ mở ngay cho người mua.\n\nGhi chú (tuỳ chọn, vd mã giao dịch):`
-      : `Huỷ đơn ${o.code}? Ghi chú (tuỳ chọn):`;
+      ? `Xác nhận ĐÃ NHẬN ${formatVND(o.amount)} cho đơn ${o.code} của ${o.user_email}?\nKhóa "${o.course_title}" sẽ mở ngay cho người mua.\n\nGhi chú (tùy chọn, vd mã giao dịch):`
+      : `Hủy đơn ${o.code}? Ghi chú (tùy chọn):`;
     const note = prompt(msg, "");
     if (note === null) return;
     setBusyId(o.id); setError("");
@@ -38,7 +38,7 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        {([["pending", "Chờ thanh toán"], ["paid", "Đã thanh toán"], ["cancelled", "Đã huỷ"], ["expired", "Hết hạn"], ["", "Tất cả"]] as const).map(([k, l]) => (
+        {([["pending", "Chờ thanh toán"], ["paid", "Đã thanh toán"], ["cancelled", "Đã hủy"], ["expired", "Hết hạn"], ["", "Tất cả"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setStatus(k); setOffset(0); }}
             className={`chip ${status === k ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}>{l}</button>
         ))}
@@ -86,7 +86,7 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
                       <button onClick={() => act(o, "confirm")} disabled={busyId === o.id} className="btn-primary btn-xs disabled:opacity-60">✓ Đã nhận tiền</button>
                     )}
                     {o.status === "pending" && (
-                      <button onClick={() => act(o, "cancel")} disabled={busyId === o.id} className="btn-outline-danger ml-1 btn-xs disabled:opacity-60">Huỷ</button>
+                      <button onClick={() => act(o, "cancel")} disabled={busyId === o.id} className="btn-outline-danger ml-1 btn-xs disabled:opacity-60">Hủy</button>
                     )}
                   </td>
                 </tr>

@@ -141,7 +141,7 @@ def get_order(code: str, db: Session = Depends(get_db), user: User = Depends(get
 def cancel_order(code: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     order = _my_order(db, user, code)
     if order.status != PENDING:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ huỷ được đơn đang chờ thanh toán")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ hủy được đơn đang chờ thanh toán")
     order.status = CANCELLED
     db.commit()
     db.refresh(order)

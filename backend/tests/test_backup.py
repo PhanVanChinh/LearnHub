@@ -1,4 +1,4 @@
-"""Backup/restore vòng tròn: dump → xoá → restore → dữ liệu và quan hệ giữ nguyên; xoay vòng bản cũ trên S3 (giả lập)."""
+"""Backup/restore vòng tròn: dump → xóa → restore → dữ liệu và quan hệ giữ nguyên; xoay vòng bản cũ trên S3 (giả lập)."""
 import gzip
 import json
 
@@ -22,7 +22,7 @@ def test_dump_restore_roundtrip(client):
     try:
         _roundtrip(client, db, h, code)
     finally:
-        db.close()  # luôn đóng: session treo transaction sẽ khoá drop_all trên Postgres
+        db.close()  # luôn đóng: session treo transaction sẽ khóa drop_all trên Postgres
 
 
 def _roundtrip(client, db, h, code):

@@ -139,15 +139,15 @@ def order_paid_email(name: str, code: str, course_title: str, learn_link: str) -
 
 
 def order_cancelled_email(name: str, code: str, course_title: str, note: str | None, link: str) -> tuple[str, str]:
-    """Gửi người mua khi admin huỷ đơn đang chờ (vd. không nhận được tiền, sai nội dung chuyển khoản)."""
-    subject = f"Đơn {code} đã bị huỷ — {course_title}"
+    """Gửi người mua khi admin hủy đơn đang chờ (vd. không nhận được tiền, sai nội dung chuyển khoản)."""
+    subject = f"Đơn {code} đã bị hủy — {course_title}"
     reason = f"<p>Lý do: {_html.escape(note)}</p>" if note else ""
     body = f"""<p>Chào {name},</p>
-<p>Đơn <b>{code}</b> cho khóa học <b>{course_title}</b> đã được huỷ và không còn hiệu lực thanh toán.</p>
+<p>Đơn <b>{code}</b> cho khóa học <b>{course_title}</b> đã được hủy và không còn hiệu lực thanh toán.</p>
 {reason}
 <p>Nếu bạn đã chuyển khoản, hãy trả lời email này kèm ảnh giao dịch để chúng tôi đối soát và hoàn tiền hoặc mở khóa học.</p>
 {_btn(link, "Đặt lại đơn mới")}"""
-    return subject, _layout("Đơn hàng đã huỷ", body)
+    return subject, _layout("Đơn hàng đã hủy", body)
 
 
 def order_admin_notify_email(code: str, buyer_email: str, course_title: str, amount: int, admin_link: str) -> tuple[str, str]:

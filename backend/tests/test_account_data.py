@@ -1,4 +1,4 @@
-"""Quyền dữ liệu cá nhân: xuất dữ liệu (và xoá tài khoản ở commit sau)."""
+"""Quyền dữ liệu cá nhân: xuất dữ liệu (và xóa tài khoản ở commit sau)."""
 from tests.test_api import verify
 
 
@@ -69,16 +69,16 @@ def test_delete_account_anonymizes(client, monkeypatch):
 
     db = SessionLocal()
     u = db.get(User, uid)
-    assert u.deleted_at and not u.is_active and u.email.startswith(f"deleted-{uid}@") and u.full_name == "Người dùng đã xoá" and u.hashed_password == ""
+    assert u.deleted_at and not u.is_active and u.email.startswith(f"deleted-{uid}@") and u.full_name == "Người dùng đã xóa" and u.hashed_password == ""
     assert db.query(Enrollment).filter_by(user_id=uid).count() == 0
     orders = {o.code: o.status for o in db.query(Order).filter_by(user_id=uid).all()}
-    assert orders == {paid_order["code"]: "paid", pending["code"]: "cancelled"}  # giữ đơn, huỷ đơn chờ
+    assert orders == {paid_order["code"]: "paid", pending["code"]: "cancelled"}  # giữ đơn, hủy đơn chờ
     m = db.query(ContactMessage).filter(ContactMessage.message == "Nội dung cần giữ để hỗ trợ").first()
-    assert m.user_id is None and m.email.startswith("deleted-") and m.name == "Người dùng đã xoá"
+    assert m.user_id is None and m.email.startswith("deleted-") and m.name == "Người dùng đã xóa"
     db.close()
     # email được giải phóng → đăng ký lại được
     assert client.post("/api/auth/register", json={"email": "bye@example.com", "full_name": "Lại", "password": "MatKhau2024"}).status_code == 201
-    # admin thấy tài khoản đã xoá là inactive kèm deleted_at
+    # admin thấy tài khoản đã xóa là inactive kèm deleted_at
     lst = client.get("/api/admin/users", params={"q": f"deleted-{uid}"}, headers=admin_h).json()
     assert lst["items"][0]["deleted_at"] and lst["items"][0]["is_active"] is False
 

@@ -1,11 +1,11 @@
 // Định dạng văn bản để admin soạn trắc nghiệm nhanh trong một textarea:
 //
-//   đạt: 70                      ← (tuỳ chọn) ngưỡng % để hoàn thành bài, mặc định 70
+//   đạt: 70                      ← (tùy chọn) ngưỡng % để hoàn thành bài, mặc định 70
 //   1. Câu hỏi thứ nhất?
 //   A. Phương án sai
 //   B. Phương án đúng *          ← dấu * ở cuối = đáp án đúng (đúng một phương án)
 //   C. Phương án sai
-//   > Giải thích ngắn (tuỳ chọn)
+//   > Giải thích ngắn (tùy chọn)
 //
 //   2. Câu tiếp theo...
 //

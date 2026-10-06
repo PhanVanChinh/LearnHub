@@ -1,6 +1,6 @@
 """Giới hạn tần suất theo IP, lưu trong bộ nhớ tiến trình (đủ cho 1 instance; nhiều instance thì đổi sang Redis).
 
-Dùng: `dependencies=[Depends(rate_limit("login", 10, 60))]` → tối đa 10 request / 60 giây / IP cho khoá "login".
+Dùng: `dependencies=[Depends(rate_limit("login", 10, 60))]` → tối đa 10 request / 60 giây / IP cho khóa "login".
 """
 import time
 from collections import defaultdict, deque

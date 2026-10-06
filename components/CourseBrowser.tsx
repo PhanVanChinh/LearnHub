@@ -123,7 +123,7 @@ export default function CourseBrowser({
         <p className="mt-4 text-sm text-slate-500">{filtered.length} kết quả cho “{q.trim()}”{filtered.some((h) => h.match.where === "lesson" || h.match.where === "attachment") && " · một số khớp ở bài học bên trong"}</p>
       )}
       {visible.length === 0 ? (
-        <p className="mt-10 text-center text-slate-500">Không tìm thấy khóa học phù hợp.{q.trim() && " Thử từ khoá ngắn hơn hoặc bỏ dấu."}</p>
+        <p className="mt-10 text-center text-slate-500">Không tìm thấy khóa học phù hợp.{q.trim() && " Thử từ khóa ngắn hơn hoặc bỏ dấu."}</p>
       ) : (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((h) => <CourseCard key={h.course.slug} course={h.course} match={q.trim() ? h.match : undefined} query={q} />)}

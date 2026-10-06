@@ -97,4 +97,4 @@ def delete(key: str) -> None:
     try:
         _client().delete_object(Bucket=settings.s3_bucket, Key=key)
     except Exception as e:
-        log.warning("Xoá %s thất bại: %s", key, e)
+        log.warning("Xóa %s thất bại: %s", key, e)

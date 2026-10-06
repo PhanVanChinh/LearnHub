@@ -43,7 +43,7 @@ def test_review_flow(client):
     row = next(r for r in client.get("/api/stats/courses").json() if r["slug"] == slug)
     assert row["rating"]["average"] == 4.0 and row["rating"]["count"] == 3
 
-    # xoá của tôi
+    # xóa của tôi
     assert client.delete(f"{url}/me", headers=h1).status_code == 204
     assert client.delete(f"{url}/me", headers=h1).status_code == 404
     assert client.get(url).json()["summary"]["count"] == 2

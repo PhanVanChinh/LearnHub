@@ -191,11 +191,11 @@ async def upload_file(request: Request, file: UploadFile = File(...), course_slu
 
 @router.delete("/uploads", status_code=status.HTTP_204_NO_CONTENT)
 def delete_upload(key: str, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    """Xoá file trên S3 (chỉ key trong thư mục courses/). Không tự gỡ khỏi lesson.attachments — admin lưu lại khóa học."""
+    """Xóa file trên S3 (chỉ key trong thư mục courses/). Không tự gỡ khỏi lesson.attachments — admin lưu lại khóa học."""
     if not key.startswith("courses/") or ".." in key:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Key không hợp lệ")
     storage.delete(key)
-    audit.record(db, request, admin, "upload.delete", "upload", key, f"Xoá file {key}")
+    audit.record(db, request, admin, "upload.delete", "upload", key, f"Xóa file {key}")
 
 
 # ---------- contact ----------
@@ -241,7 +241,7 @@ def delete_contact(msg_id: int, request: Request, db: Session = Depends(get_db),
     m = db.get(ContactMessage, msg_id)
     if not m:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy tin nhắn")
-    summary = f"Xoá tin nhắn #{m.id} của {m.email}"
+    summary = f"Xóa tin nhắn #{m.id} của {m.email}"
     db.delete(m)
     db.commit()
     audit.record(db, request, admin, "contact.delete", "contact", msg_id, summary)
@@ -306,11 +306,11 @@ def admin_cancel_order(order_id: int, payload: schemas.OrderAction, request: Req
                        admin: User = Depends(require_admin)):
     o = _get_order(db, order_id)
     if o.status != PENDING:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ huỷ được đơn đang chờ thanh toán")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Chỉ hủy được đơn đang chờ thanh toán")
     o.status, o.note = CANCELLED, payload.note or o.note
     db.commit()
     db.refresh(o)
-    audit.record(db, request, admin, "order.cancel", "order", o.id, f"Huỷ đơn {o.code} · {o.user.email}", {"code": o.code, "note": payload.note})
+    audit.record(db, request, admin, "order.cancel", "order", o.id, f"Hủy đơn {o.code} · {o.user.email}", {"code": o.code, "note": payload.note})
     notify_cancelled(o, payload.note)
     return _admin_order_out(o)
 
@@ -394,11 +394,11 @@ def delete_course(course_id: int, request: Request, db: Session = Depends(get_db
     course = _get_course(db, course_id)
     paid = db.query(Order).filter(Order.course_id == course.id, Order.status == PAID).count()
     if paid:
-        # Đơn đã thanh toán là chứng từ kế toán, xoá khóa sẽ cascade xoá luôn → doanh thu biến mất. Ẩn khóa thay vì xoá.
+        # Đơn đã thanh toán là chứng từ kế toán, xóa khóa sẽ cascade xóa luôn → doanh thu biến mất. Ẩn khóa thay vì xóa.
         raise HTTPException(status.HTTP_409_CONFLICT,
-                            f"Khóa học có {paid} đơn đã thanh toán nên không thể xoá. Hãy ẩn khóa học (người đã mua vẫn học tiếp).")
-    summary = f"Xoá khóa học «{course.title}» (/{course.slug}), {len(course.enrollments)} ghi danh"
-    db.delete(course)  # cascade xoá enrollments và đơn chưa thanh toán
+                            f"Khóa học có {paid} đơn đã thanh toán nên không thể xóa. Hãy ẩn khóa học (người đã mua vẫn học tiếp).")
+    summary = f"Xóa khóa học «{course.title}» (/{course.slug}), {len(course.enrollments)} ghi danh"
+    db.delete(course)  # cascade xóa enrollments và đơn chưa thanh toán
     db.commit()
     audit.record(db, request, admin, "course.delete", "course", course_id, summary)
 
@@ -455,7 +455,7 @@ def update_user(user_id: int, payload: schemas.AdminUserUpdate, request: Request
         if data.get("role") == "user":
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể tự hạ quyền admin của chính mình")
         if data.get("is_active") is False:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể tự khoá tài khoản của chính mình")
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể tự khóa tài khoản của chính mình")
     if "email" in data:
         data["email"] = data["email"].lower()
         if data["email"] != user.email:
@@ -478,16 +478,16 @@ def update_user(user_id: int, payload: schemas.AdminUserUpdate, request: Request
 def delete_user(user_id: int, request: Request, db: Session = Depends(get_db), me: User = Depends(require_admin)):
     user = _get_user(db, user_id)
     if user.id == me.id:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể xoá tài khoản của chính mình")
-    summary = f"Xoá người dùng {user.email} ({len(user.enrollments)} ghi danh, {len(user.orders)} đơn)"
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Không thể xóa tài khoản của chính mình")
+    summary = f"Xóa người dùng {user.email} ({len(user.enrollments)} ghi danh, {len(user.orders)} đơn)"
     # Đơn do người này duyệt: gỡ liên kết trước, nếu không FK confirmed_by_id gây lỗi 500 trên Postgres
     db.query(Order).filter(Order.confirmed_by_id == user.id).update({"confirmed_by_id": None}, synchronize_session=False)
     if db.query(Order).filter(Order.user_id == user.id, Order.status == PAID).count():
-        # Có đơn đã thanh toán → ẩn danh hoá như khi tự xoá tài khoản: giữ chứng từ, xoá dữ liệu học, khoá đăng nhập
+        # Có đơn đã thanh toán → ẩn danh hóa như khi tự xóa tài khoản: giữ chứng từ, xóa dữ liệu học, khóa đăng nhập
         anonymize_user(db, user)
-        summary += " — có đơn đã thanh toán nên ẩn danh hoá, giữ đơn"
+        summary += " — có đơn đã thanh toán nên ẩn danh hóa, giữ đơn"
     else:
-        db.delete(user)  # cascade xoá enrollments, đơn chưa thanh toán...
+        db.delete(user)  # cascade xóa enrollments, đơn chưa thanh toán...
         db.commit()
     audit.record(db, request, me, "user.delete", "user", user_id, summary)
 
@@ -611,7 +611,7 @@ def list_all_reviews(
 
 @router.post("/reviews/{review_id}/hide", response_model=schemas.AdminReviewOut)
 def hide_review(review_id: int, payload: schemas.ReviewHideIn, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
-    """Ẩn đánh giá vi phạm (không xoá, không sửa nội dung). Gọi lại trên đánh giá đang ẩn → hiện lại."""
+    """Ẩn đánh giá vi phạm (không xóa, không sửa nội dung). Gọi lại trên đánh giá đang ẩn → hiện lại."""
     r = db.get(Review, review_id)
     if not r:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy đánh giá")

@@ -41,7 +41,7 @@ def _course(db: Session, slug: str) -> Course:
 
 
 def _out(r: Review, viewer: User | None) -> schemas.ReviewOut:
-    name = r.user.full_name if r.user.is_active else "Người dùng đã xoá"
+    name = r.user.full_name if r.user.is_active else "Người dùng đã xóa"
     return schemas.ReviewOut(id=r.id, rating=r.rating, comment=r.comment, created_at=r.created_at, updated_at=r.updated_at,
                              user_name=name, user_initial=(name.strip()[:1] or "?").upper(), mine=bool(viewer and r.user_id == viewer.id))
 

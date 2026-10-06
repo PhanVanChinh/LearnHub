@@ -59,7 +59,7 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
     } finally { setBusy(false); }
   };
   const cancel = async () => {
-    if (!order || !confirm("Huỷ đơn này? Bạn có thể đặt lại sau.")) return;
+    if (!order || !confirm("Hủy đơn này? Bạn có thể đặt lại sau.")) return;
     setBusy(true);
     try { setOrder(await ordersApi.cancel(order.code)); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };

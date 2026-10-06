@@ -9,7 +9,7 @@ const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", 
 
 const GROUPS: { key: string; label: string }[] = [
   { key: "", label: "Tất cả" }, { key: "order", label: "Đơn hàng" }, { key: "course", label: "Khóa học" }, { key: "user", label: "Người dùng" },
-  { key: "enrollment", label: "Ghi danh" }, { key: "contact", label: "Liên hệ" }, { key: "site", label: "Xuất bản" }, { key: "account", label: "Tự xoá TK" },
+  { key: "enrollment", label: "Ghi danh" }, { key: "contact", label: "Liên hệ" }, { key: "site", label: "Xuất bản" }, { key: "account", label: "Tự xóa TK" },
 ];
 const TONE: Record<string, string> = {
   create: "bg-emerald-50 text-emerald-700", confirm: "bg-emerald-50 text-emerald-700", replied: "bg-emerald-50 text-emerald-700",
@@ -18,7 +18,7 @@ const TONE: Record<string, string> = {
 };
 const verb = (action: string) => action.split(".")[1] ?? action;
 
-/** Nhật ký hành động admin: chỉ đọc, mới nhất trước, lọc theo nhóm / người thực hiện / từ khoá, bấm dòng để xem chi tiết JSON. */
+/** Nhật ký hành động admin: chỉ đọc, mới nhất trước, lọc theo nhóm / người thực hiện / từ khóa, bấm dòng để xem chi tiết JSON. */
 export default function AuditPanel() {
   const [group, setGroup] = useState("");
   const [actor, setActor] = useState("");
@@ -44,7 +44,7 @@ export default function AuditPanel() {
         <input value={actor} onChange={(e) => { setActor(e.target.value); setOffset(0); }} placeholder="Email admin…" className="input ml-auto sm:w-48" />
         <input value={q} onChange={(e) => { setQ(e.target.value); setOffset(0); }} placeholder="Tìm trong tóm tắt…" className="input sm:w-56" />
       </div>
-      <p className="mt-3 text-xs text-slate-500">Nhật ký chỉ đọc, không sửa/xoá được từ giao diện. Mỗi dòng ghi ai làm, làm gì, lúc nào, từ IP nào.</p>
+      <p className="mt-3 text-xs text-slate-500">Nhật ký chỉ đọc, không sửa/xóa được từ giao diện. Mỗi dòng ghi ai làm, làm gì, lúc nào, từ IP nào.</p>
       <div className="mt-3"><ErrorBox message={error} /></div>
 
       <ul className="mt-4 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">

@@ -83,7 +83,7 @@ export default async function Home() {
         <div className="rounded-3xl bg-slate-900 px-8 py-12 text-white sm:px-12 lg:flex lg:items-center lg:justify-between">
           <div>
             <h2 className="text-2xl font-bold sm:text-3xl">Rà soát dấu hiệu AI trong bài viết trước khi nộp</h2>
-            <p className="mt-2 max-w-xl text-slate-300">Dán tiểu luận, báo cáo hoặc khoá luận — nhận điểm ước lượng, đoạn đáng chú ý và gợi ý chỉnh sửa trong khoảng một phút.</p>
+            <p className="mt-2 max-w-xl text-slate-300">Dán tiểu luận, báo cáo hoặc khóa luận — nhận điểm ước lượng, đoạn đáng chú ý và gợi ý chỉnh sửa trong khoảng một phút.</p>
           </div>
           <Link href="/ai-check" className="btn-primary mt-6 lg:mt-0">Dùng thử AI Check</Link>
         </div>

@@ -13,7 +13,7 @@ from .config import settings
 
 log = logging.getLogger("learnhub.aicheck")
 
-SYSTEM = """Bạn là công cụ hỗ trợ sinh viên Việt Nam tự rà soát bài viết học thuật (tiểu luận, báo cáo, khoá luận) trước khi nộp.
+SYSTEM = """Bạn là công cụ hỗ trợ sinh viên Việt Nam tự rà soát bài viết học thuật (tiểu luận, báo cáo, khóa luận) trước khi nộp.
 Nhiệm vụ: đọc văn bản và (1) ước lượng khả năng văn bản được tạo bởi AI, (2) chỉ ra các dấu hiệu cụ thể, (3) nhận xét chất lượng
 học thuật, (4) gợi ý chỉnh sửa để bài viết tự nhiên, rõ ràng và mang dấu ấn cá nhân hơn.
 

@@ -1,7 +1,7 @@
 [
   {
     "slug": "ai-check-dao-van-khoa-luan",
-    "title": "Gói AI Check mở rộng — Khoá luận, tiểu luận",
+    "title": "Gói AI Check mở rộng — Khóa luận, tiểu luận",
     "category": "ai-check",
     "tags": [
       "ai-check"
@@ -10,7 +10,7 @@
     "color": "from-violet-500 to-fuchsia-600",
     "emoji": "🤖",
     "short": "Thêm lượt rà soát dấu hiệu AI cho bài dài, phân tích theo từng phần và gợi ý chỉnh sửa. Sắp mở bán.",
-    "description": "Thêm lượt rà soát dấu hiệu AI cho bài dài, phân tích theo từng phần và gợi ý chỉnh sửa. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Thêm lượt rà soát dấu hiệu AI cho bài dài, phân tích theo từng phần và gợi ý chỉnh sửa. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -52,7 +52,7 @@
     "color": "from-indigo-500 to-violet-600",
     "emoji": "🧠",
     "short": "Thêm lượt rà soát báo cáo thực tập theo từng chương, kèm nhận xét học thuật. Sắp mở bán.",
-    "description": "Thêm lượt rà soát báo cáo thực tập theo từng chương, kèm nhận xét học thuật. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Thêm lượt rà soát báo cáo thực tập theo từng chương, kèm nhận xét học thuật. Sắp mở bán. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -93,7 +93,7 @@
     "color": "from-rose-500 to-orange-500",
     "emoji": "📚",
     "short": "Câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương, làm ngay trong bài học.",
-    "description": "Câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương, làm ngay trong bài học. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Câu hỏi trắc nghiệm có đáp án và giải thích, chia theo chương, làm ngay trong bài học. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -255,7 +255,7 @@
     "color": "from-emerald-500 to-teal-600",
     "emoji": "💹",
     "short": "Bộ câu hỏi ôn thi cuối kỳ, bám sát giáo trình mới nhất.",
-    "description": "Bộ câu hỏi ôn thi cuối kỳ, bám sát giáo trình mới nhất. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Bộ câu hỏi ôn thi cuối kỳ, bám sát giáo trình mới nhất. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -356,7 +356,7 @@
     "color": "from-red-500 to-rose-600",
     "emoji": "⭐",
     "short": "Câu hỏi luyện tập theo từng chương, chấm điểm và giải thích ngay sau khi nộp.",
-    "description": "Câu hỏi luyện tập theo từng chương, chấm điểm và giải thích ngay sau khi nộp. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Câu hỏi luyện tập theo từng chương, chấm điểm và giải thích ngay sau khi nộp. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -457,7 +457,7 @@
     "color": "from-amber-500 to-orange-600",
     "emoji": "🏛️",
     "short": "Ôn tập nhanh kiến thức trọng tâm bằng câu hỏi trắc nghiệm.",
-    "description": "Ôn tập nhanh kiến thức trọng tâm bằng câu hỏi trắc nghiệm. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Ôn tập nhanh kiến thức trọng tâm bằng câu hỏi trắc nghiệm. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -558,7 +558,7 @@
     "color": "from-sky-500 to-blue-600",
     "emoji": "🌐",
     "short": "Câu hỏi về mô hình OSI, TCP/IP, định tuyến, subnet và bảo mật mạng.",
-    "description": "Câu hỏi về mô hình OSI, TCP/IP, định tuyến, subnet và bảo mật mạng. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Câu hỏi về mô hình OSI, TCP/IP, định tuyến, subnet và bảo mật mạng. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -658,8 +658,8 @@
     "price": 15000,
     "color": "from-cyan-500 to-sky-600",
     "emoji": "🗄️",
-    "short": "Đại số quan hệ, chuẩn hoá, SQL và thiết kế ERD qua 400+ câu hỏi.",
-    "description": "Đại số quan hệ, chuẩn hoá, SQL và thiết kế ERD qua 400+ câu hỏi. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Đại số quan hệ, chuẩn hóa, SQL và thiết kế ERD qua 400+ câu hỏi.",
+    "description": "Đại số quan hệ, chuẩn hóa, SQL và thiết kế ERD qua 400+ câu hỏi. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -760,7 +760,7 @@
     "color": "from-blue-500 to-indigo-600",
     "emoji": "📄",
     "short": "Tổng hợp đề thi cuối kỳ các năm gần đây kèm lời giải chi tiết.",
-    "description": "Tổng hợp đề thi cuối kỳ các năm gần đây kèm lời giải chi tiết. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Tổng hợp đề thi cuối kỳ các năm gần đây kèm lời giải chi tiết. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -802,7 +802,7 @@
     "color": "from-teal-500 to-emerald-600",
     "emoji": "📐",
     "short": "Đề thi + đáp án + ghi chú các dạng bài thường gặp.",
-    "description": "Đề thi + đáp án + ghi chú các dạng bài thường gặp. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Đề thi + đáp án + ghi chú các dạng bài thường gặp. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -844,7 +844,7 @@
     "color": "from-lime-500 to-green-600",
     "emoji": "🎲",
     "short": "Cheatsheet 12 trang gói gọn toàn bộ công thức cần nhớ.",
-    "description": "Cheatsheet 12 trang gói gọn toàn bộ công thức cần nhớ. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Cheatsheet 12 trang gói gọn toàn bộ công thức cần nhớ. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -886,7 +886,7 @@
     "color": "from-slate-600 to-slate-800",
     "emoji": "💻",
     "short": "Slide bài giảng và bộ bài tập có lời giải cho người mới bắt đầu.",
-    "description": "Slide bài giảng và bộ bài tập có lời giải cho người mới bắt đầu. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Slide bài giảng và bộ bài tập có lời giải cho người mới bắt đầu. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -928,7 +928,7 @@
     "color": "from-green-500 to-emerald-700",
     "emoji": "🛒",
     "short": "Đồ án môn Phát triển ứng dụng web: giỏ hàng, thanh toán, quản trị.",
-    "description": "Đồ án môn Phát triển ứng dụng web: giỏ hàng, thanh toán, quản trị. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Đồ án môn Phát triển ứng dụng web: giỏ hàng, thanh toán, quản trị. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -970,7 +970,7 @@
     "color": "from-orange-500 to-red-600",
     "emoji": "☕",
     "short": "Đồ án Lập trình hướng đối tượng, có báo cáo Word đi kèm.",
-    "description": "Đồ án Lập trình hướng đối tượng, có báo cáo Word đi kèm. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Đồ án Lập trình hướng đối tượng, có báo cáo Word đi kèm. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1011,7 +1011,7 @@
     "color": "from-sky-400 to-indigo-500",
     "emoji": "📱",
     "short": "Ứng dụng di động đa nền tảng, có hướng dẫn chạy từng bước.",
-    "description": "Ứng dụng di động đa nền tảng, có hướng dẫn chạy từng bước. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Ứng dụng di động đa nền tảng, có hướng dẫn chạy từng bước. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1051,8 +1051,8 @@
     "price": 20000,
     "color": "from-yellow-400 to-amber-600",
     "emoji": "🐍",
-    "short": "Khoá video dành cho người mới, học xong làm được mini project.",
-    "description": "Khoá video dành cho người mới, học xong làm được mini project. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "short": "Khóa video dành cho người mới, học xong làm được mini project.",
+    "description": "Khóa video dành cho người mới, học xong làm được mini project. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1094,7 +1094,7 @@
     "color": "from-fuchsia-500 to-pink-600",
     "emoji": "🧩",
     "short": "Giải thích trực quan bằng hình vẽ, code mẫu C++ và Python.",
-    "description": "Giải thích trực quan bằng hình vẽ, code mẫu C++ và Python. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Giải thích trực quan bằng hình vẽ, code mẫu C++ và Python. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1136,7 +1136,7 @@
     "color": "from-brand-500 to-brand-700",
     "emoji": "📈",
     "short": "Hồi quy, phân loại, đánh giá mô hình — thực hành với scikit-learn.",
-    "description": "Hồi quy, phân loại, đánh giá mô hình — thực hành với scikit-learn. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Hồi quy, phân loại, đánh giá mô hình — thực hành với scikit-learn. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1184,7 +1184,7 @@
     "color": "from-purple-500 to-indigo-600",
     "emoji": "⚛️",
     "short": "Hệ thống kiến thức theo chương, có bài tập tự luyện.",
-    "description": "Hệ thống kiến thức theo chương, có bài tập tự luyện. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Hệ thống kiến thức theo chương, có bài tập tự luyện. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1226,7 +1226,7 @@
     "color": "from-blue-400 to-cyan-500",
     "emoji": "🇬🇧",
     "short": "1.000 câu ngữ pháp, từ vựng và đọc hiểu theo format đề thi.",
-    "description": "1.000 câu ngữ pháp, từ vựng và đọc hiểu theo format đề thi. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "1.000 câu ngữ pháp, từ vựng và đọc hiểu theo format đề thi. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1328,7 +1328,7 @@
     "color": "from-stone-500 to-stone-700",
     "emoji": "📝",
     "short": "Template Word + checklist trình bày, trích dẫn tài liệu tham khảo.",
-    "description": "Template Word + checklist trình bày, trích dẫn tài liệu tham khảo. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Template Word + checklist trình bày, trích dẫn tài liệu tham khảo. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",
@@ -1369,7 +1369,7 @@
     "color": "from-zinc-600 to-zinc-800",
     "emoji": "🖥️",
     "short": "Tiến trình, luồng, lập lịch CPU, quản lý bộ nhớ và deadlock.",
-    "description": "Tiến trình, luồng, lập lịch CPU, quản lý bộ nhớ và deadlock. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    "description": "Tiến trình, luồng, lập lịch CPU, quản lý bộ nhớ và deadlock. Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
     "includes": [
       "Truy cập trọn đời, cập nhật miễn phí",
       "Học trên mọi thiết bị",

@@ -1,7 +1,7 @@
 """Nhật ký hành động (audit log): ai làm gì, với đối tượng nào, lúc nào, từ IP nào.
 
-Ghi cho mọi thao tác thay đổi dữ liệu trong khu admin và các thao tác nhạy cảm của người dùng (tự xoá tài khoản).
-Bản ghi độc lập với đối tượng gốc (lưu email actor và tóm tắt dạng chữ) nên vẫn đọc được sau khi đối tượng bị xoá.
+Ghi cho mọi thao tác thay đổi dữ liệu trong khu admin và các thao tác nhạy cảm của người dùng (tự xóa tài khoản).
+Bản ghi độc lập với đối tượng gốc (lưu email actor và tóm tắt dạng chữ) nên vẫn đọc được sau khi đối tượng bị xóa.
 """
 from fastapi import Request
 from sqlalchemy.orm import Session

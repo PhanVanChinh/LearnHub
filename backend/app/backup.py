@@ -1,7 +1,7 @@
 """Backup / restore toàn bộ DB bằng Python thuần (không cần pg_dump), chạy được trên SQLite lẫn Postgres.
 
 Dump: mọi bảng → JSON (theo thứ tự FK) → gzip → S3 (backups/learnhub-YYYYmmdd-HHMMSS.json.gz) hoặc file local.
-Giữ lại BACKUP_KEEP bản mới nhất trên S3. Restore: xoá dữ liệu hiện có rồi nạp lại theo đúng thứ tự FK.
+Giữ lại BACKUP_KEEP bản mới nhất trên S3. Restore: xóa dữ liệu hiện có rồi nạp lại theo đúng thứ tự FK.
 
     python backup_db.py                 # dump lên S3 (cần S3_*), hoặc --out file.json.gz
     python restore_db.py file.json.gz   # hoặc restore_db.py s3://<key> ; hỏi xác nhận trước khi ghi đè
@@ -69,7 +69,7 @@ def restore(db: Session, blob: bytes) -> dict[str, int]:
                 db.execute(t.insert(), [{k: _decode(cols.get(k), v) for k, v in r.items() if k in cols} for r in rows])
             counts[t.name] = len(rows)
         if not settings.is_sqlite:
-            # Postgres: đưa sequence id về đúng max(id) để insert mới không trùng khoá
+            # Postgres: đưa sequence id về đúng max(id) để insert mới không trùng khóa
             for t in tables:
                 if "id" in t.columns:
                     db.execute(text(f"SELECT setval(pg_get_serial_sequence('{t.name}', 'id'), COALESCE((SELECT MAX(id) FROM {t.name}), 0) + 1, false)"))
@@ -86,7 +86,7 @@ def backup_key(now: datetime | None = None) -> str:
 
 
 def upload_and_rotate(blob: bytes, keep: int | None = None) -> str:
-    """Đưa dump lên S3, xoá bản cũ vượt quá `keep`. Trả key vừa ghi."""
+    """Đưa dump lên S3, xóa bản cũ vượt quá `keep`. Trả key vừa ghi."""
     if not storage.enabled():
         raise RuntimeError("Chưa cấu hình S3_* — không có nơi lưu backup. Dùng --out để ghi file local")
     key = backup_key()
@@ -95,7 +95,7 @@ def upload_and_rotate(blob: bytes, keep: int | None = None) -> str:
     old = sorted(list_backups())[:-keep] if keep > 0 else []
     for k in old:
         storage.delete(k)
-    log.info("Backup %s (%d KB); giữ %d bản, xoá %d bản cũ", key, len(blob) // 1024, keep, len(old))
+    log.info("Backup %s (%d KB); giữ %d bản, xóa %d bản cũ", key, len(blob) // 1024, keep, len(old))
     return key
 
 

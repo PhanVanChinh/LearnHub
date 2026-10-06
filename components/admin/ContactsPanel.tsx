@@ -24,7 +24,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
     try { await adminApi.toggleContactReplied(m.id); load(); onChanged(); } catch (e) { setError((e as Error).message); }
   };
   const remove = async (m: AdminContact) => {
-    if (!confirm(`Xoá tin nhắn của ${m.email}? Không khôi phục được.`)) return;
+    if (!confirm(`Xóa tin nhắn của ${m.email}? Không khôi phục được.`)) return;
     try { await adminApi.deleteContact(m.id); load(); onChanged(); } catch (e) { setError((e as Error).message); }
   };
   const replyHref = (m: AdminContact) =>
@@ -72,7 +72,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
                     <button onClick={() => toggle(m)} className={`${m.status === "new" ? "btn-outline-success" : "btn-outline"} btn-sm`}>
                       {m.status === "new" ? "✓ Đã trả lời" : "↩ Chưa trả lời"}
                     </button>
-                    <button onClick={() => remove(m)} className="btn-outline-danger ml-auto btn-sm">Xoá</button>
+                    <button onClick={() => remove(m)} className="btn-outline-danger ml-auto btn-sm">Xóa</button>
                     {m.replied_at && <span className="w-full text-xs text-slate-500">Đã trả lời lúc {fmt(m.replied_at)}</span>}
                   </div>
                 </div>

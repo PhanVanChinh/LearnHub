@@ -1,4 +1,4 @@
-"""Xác minh Google ID token (Google Identity Services) bằng khoá công khai của Google.
+"""Xác minh Google ID token (Google Identity Services) bằng khóa công khai của Google.
 
 Frontend nhận `credential` (JWT RS256) từ nút Google rồi gửi lên; backend kiểm tra chữ ký, audience (client id),
 issuer, hạn dùng và cờ email_verified. Không cần Client Secret.
@@ -38,11 +38,11 @@ def verify_id_token(credential: str) -> dict:
     try:
         kid = jwt.get_unverified_header(credential).get("kid")
         key = next((k for k in _keys() if k.get("kid") == kid), None)
-        if key is None:  # khoá xoay vòng → tải lại một lần
+        if key is None:  # khóa xoay vòng → tải lại một lần
             _certs["fetched_at"] = 0.0
             key = next((k for k in _keys() if k.get("kid") == kid), None)
         if key is None:
-            raise JWTError("Không tìm thấy khoá ký")
+            raise JWTError("Không tìm thấy khóa ký")
         claims = jwt.decode(credential, key, algorithms=["RS256"], audience=settings.google_client_id, issuer=ISSUERS)
     except (JWTError, httpx.HTTPError, KeyError, ValueError) as e:
         log.warning("Google token không hợp lệ: %s", e)

@@ -11,7 +11,7 @@ LESSONS = [
         {"name": "Slide chương 1.pdf", "kind": "file", "key": "courses/att-test/abc-slide.pdf", "size": 12345, "content_type": "application/pdf"},
         {"name": "Tài liệu tham khảo", "kind": "link", "url": "https://drive.google.com/x"},
     ]},
-    {"title": "Bài khoá", "duration": "05:00", "attachments": [
+    {"title": "Bài khóa", "duration": "05:00", "attachments": [
         {"name": "Đề mẫu.docx", "kind": "file", "key": "courses/att-test/def-de.docx", "size": 999, "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
     ]},
 ]
@@ -52,7 +52,7 @@ def test_attachments_public_metadata_hidden_secrets(client, monkeypatch):
     r = client.get("/api/courses/att-test/lessons/0/attachments/1/download")
     assert r.json()["url"] == "https://drive.google.com/x" and r.json()["expires_in"] is None
     assert client.get("/api/courses/att-test/lessons/0/attachments/5/download").status_code == 404
-    # bài khoá: 401 → 403 → 200 sau ghi danh
+    # bài khóa: 401 → 403 → 200 sau ghi danh
     assert client.get("/api/courses/att-test/lessons/1/attachments/0/download").status_code == 401
     r = client.post("/api/auth/register", json={"email": "att@example.com", "full_name": "A", "password": "MatKhau2024"})
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
@@ -82,7 +82,7 @@ def test_admin_upload(client, monkeypatch):
     assert client.post("/api/admin/uploads", data={"course_slug": "att-test"}, files={"file": ("a.pdf", io.BytesIO(b"x"), "application/pdf")}, headers=admin).status_code == 413
     monkeypatch.setattr(settings, "upload_max_mb", 50)
 
-    # người thường không upload; xoá cần key hợp lệ
+    # người thường không upload; xóa cần key hợp lệ
     assert client.post("/api/admin/uploads", data={"course_slug": "att-test"}, files=files).status_code == 401
     assert client.delete("/api/admin/uploads", params={"key": "../etc/passwd"}, headers=admin).status_code == 400
     assert client.delete("/api/admin/uploads", params={"key": up["key"]}, headers=admin).status_code == 204

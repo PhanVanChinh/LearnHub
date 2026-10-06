@@ -52,7 +52,7 @@ export default function AiCheckTool() {
       {/* Trạng thái / điều kiện dùng */}
       {status === null && <Notice tone="rose" text="Không kết nối được máy chủ. Hãy kiểm tra backend đã chạy chưa." />}
       {status && !status.enabled && (
-        <Notice tone="amber" text="AI Check chưa được kích hoạt trên hệ thống này (thiếu khoá dịch vụ phân tích). Quản trị viên cần cấu hình trước khi dùng." />
+        <Notice tone="amber" text="AI Check chưa được kích hoạt trên hệ thống này (thiếu khóa dịch vụ phân tích). Quản trị viên cần cấu hình trước khi dùng." />
       )}
       {status?.enabled && !loading && !user && (
         <Notice tone="brand" text="Đăng nhập để dùng AI Check. Mỗi tài khoản có hạn mức lượt kiểm tra mỗi ngày.">
@@ -84,7 +84,7 @@ export default function AiCheckTool() {
             {busy ? `Đang phân tích… ${elapsed}s` : "Kiểm tra ngay"}
           </button>
         </div>
-        {busy && <p className="mt-2 text-xs text-slate-500">Claude đang đọc toàn bộ văn bản, thường mất 15–60 giây tuỳ độ dài.</p>}
+        {busy && <p className="mt-2 text-xs text-slate-500">Claude đang đọc toàn bộ văn bản, thường mất 15–60 giây tùy độ dài.</p>}
         {error && <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 

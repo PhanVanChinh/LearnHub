@@ -24,7 +24,7 @@ def get_db():
 
 
 def migrate() -> None:
-    """Thêm cột mới vào bảng đã tồn tại. Chỉ thêm, không xoá/đổi kiểu — đủ cho dự án nhỏ, không cần Alembic."""
+    """Thêm cột mới vào bảng đã tồn tại. Chỉ thêm, không xóa/đổi kiểu — đủ cho dự án nhỏ, không cần Alembic."""
     from sqlalchemy import inspect, text
 
     insp = inspect(engine)
@@ -48,7 +48,7 @@ def migrate() -> None:
         with engine.begin() as conn:
             if "email_verified_at" not in cols:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN email_verified_at {DT}"))
-                # Tài khoản có từ trước quy tắc xác thực → coi như đã xác thực để không bị khoá đột ngột
+                # Tài khoản có từ trước quy tắc xác thực → coi như đã xác thực để không bị khóa đột ngột
                 conn.execute(text("UPDATE users SET email_verified_at = created_at WHERE email_verified_at IS NULL"))
             if "password_changed_at" not in cols:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN password_changed_at {DT}"))

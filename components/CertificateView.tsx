@@ -91,7 +91,7 @@ function CertificateCard({ cert }: { cert: Certificate }) {
       </div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${cert.valid ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
         <span className="text-lg">{cert.valid ? "✅" : "⚠️"}</span>
-        <span>{cert.valid ? `Chứng nhận hợp lệ, do ${site.name} cấp cho ${cert.holder_name}.` : "Tài khoản của người nhận đã bị khoá hoặc xoá; chứng nhận không còn xác thực được."}</span>
+        <span>{cert.valid ? `Chứng nhận hợp lệ, do ${site.name} cấp cho ${cert.holder_name}.` : "Tài khoản của người nhận đã bị khóa hoặc xóa; chứng nhận không còn xác thực được."}</span>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <button onClick={download} className="btn-primary">⬇ Tải ảnh PNG</button>

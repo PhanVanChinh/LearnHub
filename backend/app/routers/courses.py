@@ -33,7 +33,7 @@ CATEGORY_LABELS = {
 @router.get("", response_model=list[schemas.CourseOut])
 def list_courses(
     category: str | None = Query(None, description="all | ai-check | pdf | quiz | free | source | video"),
-    q: str | None = Query(None, description="Từ khoá tìm trong tiêu đề / mô tả ngắn"),
+    q: str | None = Query(None, description="Từ khóa tìm trong tiêu đề / mô tả ngắn"),
     featured: bool | None = None,
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),

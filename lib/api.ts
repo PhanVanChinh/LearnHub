@@ -91,7 +91,7 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
 export const authApi = {
   config: () => api<AuthConfig>("/api/auth/config"),
   logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
-  /** Xoá cookie refresh trên thiết bị này */
+  /** Xóa cookie refresh trên thiết bị này */
   logout: () => api<void>("/api/auth/logout", { method: "POST" }),
   google: (credential: string) => api<Token>("/api/auth/google", { method: "POST", body: JSON.stringify({ credential }) }),
   linkGoogle: (credential: string) => api<User>("/api/auth/google/link", { method: "POST", body: JSON.stringify({ credential }) }),

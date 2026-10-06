@@ -1,4 +1,4 @@
-"""Refresh token trong cookie httpOnly: đặt khi đăng nhập, dùng được không cần body, xoá khi logout, chế độ chỉ-cookie."""
+"""Refresh token trong cookie httpOnly: đặt khi đăng nhập, dùng được không cần body, xóa khi logout, chế độ chỉ-cookie."""
 from app.config import settings
 
 COOKIE = "learnhub_refresh"
@@ -20,7 +20,7 @@ def test_cookie_set_and_refresh_without_body(client):
     assert r2.status_code == 200 and r2.json()["access_token"] and COOKIE in r2.headers["set-cookie"]
     assert client.get("/api/auth/me", headers={"Authorization": f"Bearer {r2.json()['access_token']}"}).status_code == 200
 
-    # logout → cookie bị xoá → refresh 401
+    # logout → cookie bị xóa → refresh 401
     r3 = client.post("/api/auth/logout")
     assert r3.status_code == 204 and ("Max-Age=0" in r3.headers["set-cookie"] or "expires=" in r3.headers["set-cookie"].lower())
     client.cookies.clear()
@@ -36,7 +36,7 @@ def test_cookie_only_mode_hides_token_from_json(client, monkeypatch):
     r = client.post("/api/auth/login", json={"email": "ck2@example.com", "password": "MatKhau2024"})
     assert r.json()["refresh_token"] is None
     assert client.post("/api/auth/refresh").status_code == 200
-    # cookie hỏng → 401 và server ra lệnh xoá cookie
+    # cookie hỏng → 401 và server ra lệnh xóa cookie
     client.cookies.clear()
     client.cookies.set(COOKIE, "rac", path="/api/auth")
     r = client.post("/api/auth/refresh")

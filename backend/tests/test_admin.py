@@ -89,7 +89,7 @@ def test_user_crud(client, admin, user):
     assert r.json()["email"] == "mod@test.vn" and r.json()["role"] == "admin"
     assert client.post("/api/admin/users", json={"email": "mod@test.vn", "full_name": "x", "password": "secret123"}, headers=admin).status_code == 409
 
-    # update: thăng quyền + đổi mật khẩu + khoá
+    # update: thăng quyền + đổi mật khẩu + khóa
     r = client.patch(f"/api/admin/users/{uid}", json={"role": "admin", "password": "newpass123"}, headers=admin)
     assert r.status_code == 200 and r.json()["role"] == "admin"
     assert client.post("/api/auth/login", json={"email": "user@test.vn", "password": "newpass123"}).status_code == 200
@@ -98,7 +98,7 @@ def test_user_crud(client, admin, user):
     assert client.post("/api/auth/login", json={"email": "user@test.vn", "password": "newpass123"}).status_code == 403
     client.patch(f"/api/admin/users/{uid}", json={"is_active": True}, headers=admin)
 
-    # không tự hạ quyền / tự khoá / tự xoá
+    # không tự hạ quyền / tự khóa / tự xóa
     me = client.get("/api/auth/me", headers=admin).json()["id"]
     assert client.patch(f"/api/admin/users/{me}", json={"role": "user"}, headers=admin).status_code == 400
     assert client.patch(f"/api/admin/users/{me}", json={"is_active": False}, headers=admin).status_code == 400
@@ -129,7 +129,7 @@ def test_enrollment_admin(client, admin, user):
     lst = client.get("/api/admin/enrollments", params={"user_id": uid}, headers=admin).json()
     assert lst["total"] == 1 and lst["items"][0]["id"] == eid
 
-    # xoá ghi danh
+    # xóa ghi danh
     assert client.delete(f"/api/admin/enrollments/{eid}", headers=admin).status_code == 204
     assert client.delete(f"/api/admin/enrollments/{eid}", headers=admin).status_code == 404
     assert client.get("/api/courses/me/enrolled", headers=headers).json() == []

@@ -27,7 +27,7 @@ function save(patch: Saved) {
 /** Nút nhạc nền nổi ở góc dưới phải: bấm để bật/tạm dừng, rê chuột / focus / chạm thì mở rộng thành thanh
  *  có tên bài, nút đổi bài, tắt tiếng và thanh trượt âm lượng (mức đã chọn được nhớ giữa các lần vào web).
  *  Đang phát mà thu gọn thì nút hiện sóng nhạc thay cho biểu tượng. Tên bài được đăng ký với hệ điều hành
- *  (Media Session) nên hiện trên màn hình khoá và điều khiển được bằng phím media / tai nghe. Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
+ *  (Media Session) nên hiện trên màn hình khóa và điều khiển được bằng phím media / tai nghe. Bài chọn ngẫu nhiên, hết bài tự sang bài khác.
  *  Nằm trong layout nên đổi trang không ngắt nhạc. Trình duyệt chặn tự phát có tiếng → chỉ phát sau khi người dùng bấm. */
 export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -164,7 +164,7 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
     el.play().catch(() => setError(true));
   }, [src]);
 
-  // Media Session: tên bài trên màn hình khoá / trung tâm điều khiển, phím media và tai nghe điều khiển được.
+  // Media Session: tên bài trên màn hình khóa / trung tâm điều khiển, phím media và tai nghe điều khiển được.
   const title = track?.title;
   useEffect(() => {
     if (!title || !("mediaSession" in navigator)) return;

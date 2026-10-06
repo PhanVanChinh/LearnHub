@@ -58,7 +58,7 @@ def google_login(payload: schemas.GoogleLoginIn, response: Response, db: Session
     user = db.query(User).filter(User.google_sub == claims["sub"]).first() or db.query(User).filter(User.email == email).first()
     if user:
         if not user.is_active:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khoá")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khóa")
         if user.google_sub and user.google_sub != claims["sub"]:
             raise HTTPException(status.HTTP_409_CONFLICT, "Email này đã liên kết với một tài khoản Google khác")
         user.google_sub = claims["sub"]  # liên kết (hoặc giữ nguyên)
@@ -199,7 +199,7 @@ def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(
     now = datetime.utcnow()
     if user.locked_until and user.locked_until > now:
         left = int((user.locked_until - now).total_seconds() // 60) + 1
-        raise HTTPException(status.HTTP_423_LOCKED, f"Tài khoản tạm khoá do đăng nhập sai nhiều lần. Thử lại sau {left} phút hoặc dùng Quên mật khẩu")
+        raise HTTPException(status.HTTP_423_LOCKED, f"Tài khoản tạm khóa do đăng nhập sai nhiều lần. Thử lại sau {left} phút hoặc dùng Quên mật khẩu")
     if not user.has_password:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                             "Tài khoản này đăng nhập bằng Google. Hãy dùng nút Google, hoặc đặt mật khẩu qua Quên mật khẩu")
@@ -210,12 +210,12 @@ def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(
             user.locked_until = now + timedelta(minutes=settings.login_lockout_minutes)
             user.failed_login_attempts = 0
             db.commit()
-            raise HTTPException(status.HTTP_423_LOCKED, f"Sai mật khẩu {settings.login_max_failures} lần, tài khoản tạm khoá {settings.login_lockout_minutes} phút")
+            raise HTTPException(status.HTTP_423_LOCKED, f"Sai mật khẩu {settings.login_max_failures} lần, tài khoản tạm khóa {settings.login_lockout_minutes} phút")
         db.commit()
         hint = f" (còn {left} lần thử)" if left <= 2 else ""
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"Email hoặc mật khẩu không đúng{hint}")
     if not user.is_active:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khoá")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khóa")
     user.failed_login_attempts = 0
     user.locked_until = None
     user.last_login_at = now
@@ -231,7 +231,7 @@ def refresh(request: Request, response: Response, payload: schemas.RefreshIn | N
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Chưa đăng nhập")
     user = user_from_token(token, db, kind="refresh")
     if not user:
-        # Không raise HTTPException: header Set-Cookie trên `response` sẽ bị bỏ → trả JSONResponse riêng kèm lệnh xoá cookie hỏng
+        # Không raise HTTPException: header Set-Cookie trên `response` sẽ bị bỏ → trả JSONResponse riêng kèm lệnh xóa cookie hỏng
         bad = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"})
         clear_refresh_cookie(bad)
         return bad
@@ -240,7 +240,7 @@ def refresh(request: Request, response: Response, payload: schemas.RefreshIn | N
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(response: Response):
-    """Xoá cookie refresh trên thiết bị này. Access token còn hạn vẫn dùng được tới khi hết (tối đa 60 phút)."""
+    """Xóa cookie refresh trên thiết bị này. Access token còn hạn vẫn dùng được tới khi hết (tối đa 60 phút)."""
     clear_refresh_cookie(response)
 
 
@@ -339,7 +339,7 @@ def reset_password(payload: schemas.ResetPasswordIn, db: Session = Depends(get_d
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn")
     user = rec.user
     if not user.is_active:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khoá")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khóa")
     _set_password(db, user, payload.new_password)
     if not user.email_verified:  # nhận được mail = sở hữu email
         user.email_verified_at = datetime.utcnow()

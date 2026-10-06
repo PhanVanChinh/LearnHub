@@ -1,4 +1,4 @@
-"""Chống lạm dụng: rate limit, khoá tạm khi sai mật khẩu, refresh token, đăng xuất mọi thiết bị, captcha."""
+"""Chống lạm dụng: rate limit, khóa tạm khi sai mật khẩu, refresh token, đăng xuất mọi thiết bị, captcha."""
 from datetime import datetime, timedelta
 
 import pytest
@@ -50,10 +50,10 @@ def test_login_lockout(client, account):
         assert r.status_code == 401
     assert "còn 1 lần" in r.json()["detail"]
     r = login(client, "sai-mat-khau-1")
-    assert r.status_code == 423 and "tạm khoá" in r.json()["detail"]
-    # đúng mật khẩu cũng bị chặn khi đang khoá
+    assert r.status_code == 423 and "tạm khóa" in r.json()["detail"]
+    # đúng mật khẩu cũng bị chặn khi đang khóa
     assert login(client).status_code == 423
-    # hết hạn khoá → đăng nhập lại được, bộ đếm reset, last_login_at cập nhật
+    # hết hạn khóa → đăng nhập lại được, bộ đếm reset, last_login_at cập nhật
     db = SessionLocal()
     u = db.query(User).filter_by(email="abuse@example.com").one()
     u.locked_until = datetime.utcnow() - timedelta(seconds=1)

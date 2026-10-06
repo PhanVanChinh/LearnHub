@@ -65,7 +65,7 @@ const base = (
   short,
   description:
     short +
-    " Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh hoạ và phần luyện tập để bạn tự kiểm tra kiến thức.",
+    " Nội dung được biên soạn bám sát đề cương môn học, kèm ví dụ minh họa và phần luyện tập để bạn tự kiểm tra kiến thức.",
   includes: [
     "Truy cập trọn đời, cập nhật miễn phí",
     "Học trên mọi thiết bị",
@@ -84,7 +84,7 @@ const base = (
 export const courses: Course[] = [
   base(
     "ai-check-dao-van-khoa-luan",
-    "Gói AI Check mở rộng — Khoá luận, tiểu luận",
+    "Gói AI Check mở rộng — Khóa luận, tiểu luận",
     "ai-check",
     20000,
     "🤖",
@@ -154,7 +154,7 @@ export const courses: Course[] = [
     15000,
     "🗄️",
     "from-cyan-500 to-sky-600",
-    "Đại số quan hệ, chuẩn hoá, SQL và thiết kế ERD qua 400+ câu hỏi.",
+    "Đại số quan hệ, chuẩn hóa, SQL và thiết kế ERD qua 400+ câu hỏi.",
   ),
   base(
     "pdf-de-thi-giai-tich-1",
@@ -237,7 +237,7 @@ export const courses: Course[] = [
     20000,
     "🐍",
     "from-yellow-400 to-amber-600",
-    "Khoá video dành cho người mới, học xong làm được mini project.",
+    "Khóa video dành cho người mới, học xong làm được mini project.",
     { featured: true },
   ),
   base(

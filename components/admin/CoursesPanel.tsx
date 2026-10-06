@@ -26,7 +26,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
   const create = async (body: CourseInput) => { await adminApi.createCourse(body); done(); };
   const update = (id: number) => async (body: CourseInput) => { await adminApi.updateCourse(id, body); done(); };
   const remove = async (c: AdminCourse) => {
-    if (!confirm(`Xoá khóa học "${c.title}"?\n${c.enrollment_count} ghi danh liên quan cũng sẽ bị xoá.`)) return;
+    if (!confirm(`Xóa khóa học "${c.title}"?\n${c.enrollment_count} ghi danh liên quan cũng sẽ bị xóa.`)) return;
     try { await adminApi.deleteCourse(c.id); done(); } catch (e) { setError((e as Error).message); }
   };
   const toggleFeatured = async (c: AdminCourse) => {
@@ -105,7 +105,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
                 </td>
                 <td className={`${tdCls} whitespace-nowrap text-right`}>
                   <button onClick={() => setModal(c)} className="btn-outline btn-xs">Sửa</button>
-                  <button onClick={() => remove(c)} className="btn-outline-danger ml-1 btn-xs">Xoá</button>
+                  <button onClick={() => remove(c)} className="btn-outline-danger ml-1 btn-xs">Xóa</button>
                 </td>
               </tr>
             ))}
