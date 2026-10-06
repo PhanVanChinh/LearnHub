@@ -101,6 +101,10 @@ class Enrollment(Base):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Vị trí xem gần nhất để "Học tiếp" mở đúng bài, đúng giây (lesson_id = mã bài cố định, app/lessons.py)
+    last_lesson_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    last_seconds: Mapped[int] = mapped_column(Integer, default=0)
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     user: Mapped[User] = relationship(back_populates="enrollments")
     course: Mapped[Course] = relationship(back_populates="enrollments")

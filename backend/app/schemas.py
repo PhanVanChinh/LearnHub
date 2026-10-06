@@ -358,6 +358,13 @@ class Progress(BaseModel):
     total: int
     percent: int
     next_index: int | None = Field(None, description="Bài chưa học đầu tiên; None nếu đã xong hết")
+    last_index: int | None = Field(None, description="Bài xem gần nhất (None nếu chưa xem hoặc bài đã bị xóa)")
+    last_seconds: int = Field(0, description="Giây đang xem trong video của bài gần nhất")
+
+
+class PositionIn(BaseModel):
+    index: int = Field(ge=0)
+    seconds: int = Field(0, ge=0, le=86_400)
 
 
 class EnrolledCourseOut(CourseOut):

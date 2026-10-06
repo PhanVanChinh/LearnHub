@@ -131,7 +131,7 @@ def test_progress_flow(client):
     assert client.put(f"/api/courses/{paid}/lessons/0/complete", headers=h).status_code == 403
 
     p = client.get(f"/api/courses/{free}/progress", headers=h).json()
-    assert p == {"completed": [], "total": total, "percent": 0, "next_index": 0}
+    assert p == {"completed": [], "total": total, "percent": 0, "next_index": 0, "last_index": None, "last_seconds": 0}
 
     p = client.put(f"/api/courses/{free}/lessons/0/complete", headers=h).json()
     assert p["completed"] == [0] and p["next_index"] == 1

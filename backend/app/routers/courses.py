@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import String, Text, cast, or_
 from sqlalchemy.orm import Session
@@ -316,7 +318,23 @@ def _progress(db: Session, user: User, course: Course) -> schemas.Progress:
     done = sorted({index_of[r.lesson_id] for r in db.query(LessonCompletion).filter_by(user_id=user.id, course_id=course.id).all()
                    if r.lesson_id in index_of})
     next_index = next((i for i in range(total) if i not in done), None)
-    return schemas.Progress(completed=done, total=total, percent=round(len(done) * 100 / total) if total else 0, next_index=next_index)
+    en = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first()
+    last_index = index_of.get(en.last_lesson_id) if en and en.last_lesson_id else None
+    return schemas.Progress(completed=done, total=total, percent=round(len(done) * 100 / total) if total else 0, next_index=next_index,
+                            last_index=last_index, last_seconds=en.last_seconds if en and last_index is not None else 0)
+
+
+@router.put("/{slug}/position", response_model=schemas.Progress, dependencies=[rate_limit("position", 120, 600)])
+def save_position(slug: str, payload: schemas.PositionIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Ghi bài + giây đang xem (trình phát gọi định kỳ và khi chuyển bài) để "Học tiếp" mở đúng chỗ trên mọi thiết bị."""
+    course = _require_enrolled(db, user, slug)
+    lid = lesson_id_at(course, payload.index)
+    if not lid:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy bài học")
+    en = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first()
+    en.last_lesson_id, en.last_seconds, en.last_seen_at = lid, payload.seconds, datetime.utcnow()
+    db.commit()
+    return _progress(db, user, course)
 
 
 def _require_enrolled(db: Session, user: User, slug: str) -> Course:

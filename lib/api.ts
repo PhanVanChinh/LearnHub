@@ -135,7 +135,7 @@ export type QuizResult = { score: number; total: number; percent: number; pass_p
 export type QuizAttempt = { id: number; score: number; total: number; percent: number; passed: boolean; created_at: string };
 export type QuizAttempts = { count: number; best: QuizAttempt | null; last: QuizAttempt | null };
 
-export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null };
+export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null; last_index: number | null; last_seconds: number };
 export type LessonNote = { index: number; lesson_id: string; title: string; text: string; updated_at: string | null };
 export type EnrolledCourse = { slug: string; title: string; progress: Progress };
 
@@ -148,6 +148,8 @@ export const coursesApi = {
   exportAll: () => api<CoursePublic[]>("/api/courses/export"),
   mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),
   progress: (slug: string) => api<Progress>(`/api/courses/${slug}/progress`),
+  /** Bài + giây đang xem, để "Học tiếp" mở đúng chỗ trên mọi thiết bị (trình phát gọi định kỳ) */
+  savePosition: (slug: string, index: number, seconds: number) => api<Progress>(`/api/courses/${slug}/position`, { method: "PUT", body: JSON.stringify({ index, seconds }) }),
   /** Ghi chú riêng của tôi cho một bài (cần đăng nhập; bài khóa cần ghi danh). Lưu text rỗng = xóa. */
   note: (slug: string, index: number) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`),
   saveNote: (slug: string, index: number, text: string) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`, { method: "PUT", body: JSON.stringify({ text }) }),

@@ -37,6 +37,15 @@ def migrate() -> None:
             if "hidden" not in cols:
                 default = "0" if settings.is_sqlite else "false"
                 conn.execute(text(f"ALTER TABLE courses ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT {default}"))
+    if "enrollments" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("enrollments")}
+        with engine.begin() as conn:
+            if "last_lesson_id" not in cols:
+                conn.execute(text("ALTER TABLE enrollments ADD COLUMN last_lesson_id VARCHAR(32)"))
+            if "last_seconds" not in cols:
+                conn.execute(text("ALTER TABLE enrollments ADD COLUMN last_seconds INTEGER NOT NULL DEFAULT 0"))
+            if "last_seen_at" not in cols:
+                conn.execute(text(f"ALTER TABLE enrollments ADD COLUMN last_seen_at {DT}"))
     if "quiz_attempts" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("quiz_attempts")}
         with engine.begin() as conn:

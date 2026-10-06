@@ -41,13 +41,15 @@ export default function MyCourses({ courses }: { courses: Course[] }) {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mine.map((c) => {
               const p = byId.get(c.slug)!.progress;
-              const resume = p.next_index ?? 0;
+              // Ưu tiên bài xem gần nhất (đúng chỗ đang dở), rồi mới tới bài chưa hoàn thành đầu tiên
+              const resume = p.last_index ?? p.next_index ?? 0;
+              const started = p.last_index != null || p.completed.length > 0;
               return (
                 <CourseCard key={c.slug} course={c}
                   progress={{ completed: p.completed.length, total: p.total }}
                   action={p.percent === 100
-                    ? { href: `/learn/${c.slug}?lesson=0`, label: "🎓 Xem lại / chứng nhận" }
-                    : { href: `/learn/${c.slug}?lesson=${resume}`, label: p.completed.length ? "▶ Học tiếp" : "▶ Vào học" }} />
+                    ? { href: `/learn/${c.slug}?lesson=${p.last_index ?? 0}`, label: "🎓 Xem lại / chứng nhận" }
+                    : { href: `/learn/${c.slug}?lesson=${resume}`, label: started ? `▶ Học tiếp bài ${resume + 1}` : "▶ Vào học" }} />
               );
             })}
           </div>
