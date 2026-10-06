@@ -11,6 +11,7 @@ import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
 import LessonAttachments from "./LessonAttachments";
 import LessonContent from "./LessonContent";
+import LessonNotes from "./LessonNotes";
 import ReviewPrompt from "./ReviewPrompt";
 import CertificateButton from "./CertificateButton";
 
@@ -317,6 +318,8 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           </details>
 
           {access === "granted" && lesson.content && <LessonContent markdown={lesson.content} className="mt-6" />}
+
+          {access === "granted" && user && <LessonNotes slug={course.slug} index={index} />}
 
           {!!lesson.attachments?.length && (access === "granted" || access === "enroll" || access === "login") && (
             <div className="mt-6">

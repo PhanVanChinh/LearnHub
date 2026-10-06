@@ -136,6 +136,7 @@ export type QuizAttempt = { id: number; score: number; total: number; percent: n
 export type QuizAttempts = { count: number; best: QuizAttempt | null; last: QuizAttempt | null };
 
 export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null };
+export type LessonNote = { index: number; lesson_id: string; title: string; text: string; updated_at: string | null };
 export type EnrolledCourse = { slug: string; title: string; progress: Progress };
 
 export const coursesApi = {
@@ -147,6 +148,10 @@ export const coursesApi = {
   exportAll: () => api<CoursePublic[]>("/api/courses/export"),
   mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),
   progress: (slug: string) => api<Progress>(`/api/courses/${slug}/progress`),
+  /** Ghi chú riêng của tôi cho một bài (cần đăng nhập; bài khóa cần ghi danh). Lưu text rỗng = xóa. */
+  note: (slug: string, index: number) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`),
+  saveNote: (slug: string, index: number, text: string) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`, { method: "PUT", body: JSON.stringify({ text }) }),
+  notes: (slug: string) => api<LessonNote[]>(`/api/courses/${slug}/notes`),
   complete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "PUT" }),
   uncomplete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "DELETE" }),
   /** Video của một bài: bài free → công khai; bài khác → 401 chưa đăng nhập, 403 chưa ghi danh */
