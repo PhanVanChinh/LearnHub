@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .. import schemas, storage
 from ..database import get_db
 from ..lessons import lesson_id_at
-from ..models import Course, Enrollment, LessonCompletion, QuizAttempt, User
+from ..models import Course, Enrollment, LessonCompletion, LessonNote, QuizAttempt, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, get_current_user_optional, require_verified
 
@@ -237,6 +237,54 @@ def quiz_attempts(slug: str, index: int, db: Session = Depends(get_db), user: Us
     rows = db.query(QuizAttempt).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson_id_at(course, index)).order_by(QuizAttempt.id).all()
     return schemas.QuizAttempts(count=len(rows), best=max(rows, key=lambda r: (r.percent, r.id)) if rows else None,
                                 last=rows[-1] if rows else None)
+
+
+# ---------- ghi chú theo bài ----------
+def _note_out(course: Course, lesson_id: str, note: LessonNote | None) -> schemas.LessonNoteOut:
+    lessons = course.lessons or []
+    idx = next((i for i, l in enumerate(lessons) if l.get("id") == lesson_id), -1)
+    return schemas.LessonNoteOut(index=idx, lesson_id=lesson_id, title=lessons[idx]["title"] if idx >= 0 else "",
+                                 text=note.text if note else "", updated_at=note.updated_at if note else None)
+
+
+@router.get("/{slug}/lessons/{index}/note", response_model=schemas.LessonNoteOut)
+def get_note(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Ghi chú của tôi cho bài này. Luật truy cập như video (bài free: chỉ cần đăng nhập)."""
+    course, lesson = _lesson_for_access(slug, index, db, user)
+    note = db.query(LessonNote).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson["id"]).first()
+    return _note_out(course, lesson["id"], note)
+
+
+@router.put("/{slug}/lessons/{index}/note", response_model=schemas.LessonNoteOut)
+def save_note(slug: str, index: int, payload: schemas.LessonNoteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Lưu (tạo / cập nhật) ghi chú; text rỗng → xóa."""
+    course, lesson = _lesson_for_access(slug, index, db, user)
+    note = db.query(LessonNote).filter_by(user_id=user.id, course_id=course.id, lesson_id=lesson["id"]).first()
+    text = payload.text.strip()
+    if not text:
+        if note:
+            db.delete(note)
+            db.commit()
+        return _note_out(course, lesson["id"], None)
+    if note:
+        note.text = text
+    else:
+        note = LessonNote(user_id=user.id, course_id=course.id, lesson_id=lesson["id"], text=text)
+        db.add(note)
+    db.commit()
+    db.refresh(note)
+    return _note_out(course, lesson["id"], note)
+
+
+@router.get("/{slug}/notes", response_model=list[schemas.LessonNoteOut])
+def my_notes(slug: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Mọi ghi chú của tôi trong khóa, theo thứ tự bài hiện tại (bài đã bị xóa xếp cuối)."""
+    course = db.query(Course).filter(Course.slug == slug).first()
+    if not course:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
+    rows = db.query(LessonNote).filter_by(user_id=user.id, course_id=course.id).all()
+    out = [_note_out(course, n.lesson_id, n) for n in rows]
+    return sorted(out, key=lambda n: (n.index < 0, n.index))
 
 
 @router.post("/{slug}/enroll", response_model=schemas.CourseDetail, status_code=status.HTTP_201_CREATED)

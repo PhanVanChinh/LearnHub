@@ -338,6 +338,21 @@ class LessonVideo(BaseModel):
     video: str | None = Field(None, description="YouTube ID; None nếu bài chưa có video")
 
 
+NOTE_MAX = 20_000
+
+
+class LessonNoteIn(BaseModel):
+    text: str = Field(max_length=NOTE_MAX, description="Rỗng = xóa ghi chú")
+
+
+class LessonNoteOut(BaseModel):
+    index: int
+    lesson_id: str
+    title: str
+    text: str
+    updated_at: datetime | None = None
+
+
 class Progress(BaseModel):
     completed: list[int] = Field(default_factory=list, description="Chỉ số các bài đã hoàn thành")
     total: int

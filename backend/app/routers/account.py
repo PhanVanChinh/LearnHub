@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit, schemas
 from ..database import get_db
-from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonCompletion, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
+from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonCompletion, LessonNote, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, verify_password
 from .orders import CANCELLED, PENDING
@@ -43,6 +43,10 @@ def export_user_data(db: Session, user: User) -> dict:
         "lesson_progress": [
             {"course_slug": p.course.slug, "lesson_id": p.lesson_id, "lesson_title": _lesson_title(p.course, p.lesson_id),
              "completed_at": _iso(p.completed_at)} for p in user.completions
+        ],
+        "lesson_notes": [
+            {"course_slug": n.course.slug, "lesson_id": n.lesson_id, "lesson_title": _lesson_title(n.course, n.lesson_id),
+             "text": n.text, "updated_at": _iso(n.updated_at)} for n in user.notes
         ],
         "quiz_attempts": [
             {"course_slug": a.course.slug, "lesson_id": a.lesson_id, "lesson_title": _lesson_title(a.course, a.lesson_id),
@@ -85,7 +89,7 @@ def anonymize_user(db: Session, user: User) -> None:
     """
     now = datetime.utcnow()
     uid = user.id
-    for model in (Enrollment, LessonCompletion, LessonProgress, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
+    for model in (Enrollment, LessonCompletion, LessonProgress, LessonNote, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
         db.query(model).filter(model.user_id == uid).delete(synchronize_session=False)
     db.query(Order).filter(Order.user_id == uid, Order.status == PENDING).update({"status": CANCELLED}, synchronize_session=False)
     db.query(ContactMessage).filter(ContactMessage.user_id == uid).update(

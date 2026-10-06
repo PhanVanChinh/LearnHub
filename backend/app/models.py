@@ -50,6 +50,7 @@ class User(Base):
         marks = [d for d in (self.password_changed_at, self.sessions_revoked_at) if d]
         return max(marks) if marks else None
     completions: Mapped[list["LessonCompletion"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    notes: Mapped[list["LessonNote"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     ai_checks: Mapped[list["AiCheckRun"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -83,6 +84,7 @@ class Course(Base):
 
     enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     completions: Mapped[list["LessonCompletion"]] = relationship(back_populates="course", cascade="all, delete-orphan")
+    notes: Mapped[list["LessonNote"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="course", cascade="all, delete-orphan")
     reviews: Mapped[list["Review"]] = relationship(back_populates="course", cascade="all, delete-orphan")
@@ -251,6 +253,23 @@ class LessonCompletion(Base):
 
     user: Mapped[User] = relationship(back_populates="completions")
     course: Mapped[Course] = relationship(back_populates="completions")
+
+
+class LessonNote(Base):
+    """Ghi chú riêng của người học cho một bài (Markdown/văn bản thuần), gắn với mã bài cố định. Một người một ghi chú mỗi bài."""
+
+    __tablename__ = "lesson_notes"
+    __table_args__ = (UniqueConstraint("user_id", "course_id", "lesson_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)
+    lesson_id: Mapped[str] = mapped_column(String(32))
+    text: Mapped[str] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user: Mapped[User] = relationship(back_populates="notes")
+    course: Mapped[Course] = relationship(back_populates="notes")
 
 
 class LessonProgress(Base):
