@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { AdminContact, adminApi } from "@/lib/api";
-import { ErrorBox, Pager } from "./ui";
+import { ErrorBox, Pager, useDialog } from "./ui";
 
 const LIMIT = 20;
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
@@ -23,8 +23,9 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
   const toggle = async (m: AdminContact) => {
     try { await adminApi.toggleContactReplied(m.id); load(); onChanged(); } catch (e) { setError((e as Error).message); }
   };
+  const { ask, dialog } = useDialog();
   const remove = async (m: AdminContact) => {
-    if (!confirm(`Xóa tin nhắn của ${m.email}? Không khôi phục được.`)) return;
+    if (!(await ask({ title: "Xóa tin nhắn?", message: `Tin nhắn của ${m.email} sẽ bị xóa hẳn, không khôi phục được.`, confirmLabel: "Xóa", danger: true })).ok) return;
     try { await adminApi.deleteContact(m.id); load(); onChanged(); } catch (e) { setError((e as Error).message); }
   };
   const replyHref = (m: AdminContact) =>
@@ -32,6 +33,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
 
   return (
     <div>
+      {dialog}
       <div className="flex flex-wrap items-center gap-2">
         {([["new", "Chưa trả lời"], ["replied", "Đã trả lời"], ["", "Tất cả"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setStatus(k); setOffset(0); }}

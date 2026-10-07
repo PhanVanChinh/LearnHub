@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useDialog } from "./ui";
 import { adminApi, ApiError, PublishStatus } from "@/lib/api";
 
 /** Nút "Xuất bản": kích hoạt GitHub Actions build lại site tĩnh từ DB. Người đã mở trang thấy bản mới qua API,
@@ -12,8 +13,9 @@ export default function PublishButton() {
 
   useEffect(() => { adminApi.publishStatus().then(setSt).catch(() => setSt(null)); }, []);
 
+  const { ask, dialog } = useDialog();
   const run = async () => {
-    if (!confirm("Build lại website công khai từ dữ liệu hiện tại trong DB? Mất khoảng 2 phút.")) return;
+    if (!(await ask({ title: "Xuất bản website?", message: "Build lại website công khai từ dữ liệu hiện tại trong DB. Mất khoảng 2 phút, trong lúc đó site vẫn hoạt động bình thường.", confirmLabel: "Xuất bản" })).ok) return;
     setBusy(true); setMsg(null);
     try {
       const r = await adminApi.publish();
@@ -26,6 +28,7 @@ export default function PublishButton() {
   const disabled = busy || !st?.configured || (firedAt !== null && Date.now() - firedAt < 60_000);
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+      {dialog}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="font-semibold text-slate-900">Xuất bản lên website</p>

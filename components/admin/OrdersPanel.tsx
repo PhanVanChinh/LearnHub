@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminOrder, adminApi, OrderStatus } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { ORDER_STATUS } from "@/components/MyOrders";
-import { ErrorBox, Pager, tableCls, tdCls, thCls } from "./ui";
+import { ErrorBox, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
 
 const LIMIT = 20;
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
@@ -22,12 +22,23 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
   }, [status, q, offset]);
   useEffect(load, [load]);
 
+  const { ask, dialog } = useDialog();
   const act = async (o: AdminOrder, kind: "confirm" | "cancel") => {
-    const msg = kind === "confirm"
-      ? `Xác nhận ĐÃ NHẬN ${formatVND(o.amount)} cho đơn ${o.code} của ${o.user_email}?\nKhóa "${o.course_title}" sẽ mở ngay cho người mua.\n\nGhi chú (tùy chọn, vd mã giao dịch):`
-      : `Hủy đơn ${o.code}? Ghi chú (tùy chọn):`;
-    const note = prompt(msg, "");
-    if (note === null) return;
+    const r = kind === "confirm"
+      ? await ask({
+          title: `Xác nhận đã nhận ${formatVND(o.amount)}`,
+          message: `Đơn ${o.code} của ${o.user_email}. Khóa "${o.course_title}" sẽ mở ngay cho người mua và gửi email xác nhận.`,
+          confirmLabel: "Đã nhận tiền",
+          input: { label: "Mã giao dịch / ghi chú đối soát", required: true, placeholder: "VD: FT25100412345 · VCB 14:32 · nội dung CK đúng mã" },
+        })
+      : await ask({
+          title: `Hủy đơn ${o.code}?`,
+          message: `Người mua ${o.user_email} sẽ nhận email báo đơn đã hủy. Nếu họ đã chuyển khoản, hãy đối soát trước.`,
+          confirmLabel: "Hủy đơn", danger: true,
+          input: { label: "Lý do (người mua sẽ thấy)", placeholder: "VD: Không nhận được tiền sau 24 giờ" },
+        });
+    if (!r.ok) return;
+    const note = r.value;
     setBusyId(o.id); setError("");
     try {
       if (kind === "confirm") await adminApi.confirmOrder(o.id, note); else await adminApi.cancelOrder(o.id, note);
@@ -37,6 +48,7 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
 
   return (
     <div>
+      {dialog}
       <div className="flex flex-wrap items-center gap-2">
         {([["pending", "Chờ thanh toán"], ["paid", "Đã thanh toán"], ["cancelled", "Đã hủy"], ["expired", "Hết hạn"], ["", "Tất cả"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => { setStatus(k); setOffset(0); }}

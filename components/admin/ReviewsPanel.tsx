@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Stars from "@/components/Stars";
 import { AdminCourse, AdminReview, adminApi } from "@/lib/api";
-import { ErrorBox, Pager } from "./ui";
+import { ErrorBox, Pager, useDialog } from "./ui";
 
 const LIMIT = 20;
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
@@ -27,11 +27,14 @@ export default function ReviewsPanel() {
   useEffect(load, [load]);
   useEffect(() => { adminApi.courses({ limit: 200 }).then((r) => setCourses(r.items)).catch(() => {}); }, []);
 
+  const { ask, dialog } = useDialog();
   const toggle = async (r: AdminReview) => {
-    let reason: string | null = "";
+    let reason = "";
     if (!r.hidden) {
-      reason = prompt(`Ẩn đánh giá ${r.rating}★ của ${r.user_email}?\nLý do (tùy chọn, người dùng KHÔNG thấy):`, "");
-      if (reason === null) return;
+      const d = await ask({ title: `Ẩn đánh giá ${r.rating}★ của ${r.user_email}?`, message: "Đánh giá sẽ không hiện trên trang khóa học. Người viết không được báo.",
+        confirmLabel: "Ẩn đánh giá", danger: true, input: { label: "Lý do (chỉ admin thấy)", placeholder: "VD: spam, chứa link quảng cáo" } });
+      if (!d.ok) return;
+      reason = d.value;
     }
     setBusyId(r.id); setError("");
     try { await adminApi.toggleReviewHidden(r.id, reason || undefined); load(); }
@@ -40,6 +43,7 @@ export default function ReviewsPanel() {
 
   return (
     <div>
+      {dialog}
       <div className="flex flex-wrap items-center gap-2">
         {([["", "Tất cả"], [false, "Đang hiện"], [true, "Đã ẩn"]] as const).map(([k, l]) => (
           <button key={String(k)} onClick={() => { setHidden(k); setOffset(0); }}

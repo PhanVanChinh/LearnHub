@@ -6,7 +6,7 @@ import { AdminCourse, adminApi, Attachment, CourseInput, Lesson, UploadStatus } 
 import { fmtSize } from "@/components/LessonAttachments";
 import { coverUrl } from "@/lib/cover";
 import { parseQuizText, quizToText } from "@/lib/quizText";
-import { ErrorBox, Field } from "./ui";
+import { AskFn, ErrorBox, Field, useDialog } from "./ui";
 import LessonContent from "@/components/LessonContent";
 
 const COLORS = [
@@ -71,6 +71,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   const [busy, setBusy] = useState(false);
 
   const set = <K extends keyof typeof f>(k: K, v: (typeof f)[K]) => setF((s) => ({ ...s, [k]: v }));
+  const { ask, dialog } = useDialog();
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -106,6 +107,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {dialog}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Tiêu đề">
           <input className="input" required value={f.title} onChange={(e) => { set("title", e.target.value); if (autoSlug) set("slug", slugify(e.target.value)); }} />
@@ -158,7 +160,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
       </div>
       <ContentEditor lessonsText={f.lessons} content={content} setContent={setContent} lesson={quizLesson} setLesson={setQuizLesson} />
       <QuizEditor lessonsText={f.lessons} quizText={quizText} setQuizText={setQuizText} lesson={quizLesson} setLesson={setQuizLesson} />
-      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} setLesson={setQuizLesson} />
+      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} setLesson={setQuizLesson} ask={ask} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={f.featured} onChange={(e) => set("featured", e.target.checked)} />
         Nổi bật (hiển thị ở trang chủ)
@@ -270,9 +272,9 @@ function QuizEditor({ lessonsText, quizText, setQuizText, lesson, setLesson }: {
 
 
 /** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu. */
-function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, setLesson }: {
+function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, setLesson, ask }: {
   lessonsText: string; slug: string; attachments: Record<number, Attachment[]>;
-  setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; setLesson: (i: number) => void;
+  setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; setLesson: (i: number) => void; ask: AskFn;
 }) {
   const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
   const idx = Math.min(lesson, Math.max(0, titles.length - 1));
@@ -307,7 +309,7 @@ function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, less
   };
   const remove = async (i: number) => {
     const a = list[i];
-    if (!confirm(`Gỡ «${a.name}» khỏi bài này?${a.kind === "file" ? " File cũng bị xóa khỏi kho lưu trữ." : ""}`)) return;
+    if (!(await ask({ title: `Gỡ «${a.name}»?`, message: a.kind === "file" ? "File cũng bị xóa khỏi kho lưu trữ, không khôi phục được." : "Chỉ gỡ link khỏi bài.", confirmLabel: "Gỡ", danger: true })).ok) return;
     if (a.kind === "file" && a.key) { try { await adminApi.deleteUpload(a.key); } catch { /* file có thể đã mất; vẫn gỡ khỏi bài */ } }
     update(list.filter((_, j) => j !== i));
   };

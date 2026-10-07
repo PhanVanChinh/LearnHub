@@ -5,7 +5,7 @@ import { AdminCourse, adminApi, CourseInput } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { categories } from "@/data/courses";
 import CourseForm from "./CourseForm";
-import { Badge, ErrorBox, Modal, Pager, tableCls, tdCls, thCls } from "./ui";
+import { Badge, ErrorBox, Modal, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
 
 const LIMIT = 20;
 
@@ -25,8 +25,14 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
   const done = () => { setModal(null); load(); onChanged(); };
   const create = async (body: CourseInput) => { await adminApi.createCourse(body); done(); };
   const update = (id: number) => async (body: CourseInput) => { await adminApi.updateCourse(id, body); done(); };
+  const { ask, notify, dialog } = useDialog();
   const remove = async (c: AdminCourse) => {
-    if (!confirm(`Xóa khóa học "${c.title}"?\n${c.enrollment_count} ghi danh liên quan cũng sẽ bị xóa.`)) return;
+    const r = await ask({
+      title: `Xóa khóa học "${c.title}"?`,
+      message: `${c.enrollment_count} ghi danh liên quan cũng bị xóa. Khóa có đơn đã thanh toán sẽ bị từ chối — hãy dùng "Ẩn" thay vì xóa.`,
+      confirmLabel: "Xóa khóa học", danger: true,
+    });
+    if (!r.ok) return;
     try { await adminApi.deleteCourse(c.id); done(); } catch (e) { setError((e as Error).message); }
   };
   const toggleFeatured = async (c: AdminCourse) => {
@@ -40,17 +46,23 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
     setBusy(true); setError("");
     try {
       const dry = await adminApi.hideEmptyCourses(true);
-      if (!dry.hidden) { alert("Không có khóa nào trống để ẩn."); return; }
+      if (!dry.hidden) { await notify("Không có khóa nào trống để ẩn."); return; }
       const kept = dry.skipped_enrolled.length ? `\n\n${dry.skipped_enrolled.length} khóa trống nhưng đã có người ghi danh sẽ KHÔNG bị ẩn.` : "";
-      if (!confirm(`Ẩn ${dry.hidden} khóa chưa có nội dung?\n\n${dry.slugs.slice(0, 12).join("\n")}${dry.slugs.length > 12 ? "\n…" : ""}${kept}`)) return;
+      const ok = (await ask({
+        title: `Ẩn ${dry.hidden} khóa chưa có nội dung?`,
+        message: `${dry.slugs.slice(0, 12).join("\n")}${dry.slugs.length > 12 ? "\n…" : ""}${kept}`,
+        confirmLabel: `Ẩn ${dry.hidden} khóa`,
+      })).ok;
+      if (!ok) return;
       const r = await adminApi.hideEmptyCourses();
       load(); onChanged();
-      alert(`Đã ẩn ${r.hidden} khóa. Bấm "Xuất bản" để website cập nhật.`);
+      await notify(`Đã ẩn ${r.hidden} khóa.`, "Bấm \"Xuất bản\" để website công khai cập nhật.");
     } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
 
   return (
     <div>
+      {dialog}
       <div className="flex flex-wrap items-center gap-2">
         <input className="input max-w-xs" placeholder="Tìm tiêu đề / slug…" value={q} onChange={(e) => { setQ(e.target.value); setOffset(0); }} />
         <select className="input max-w-[12rem]" value={category} onChange={(e) => { setCategory(e.target.value); setOffset(0); }}>

@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AdminCourse, AdminEnrollment, AdminUser, adminApi } from "@/lib/api";
-import { ErrorBox, Field, Pager, tableCls, tdCls, thCls } from "./ui";
+import { ErrorBox, Field, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
 
 const LIMIT = 20;
 
@@ -28,13 +28,15 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
       setForm({ user_id: "", course_id: "" }); load(); onChanged();
     } catch (err) { setError((err as Error).message); } finally { setBusy(false); }
   };
+  const { ask, dialog } = useDialog();
   const revoke = async (en: AdminEnrollment) => {
-    if (!confirm(`Thu hồi quyền truy cập "${en.course_title}" của ${en.user_email}?`)) return;
+    if (!(await ask({ title: "Thu hồi quyền truy cập?", message: `${en.user_email} sẽ không học được "${en.course_title}" nữa. Tiến độ và ghi chú của họ vẫn giữ nếu được cấp lại.`, confirmLabel: "Thu hồi", danger: true })).ok) return;
     try { await adminApi.deleteEnrollment(en.id); load(); onChanged(); } catch (err) { setError((err as Error).message); }
   };
 
   return (
     <div>
+      {dialog}
       <form onSubmit={grant} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <Field label="Người dùng">
           <select className="input" required value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })}>

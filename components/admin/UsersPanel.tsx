@@ -2,7 +2,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { AdminUser, adminApi } from "@/lib/api";
-import { Badge, ErrorBox, Field, Modal, Pager, tableCls, tdCls, thCls } from "./ui";
+import { Badge, ErrorBox, Field, Modal, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
 
 const LIMIT = 20;
 type Role = "user" | "admin";
@@ -24,13 +24,19 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
 
   const toggleActive = (u: AdminUser) => act(() => adminApi.updateUser(u.id, { is_active: !u.is_active }));
   const toggleRole = (u: AdminUser) => act(() => adminApi.updateUser(u.id, { role: u.role === "admin" ? "user" : "admin" }));
-  const remove = (u: AdminUser) => {
-    if (!confirm(`Xóa người dùng ${u.email}?\n${u.enrollment_count} ghi danh của họ cũng sẽ bị xóa.`)) return;
-    act(() => adminApi.deleteUser(u.id));
+  const { ask, dialog } = useDialog();
+  const remove = async (u: AdminUser) => {
+    const r = await ask({
+      title: `Xóa người dùng ${u.email}?`,
+      message: `${u.enrollment_count} ghi danh, tiến độ và ghi chú của họ bị xóa. Nếu họ có đơn đã thanh toán, tài khoản chỉ bị ẩn danh và khóa, đơn được giữ làm chứng từ.`,
+      confirmLabel: "Xóa người dùng", danger: true,
+    });
+    if (r.ok) act(() => adminApi.deleteUser(u.id));
   };
 
   return (
     <div>
+      {dialog}
       <div className="flex flex-wrap items-center gap-2">
         <input className="input max-w-xs" placeholder="Tìm email / họ tên…" value={q} onChange={(e) => { setQ(e.target.value); setOffset(0); }} />
         <select className="input max-w-[10rem]" value={role} onChange={(e) => { setRole(e.target.value as "" | Role); setOffset(0); }}>
