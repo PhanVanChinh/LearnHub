@@ -37,6 +37,22 @@ def apply_seed_quizzes(db, overwrite: bool = False) -> int:
     return changed
 
 
+def backfill_faculty(db) -> int:
+    """DB tạo trước khi có trường khoa: lấy khoa từ seed_data.json theo slug cho khóa còn trống. Idempotent."""
+    if not SEED_FILE.exists():
+        return 0
+    seed = {c["slug"]: c.get("faculty") or "" for c in json.loads(SEED_FILE.read_text(encoding="utf-8"))}
+    changed = 0
+    for course in db.query(Course).filter((Course.faculty == "") | (Course.faculty.is_(None))).all():
+        f = seed.get(course.slug)
+        if f:
+            course.faculty = f
+            changed += 1
+    if changed:
+        db.commit()
+    return changed
+
+
 def seed_if_empty() -> None:
     db = SessionLocal()
     try:
@@ -44,7 +60,7 @@ def seed_if_empty() -> None:
             for c in json.loads(SEED_FILE.read_text(encoding="utf-8")):
                 # views/sold không lấy từ file seed: bắt đầu từ 0 và tăng theo hành vi thật (xem trang, ghi danh)
                 db.add(Course(**{k: c.get(k, False if k == "featured" else None) for k in (
-                    "slug", "title", "category", "tags", "price", "color",
+                    "slug", "title", "category", "faculty", "tags", "price", "color",
                     "emoji", "short", "description", "includes", "lessons", "featured")}))
         if db.query(User).count() == 0:
             db.add(User(email=settings.admin_email.lower(), full_name="Admin", role="admin",

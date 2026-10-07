@@ -3,6 +3,7 @@
     "slug": "ai-check-dao-van-khoa-luan",
     "title": "Gói AI Check mở rộng — Khóa luận, tiểu luận",
     "category": "ai-check",
+    "faculty": "chung",
     "tags": [
       "ai-check"
     ],
@@ -45,6 +46,7 @@
     "slug": "ai-check-bao-cao-thuc-tap",
     "title": "Gói AI Check mở rộng — Báo cáo thực tập",
     "category": "ai-check",
+    "faculty": "chung",
     "tags": [
       "ai-check"
     ],
@@ -86,6 +88,7 @@
     "slug": "trac-nghiem-triet-hoc-mac-lenin",
     "title": "Ngân hàng trắc nghiệm Triết học Mác – Lênin",
     "category": "quiz",
+    "faculty": "dai-cuong",
     "tags": [
       "quiz"
     ],
@@ -248,6 +251,7 @@
     "slug": "trac-nghiem-kinh-te-chinh-tri",
     "title": "Trắc nghiệm Kinh tế chính trị Mác – Lênin",
     "category": "quiz",
+    "faculty": "dai-cuong",
     "tags": [
       "quiz"
     ],
@@ -349,6 +353,7 @@
     "slug": "trac-nghiem-tu-tuong-ho-chi-minh",
     "title": "Trắc nghiệm Tư tưởng Hồ Chí Minh",
     "category": "quiz",
+    "faculty": "dai-cuong",
     "tags": [
       "quiz"
     ],
@@ -450,6 +455,7 @@
     "slug": "trac-nghiem-lich-su-dang",
     "title": "Trắc nghiệm Lịch sử Đảng Cộng sản Việt Nam",
     "category": "quiz",
+    "faculty": "dai-cuong",
     "tags": [
       "quiz"
     ],
@@ -551,6 +557,7 @@
     "slug": "trac-nghiem-mang-may-tinh",
     "title": "Trắc nghiệm Mạng máy tính",
     "category": "quiz",
+    "faculty": "cntt",
     "tags": [
       "quiz"
     ],
@@ -652,6 +659,7 @@
     "slug": "trac-nghiem-co-so-du-lieu",
     "title": "Trắc nghiệm Cơ sở dữ liệu",
     "category": "quiz",
+    "faculty": "cntt",
     "tags": [
       "quiz"
     ],
@@ -753,6 +761,7 @@
     "slug": "pdf-de-thi-giai-tich-1",
     "title": "PDF Đề thi & lời giải Giải tích 1 (5 năm)",
     "category": "pdf",
+    "faculty": "co-ban",
     "tags": [
       "pdf"
     ],
@@ -795,6 +804,7 @@
     "slug": "pdf-de-thi-dai-so-tuyen-tinh",
     "title": "PDF Đề thi Đại số tuyến tính",
     "category": "pdf",
+    "faculty": "co-ban",
     "tags": [
       "pdf"
     ],
@@ -836,6 +846,7 @@
     "slug": "pdf-tom-tat-xac-suat-thong-ke",
     "title": "PDF Tóm tắt công thức Xác suất thống kê",
     "category": "pdf",
+    "faculty": "co-ban",
     "tags": [
       "pdf",
       "free"
@@ -878,6 +889,7 @@
     "slug": "pdf-slide-lap-trinh-c",
     "title": "PDF Slide & bài tập Lập trình C",
     "category": "pdf",
+    "faculty": "cntt",
     "tags": [
       "pdf",
       "free"
@@ -921,6 +933,7 @@
     "slug": "source-web-ban-hang-nodejs",
     "title": "Source code Web bán hàng (Node.js + MongoDB)",
     "category": "source",
+    "faculty": "cntt",
     "tags": [
       "source"
     ],
@@ -963,6 +976,7 @@
     "slug": "source-quan-ly-sinh-vien-java",
     "title": "Source code Quản lý sinh viên (Java Swing + MySQL)",
     "category": "source",
+    "faculty": "cntt",
     "tags": [
       "source"
     ],
@@ -1004,6 +1018,7 @@
     "slug": "source-app-todo-flutter",
     "title": "Source code App ghi chú (Flutter)",
     "category": "source",
+    "faculty": "cntt",
     "tags": [
       "source"
     ],
@@ -1045,6 +1060,7 @@
     "slug": "video-lap-trinh-python-co-ban",
     "title": "Video Lập trình Python từ 0 (12 giờ)",
     "category": "video",
+    "faculty": "cntt",
     "tags": [
       "video"
     ],
@@ -1087,6 +1103,7 @@
     "slug": "video-cau-truc-du-lieu-giai-thuat",
     "title": "Video Cấu trúc dữ liệu & Giải thuật",
     "category": "video",
+    "faculty": "cntt",
     "tags": [
       "video"
     ],
@@ -1128,6 +1145,7 @@
     "slug": "video-nhap-mon-machine-learning",
     "title": "Video Nhập môn Machine Learning",
     "category": "video",
+    "faculty": "cntt",
     "tags": [
       "video",
       "free"
@@ -1176,6 +1194,7 @@
     "slug": "pdf-de-cuong-vat-ly-dai-cuong",
     "title": "PDF Đề cương ôn tập Vật lý đại cương",
     "category": "pdf",
+    "faculty": "co-ban",
     "tags": [
       "pdf",
       "free"
@@ -1218,6 +1237,7 @@
     "slug": "trac-nghiem-tieng-anh-b1",
     "title": "Trắc nghiệm Tiếng Anh chuẩn đầu ra B1",
     "category": "quiz",
+    "faculty": "dai-cuong",
     "tags": [
       "quiz",
       "free"
@@ -1320,6 +1340,7 @@
     "slug": "pdf-huong-dan-viet-bao-cao-thuc-tap",
     "title": "PDF Hướng dẫn viết báo cáo thực tập chuẩn form",
     "category": "pdf",
+    "faculty": "chung",
     "tags": [
       "pdf",
       "free"
@@ -1362,6 +1383,7 @@
     "slug": "trac-nghiem-he-dieu-hanh",
     "title": "Trắc nghiệm Hệ điều hành",
     "category": "quiz",
+    "faculty": "cntt",
     "tags": [
       "quiz"
     ],

@@ -18,7 +18,7 @@ observability.setup_sentry()
 
 from .database import Base, engine, migrate  # noqa: E402 — sau khi logging đã cấu hình
 from .routers import account, admin, ai_check, auth, certificates, contact, courses, orders, reviews, stats
-from .seed import seed_if_empty
+from .seed import backfill_faculty, seed_if_empty
 from .routers.account import purge_expired_tokens
 from .database import SessionLocal
 from .startup_checks import find_problems, run_startup_checks
@@ -37,6 +37,7 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         ensure_lesson_ids(db)  # dữ liệu cũ (seed, backup) chưa có mã bài học
+        backfill_faculty(db)  # khóa tạo trước khi có trường khoa
         migrate_lesson_refs(db)  # tiến độ / trắc nghiệm theo số thứ tự → theo mã bài
         purge_expired_tokens(db)
         run_startup_checks(db)  # production: RuntimeError → tiến trình dừng, không chạy với cấu hình mặc định

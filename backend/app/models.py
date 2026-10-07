@@ -65,6 +65,7 @@ class Course(Base):
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     title: Mapped[str] = mapped_column(String(500))
     category: Mapped[str] = mapped_column(String(50), index=True)
+    faculty: Mapped[str] = mapped_column(String(30), default="", index=True)  # khoa (xem schemas.FACULTIES); "" = chưa xếp
     tags: Mapped[list] = mapped_column(JSON, default=list)
     price: Mapped[int] = mapped_column(Integer, default=0)
     views: Mapped[int] = mapped_column(Integer, default=0)

@@ -239,6 +239,7 @@ class CourseOut(BaseModel):
     slug: str
     title: str
     category: str
+    faculty: str = ""
     tags: list[str]
     price: int
     views: int
@@ -378,11 +379,17 @@ class CategoryCount(BaseModel):
 
 
 # ---- Admin: courses ----
+# Khoa / nhóm ngành cho trang "Dành cho Phenikaa". Nhãn hiển thị ở frontend (lib/faculties.ts). "" = chưa xếp.
+FACULTIES = ("cntt", "kinh-te", "co-ban", "dai-cuong", "chung")
+FACULTY_PATTERN = r"^(" + "|".join(FACULTIES) + r")?$"
+
+
 class CourseBase(BaseModel):
     slug: str = Field(min_length=1, max_length=255, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$",
                       description="Chữ thường, số và dấu gạch ngang")
     title: str = Field(min_length=1, max_length=500)
     category: str = Field(min_length=1, max_length=50)
+    faculty: str = Field("", pattern=FACULTY_PATTERN)
     tags: list[str] = []
     price: int = Field(0, ge=0)
     color: str = Field("from-brand-500 to-brand-700", max_length=100)
@@ -407,6 +414,7 @@ class CourseUpdate(BaseModel):
     slug: str | None = Field(None, min_length=1, max_length=255, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     title: str | None = Field(None, min_length=1, max_length=500)
     category: str | None = Field(None, min_length=1, max_length=50)
+    faculty: str | None = Field(None, pattern=FACULTY_PATTERN)
     tags: list[str] | None = None
     price: int | None = Field(None, ge=0)
     views: int | None = Field(None, ge=0)
