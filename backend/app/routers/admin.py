@@ -2,11 +2,13 @@
 
 Mọi endpoint yêu cầu Bearer token của tài khoản có role = "admin" (xem security.require_admin).
 """
+import csv
+import io
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import httpx
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile, status
 from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
@@ -138,6 +140,74 @@ def publish(request: Request, db: Session = Depends(get_db), admin: User = Depen
 
 
 # ---------- stats ----------
+@router.get("/stats/revenue", response_model=schemas.RevenueReport)
+def revenue_report(days: int = Query(30, ge=1, le=365), db: Session = Depends(get_db)):
+    """Doanh thu theo ngày và theo khóa trong `days` ngày gần nhất (đơn paid, tính theo paid_at, ngày UTC)."""
+    today = datetime.utcnow().date()
+    since = today - timedelta(days=days - 1)
+    rows = (db.query(Order).filter(Order.status == PAID, Order.paid_at >= datetime.combine(since, datetime.min.time()))
+            .order_by(Order.paid_at).all())
+    by_day = {(since + timedelta(days=i)).isoformat(): schemas.RevenueDay(date=(since + timedelta(days=i)).isoformat(), revenue=0, orders=0)
+              for i in range(days)}
+    by_course: dict[int, schemas.RevenueCourse] = {}
+    for o in rows:
+        d = by_day.get(o.paid_at.date().isoformat())
+        if d:
+            d.revenue += o.amount
+            d.orders += 1
+        c = by_course.setdefault(o.course_id, schemas.RevenueCourse(slug=o.course.slug, title=o.course.title, revenue=0, orders=0))
+        c.revenue += o.amount
+        c.orders += 1
+    return schemas.RevenueReport(days=days, since=since.isoformat(), total=sum(o.amount for o in rows), orders=len(rows),
+                                 by_day=list(by_day.values()), by_course=sorted(by_course.values(), key=lambda c: -c.revenue))
+
+
+# ---------- export CSV ----------
+def _csv_response(name: str, header: list[str], rows) -> Response:
+    """CSV UTF-8 có BOM để Excel mở đúng tiếng Việt; tải về dạng file."""
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(header)
+    for r in rows:
+        w.writerow(["" if v is None else v for v in r])
+    body = "\ufeff" + buf.getvalue()
+    return Response(body, media_type="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="learnhub-{name}-{datetime.utcnow():%Y%m%d}.csv"'})
+
+
+def _ts(d: datetime | None) -> str:
+    return d.strftime("%Y-%m-%d %H:%M:%S") if d else ""
+
+
+@router.get("/export/orders.csv", response_class=Response)
+def export_orders_csv(status_filter: str | None = Query(None, alias="status", pattern=r"^(pending|paid|cancelled|expired)$"),
+                      db: Session = Depends(get_db)):
+    q = db.query(Order)
+    if status_filter:
+        q = q.filter(Order.status == status_filter)
+    rows = ((o.code, o.user.email, o.user.full_name, o.course.slug, o.course.title, o.amount, o.status, o.payment_method,
+             _ts(o.created_at), _ts(o.paid_at), o.confirmed_by.email if o.confirmed_by else "", o.note or "")
+            for o in q.order_by(Order.id).all())
+    return _csv_response("don-hang", ["ma_don", "email", "ho_ten", "khoa_slug", "khoa", "so_tien", "trang_thai", "phuong_thuc",
+                                      "tao_luc", "thanh_toan_luc", "nguoi_duyet", "ghi_chu"], rows)
+
+
+@router.get("/export/users.csv", response_class=Response)
+def export_users_csv(db: Session = Depends(get_db)):
+    rows = ((u.id, u.email, u.full_name, u.role, "1" if u.is_active else "0", _ts(u.email_verified_at), "1" if u.has_google else "0",
+             len(u.enrollments), _ts(u.created_at), _ts(u.last_login_at))
+            for u in db.query(User).order_by(User.id).all())
+    return _csv_response("nguoi-dung", ["id", "email", "ho_ten", "vai_tro", "hoat_dong", "xac_thuc_email_luc", "google",
+                                        "so_khoa_ghi_danh", "tao_luc", "dang_nhap_gan_nhat"], rows)
+
+
+@router.get("/export/enrollments.csv", response_class=Response)
+def export_enrollments_csv(db: Session = Depends(get_db)):
+    rows = ((e.id, e.user.email, e.user.full_name, e.course.slug, e.course.title, _ts(e.created_at), _ts(e.last_seen_at))
+            for e in db.query(Enrollment).order_by(Enrollment.id).all())
+    return _csv_response("ghi-danh", ["id", "email", "ho_ten", "khoa_slug", "khoa", "ghi_danh_luc", "hoc_gan_nhat"], rows)
+
+
 @router.get("/stats", response_model=schemas.AdminStats)
 def stats(db: Session = Depends(get_db)):
     users = db.query(func.count(User.id)).scalar() or 0

@@ -763,6 +763,28 @@ class PublishResult(PublishStatus):
     detail: str
 
 
+class RevenueDay(BaseModel):
+    date: str  # YYYY-MM-DD (UTC)
+    revenue: int
+    orders: int
+
+
+class RevenueCourse(BaseModel):
+    slug: str
+    title: str
+    revenue: int
+    orders: int
+
+
+class RevenueReport(BaseModel):
+    days: int
+    since: str
+    total: int = Field(description="Doanh thu trong kỳ (đơn paid, theo ngày thanh toán)")
+    orders: int
+    by_day: list[RevenueDay]  # đủ mọi ngày trong kỳ, ngày không có đơn = 0
+    by_course: list[RevenueCourse]  # giảm dần theo doanh thu
+
+
 class AdminStats(BaseModel):
     users: int
     admins: int
