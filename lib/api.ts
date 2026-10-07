@@ -251,6 +251,11 @@ export type AdminUser = User & { is_active: boolean; enrollment_count: number };
 export type AdminEnrollment = {
   id: number; user_id: number; course_id: number; created_at: string; user_email: string; course_slug: string; course_title: string;
 };
+export type RevenueReport = {
+  days: number; since: string; total: number; orders: number;
+  by_day: { date: string; revenue: number; orders: number }[];
+  by_course: { slug: string; title: string; revenue: number; orders: number }[];
+};
 export type AdminStats = {
   users: number; admins: number; courses: number; free_courses: number; paid_courses: number;
   enrollments: number; total_views: number; total_sold: number; revenue: number; paid_orders: number; pending_orders: number; new_contacts: number;
@@ -276,8 +281,24 @@ export type PublishResult = PublishStatus & { detail: string };
 
 const json = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
 
+/** Tải file (CSV...) từ API có kèm token: link <a href> thường không mang Authorization. Tự gia hạn token 1 lần khi 401. */
+export async function downloadFile(path: string, _retried = false): Promise<void> {
+  const headers: Record<string, string> = {};
+  const token = tokenStore.get();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}${path}`, { credentials: "include", headers });
+  if (res.status === 401 && !_retried && (await tryRefresh())) return downloadFile(path, true);
+  if (!res.ok) throw new ApiError(res.status, res.status === 403 ? "Chỉ admin mới tải được." : `Không tải được (HTTP ${res.status})`);
+  const name = res.headers.get("content-disposition")?.match(/filename="?([^";]+)"?/)?.[1] ?? path.split("/").pop() ?? "file";
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 export const adminApi = {
   stats: () => api<AdminStats>("/api/admin/stats"),
+  revenue: (days = 30) => api<RevenueReport>(`/api/admin/stats/revenue?days=${days}`),
   publishStatus: () => api<PublishStatus>("/api/admin/publish"),
   healthConfig: () => api<HealthConfig>("/api/health/config"),
   uploadStatus: () => api<UploadStatus>("/api/admin/uploads/status"),

@@ -14,9 +14,11 @@ import ContactsPanel from "./ContactsPanel";
 import AuditPanel from "./AuditPanel";
 import ReviewsPanel from "./ReviewsPanel";
 import UsersPanel from "./UsersPanel";
+import RevenuePanel from "./RevenuePanel";
 
 const TABS = [
   { key: "orders", label: "Đơn hàng" },
+  { key: "revenue", label: "Doanh thu" },
   { key: "courses", label: "Khóa học" },
   { key: "users", label: "Người dùng" },
   { key: "enrollments", label: "Ghi danh" },
@@ -95,6 +97,7 @@ export default function AdminDashboard() {
 
         <div className="mt-6">
           {tab === "orders" && <OrdersPanel onChanged={loadStats} />}
+          {tab === "revenue" && <RevenuePanel />}
           {tab === "contacts" && <ContactsPanel onChanged={loadStats} />}
           {tab === "reviews" && <ReviewsPanel />}
           {tab === "audit" && <AuditPanel />}
