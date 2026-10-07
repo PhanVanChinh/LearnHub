@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { categories } from "@/data/courses";
+import { faculties } from "@/lib/faculties";
 import { AdminCourse, adminApi, Attachment, CourseInput, Lesson, UploadStatus } from "@/lib/api";
 import { fmtSize } from "@/components/LessonAttachments";
 import { coverUrl } from "@/lib/cover";
@@ -50,7 +51,7 @@ type Props = { initial?: AdminCourse; onSubmit: (body: CourseInput) => Promise<v
 
 export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   const [f, setF] = useState({
-    slug: initial?.slug ?? "", title: initial?.title ?? "", category: initial?.category ?? "video",
+    slug: initial?.slug ?? "", title: initial?.title ?? "", category: initial?.category ?? "video", faculty: initial?.faculty ?? "",
     price: initial?.price ?? 0, emoji: initial?.emoji ?? "📘", color: initial?.color ?? COLORS[0],
     short: initial?.short ?? "", description: initial?.description ?? "", featured: initial?.featured ?? false, cover: initial?.cover ?? "",
     includes: (initial?.includes ?? []).join("\n"), lessons: lessonsToText(initial?.lessons ?? []),
@@ -92,7 +93,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         if (lessons[idx] && md.trim()) lessons[idx].content = md.trim();
       }
       await onSubmit({
-        slug: f.slug, title: f.title.trim(), category: f.category, price: Number(f.price) || 0, emoji: f.emoji, color: f.color,
+        slug: f.slug, title: f.title.trim(), category: f.category, faculty: f.faculty, price: Number(f.price) || 0, emoji: f.emoji, color: f.color,
         short: f.short.trim(), description: f.description.trim(), featured: f.featured, cover: f.cover.trim(),
         includes: f.includes.split("\n").map((s) => s.trim()).filter(Boolean), lessons,
       });
@@ -116,6 +117,12 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         <Field label="Danh mục">
           <select className="input" value={f.category} onChange={(e) => set("category", e.target.value)}>
             {categories.filter((c) => c.key !== "all").map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Khoa" hint="Hiện ở trang Dành cho Phenikaa; để trống nếu không thuộc khoa nào">
+          <select className="input" value={f.faculty} onChange={(e) => set("faculty", e.target.value)}>
+            <option value="">— Chưa xếp —</option>
+            {faculties.map((x) => <option key={x.key} value={x.key}>{x.emoji} {x.label}</option>)}
           </select>
         </Field>
         <Field label="Giá (VNĐ)" hint="0 = miễn phí, tự gắn tag 'free'">

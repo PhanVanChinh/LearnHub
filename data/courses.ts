@@ -32,6 +32,7 @@ export type Course = {
   slug: string;
   title: string;
   category: Category;
+  faculty?: string; // khoa (lib/faculties.ts); từ API, trống = chưa xếp
   tags: Category[];
   price: number; // 0 = free
   // Lượt xem / số học viên KHÔNG nằm ở đây: lấy từ API /api/stats/courses (số thật, tăng theo hành vi người dùng)
@@ -43,6 +44,17 @@ export type Course = {
   includes: string[];
   lessons: Lesson[];
   featured?: boolean;
+};
+
+// Khoa của từng khóa mẫu (khớp backend/app/seed_data.json). Bản tĩnh chỉ là dự phòng khi build không gọi được API.
+const facultyOf: Record<string, string> = {
+  "trac-nghiem-mang-may-tinh": "cntt", "trac-nghiem-co-so-du-lieu": "cntt", "pdf-slide-lap-trinh-c": "cntt", "source-web-ban-hang-nodejs": "cntt",
+  "source-quan-ly-sinh-vien-java": "cntt", "source-app-todo-flutter": "cntt", "video-lap-trinh-python-co-ban": "cntt",
+  "video-cau-truc-du-lieu-giai-thuat": "cntt", "video-nhap-mon-machine-learning": "cntt", "trac-nghiem-he-dieu-hanh": "cntt",
+  "pdf-de-thi-giai-tich-1": "co-ban", "pdf-de-thi-dai-so-tuyen-tinh": "co-ban", "pdf-tom-tat-xac-suat-thong-ke": "co-ban", "pdf-de-cuong-vat-ly-dai-cuong": "co-ban",
+  "trac-nghiem-triet-hoc-mac-lenin": "dai-cuong", "trac-nghiem-kinh-te-chinh-tri": "dai-cuong", "trac-nghiem-tu-tuong-ho-chi-minh": "dai-cuong",
+  "trac-nghiem-lich-su-dang": "dai-cuong", "trac-nghiem-tieng-anh-b1": "dai-cuong",
+  "ai-check-dao-van-khoa-luan": "chung", "ai-check-bao-cao-thuc-tap": "chung", "pdf-huong-dan-viet-bao-cao-thuc-tap": "chung",
 };
 
 const base = (
@@ -58,6 +70,7 @@ const base = (
   slug,
   title,
   category,
+  faculty: facultyOf[slug],
   tags: [category, ...(price === 0 ? (["free"] as Category[]) : [])],
   price,
   color,
