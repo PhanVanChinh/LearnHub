@@ -1,4 +1,5 @@
 "use client";
+import { useDialog } from "@/components/Dialog";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import GoogleButton, { GOOGLE_CLIENT_ID } from "@/components/GoogleButton";
@@ -9,10 +10,11 @@ export default function GoogleSection() {
   const { user, setUser } = useAuth();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const { ask, dialog } = useDialog();
   if (!user) return null;
 
   const unlink = async () => {
-    if (!confirm("Gỡ liên kết Google? Bạn vẫn đăng nhập được bằng email và mật khẩu.")) return;
+    if (!(await ask({ title: "Gỡ liên kết Google?", message: "Bạn vẫn đăng nhập được bằng email và mật khẩu. Có thể liên kết lại bất cứ lúc nào.", confirmLabel: "Gỡ liên kết", danger: true })).ok) return;
     setBusy(true); setError("");
     try { setUser(await authApi.unlinkGoogle()); }
     catch (e) { setError((e as Error).message); }
@@ -21,6 +23,7 @@ export default function GoogleSection() {
 
   return (
     <Section title="Đăng nhập bằng Google" description="Liên kết để đăng nhập một chạm bằng tài khoản Google của bạn.">
+      {dialog}
       {user.has_google ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 "use client";
+import { useDialog } from "@/components/Dialog";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -16,10 +17,11 @@ export default function SecuritySection() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const { ask, dialog } = useDialog();
   if (!user) return null;
 
   const doLogoutAll = async () => {
-    if (!confirm("Đăng xuất khỏi mọi thiết bị khác? Thiết bị này vẫn giữ đăng nhập.")) return;
+    if (!(await ask({ title: "Đăng xuất mọi thiết bị khác?", message: "Mọi phiên đăng nhập khác bị vô hiệu ngay. Thiết bị này vẫn giữ đăng nhập.", confirmLabel: "Đăng xuất thiết bị khác", danger: true })).ok) return;
     setBusy(true); setMsg(null);
     try { await logoutAll(); setMsg({ ok: true, text: "Đã đăng xuất các thiết bị khác. Phiên trên thiết bị này vẫn hoạt động." }); }
     catch (e) { setMsg({ ok: false, text: (e as Error).message }); }
@@ -29,6 +31,7 @@ export default function SecuritySection() {
 
   return (
     <Section title="Bảo mật & phiên đăng nhập" description="Nếu nghi ngờ tài khoản bị dùng ở nơi khác, hãy đổi mật khẩu rồi đăng xuất mọi thiết bị.">
+      {dialog}
       <dl className="grid gap-3 text-sm sm:grid-cols-3">
         <Stat k="Đăng nhập gần nhất" v={fmt(user.last_login_at)} />
         <Stat k="Đổi mật khẩu lần cuối" v={user.password_changed_at ? fmt(user.password_changed_at) : "Chưa đổi"} />

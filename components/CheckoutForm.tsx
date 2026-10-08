@@ -1,4 +1,5 @@
 "use client";
+import { useDialog } from "@/components/Dialog";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -58,8 +59,10 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
       if (ae.status === 409) setEnrolled(true); else setError(ae.message);
     } finally { setBusy(false); }
   };
+  const { ask, dialog } = useDialog();
   const cancel = async () => {
-    if (!order || !confirm("Hủy đơn này? Bạn có thể đặt lại sau.")) return;
+    if (!order) return;
+    if (!(await ask({ title: `Hủy đơn ${order.code}?`, message: "Nếu bạn đã chuyển khoản, đừng hủy — hãy bấm \"Kiểm tra lại\" hoặc liên hệ hỗ trợ. Bạn có thể đặt lại đơn mới bất cứ lúc nào.", confirmLabel: "Hủy đơn", cancelLabel: "Giữ đơn", danger: true })).ok) return;
     setBusy(true);
     try { setOrder(await ordersApi.cancel(order.code)); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
   };
@@ -94,6 +97,7 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
 
   return (
     <Shell title={order ? `Đơn hàng ${order.code}` : "Thanh toán"}>
+      {dialog}
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {enrolled && !order && (

@@ -1,4 +1,5 @@
 "use client";
+import { useDialog } from "@/components/Dialog";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, coursesApi, QuizAttempts, QuizPublic, QuizResult } from "@/lib/api";
 
@@ -36,9 +37,10 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
 
   const answered = answers.filter((a) => a !== null).length;
 
+  const { ask, dialog } = useDialog();
   const submit = async () => {
     if (!quiz) return;
-    if (answered < quiz.total && !confirm(`Bạn còn ${quiz.total - answered} câu chưa trả lời. Nộp bài luôn?`)) return;
+    if (answered < quiz.total && !(await ask({ title: `Còn ${quiz.total - answered} câu chưa trả lời`, message: "Câu bỏ trống tính là sai. Nộp bài luôn hay quay lại làm tiếp?", confirmLabel: "Nộp bài", cancelLabel: "Làm tiếp" })).ok) return;
     setBusy(true); setError("");
     try {
       const r = await coursesApi.submitQuiz(slug, index, answers);
@@ -55,6 +57,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
 
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+      {dialog}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-wider text-slate-400">Trắc nghiệm</p>

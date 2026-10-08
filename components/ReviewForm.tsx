@@ -1,4 +1,5 @@
 "use client";
+import { useDialog } from "@/components/Dialog";
 import { FormEvent, useState } from "react";
 import { ApiError, Review, reviewsApi } from "@/lib/api";
 import Stars from "./Stars";
@@ -21,8 +22,9 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
     try { onSaved(await reviewsApi.upsert(slug, rating, comment)); }
     catch (err) { setError((err as ApiError).message); } finally { setBusy(false); }
   };
+  const { ask, dialog } = useDialog();
   const remove = async () => {
-    if (!confirm("Xóa đánh giá của bạn?")) return;
+    if (!(await ask({ title: "Xóa đánh giá của bạn?", message: "Bạn có thể viết đánh giá mới sau.", confirmLabel: "Xóa", danger: true })).ok) return;
     setBusy(true);
     try { await reviewsApi.remove(slug); onDeleted?.(); } catch (err) { setError((err as ApiError).message); } finally { setBusy(false); }
   };
@@ -31,6 +33,7 @@ export default function ReviewForm({ slug, initial, onSaved, onDeleted, onCancel
   const sub = dark ? "text-slate-400" : "text-slate-500";
   return (
     <form onSubmit={submit} className="space-y-3">
+      {dialog}
       <div className="flex flex-wrap items-center gap-3">
         <Stars value={rating} onChange={(v) => { setRating(v); setError(""); }} size="text-3xl" label="Chọn số sao" />
         <span className={`text-sm ${rating ? text : sub}`}>{rating ? LABELS[rating] : "Chọn số sao"}</span>
