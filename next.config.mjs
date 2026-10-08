@@ -8,6 +8,7 @@ const staticExport = process.env.STATIC_EXPORT === "1";
 
 const nextConfig = {
   ...(staticExport ? { output: "export" } : {}),
+  distDir: process.env.NEXT_DIST_DIR ?? ".next", // e2e dùng .next-e2e để không đụng server dev đang chạy
   basePath,
   trailingSlash: true, // mỗi route thành thư-mục/index.html → reload trang không bị 404 trên Pages
   images: { unoptimized: true }, // Pages không có server tối ưu ảnh

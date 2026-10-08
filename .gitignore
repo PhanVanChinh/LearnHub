@@ -6,3 +6,10 @@ out
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts
+
+# e2e (Playwright)
+.next-e2e
+e2e/.backend.log
+backend/e2e.db
+playwright-report
+test-results
