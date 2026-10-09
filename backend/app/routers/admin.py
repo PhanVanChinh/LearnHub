@@ -262,7 +262,7 @@ async def upload_file(request: Request, file: UploadFile = File(...), course_slu
 @router.delete("/uploads", status_code=status.HTTP_204_NO_CONTENT)
 def delete_upload(key: str, request: Request, db: Session = Depends(get_db), admin: User = Depends(require_admin)):
     """Xóa file trên S3 (chỉ key trong thư mục courses/). Không tự gỡ khỏi lesson.attachments — admin lưu lại khóa học."""
-    if not key.startswith("courses/") or ".." in key:
+    if not storage.is_attachment_key(key):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Key không hợp lệ")
     storage.delete(key)
     audit.record(db, request, admin, "upload.delete", "upload", key, f"Xóa file {key}")

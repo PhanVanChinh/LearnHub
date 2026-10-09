@@ -8,11 +8,11 @@ from tests.test_api import verify
 
 LESSONS = [
     {"title": "Bài mở", "duration": "05:00", "free": True, "attachments": [
-        {"name": "Slide chương 1.pdf", "kind": "file", "key": "courses/att-test/abc-slide.pdf", "size": 12345, "content_type": "application/pdf"},
+        {"name": "Slide chương 1.pdf", "kind": "file", "key": "courses/att-test/0123456789ab-slide.pdf", "size": 12345, "content_type": "application/pdf"},
         {"name": "Tài liệu tham khảo", "kind": "link", "url": "https://drive.google.com/x"},
     ]},
     {"title": "Bài khóa", "duration": "05:00", "attachments": [
-        {"name": "Đề mẫu.docx", "kind": "file", "key": "courses/att-test/def-de.docx", "size": 999, "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+        {"name": "Đề mẫu.docx", "kind": "file", "key": "courses/att-test/abcdef012345-de.docx", "size": 999, "content_type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
     ]},
 ]
 COURSE = {"slug": "att-test", "title": "Khóa tài liệu", "category": "pdf", "price": 0, "short": "s", "description": "d", "includes": [], "lessons": LESSONS}
@@ -41,14 +41,14 @@ def test_attachments_public_metadata_hidden_secrets(client, monkeypatch):
 
     for url in ("/api/courses/att-test", "/api/courses/export"):
         dump = json.dumps(client.get(url).json())
-        assert "courses/att-test/abc" not in dump and "drive.google.com" not in dump, url
+        assert "courses/att-test/0123456789ab" not in dump and "drive.google.com" not in dump, url
     d = client.get("/api/courses/att-test").json()
     assert [a["name"] for a in d["lessons"][0]["attachments"]] == ["Slide chương 1.pdf", "Tài liệu tham khảo"]
     assert d["lessons"][0]["attachments"][0] == {"name": "Slide chương 1.pdf", "kind": "file", "size": 12345, "content_type": "application/pdf"}
 
     # bài free: khách tải được; file → URL ký, link → URL ngoài
     r = client.get("/api/courses/att-test/lessons/0/attachments/0/download")
-    assert r.status_code == 200 and r.json()["url"].startswith("https://s3.example/courses/att-test/abc") and r.json()["expires_in"] == settings.s3_link_expire_seconds
+    assert r.status_code == 200 and r.json()["url"].startswith("https://s3.example/courses/att-test/0123456789ab-") and r.json()["expires_in"] == settings.s3_link_expire_seconds
     r = client.get("/api/courses/att-test/lessons/0/attachments/1/download")
     assert r.json()["url"] == "https://drive.google.com/x" and r.json()["expires_in"] is None
     assert client.get("/api/courses/att-test/lessons/0/attachments/5/download").status_code == 404

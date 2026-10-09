@@ -180,7 +180,8 @@ class Attachment(BaseModel):
 
     name: str = Field(min_length=1, max_length=200)
     kind: str = Field("file", pattern=r"^(file|link)$")
-    key: str | None = Field(None, max_length=300)
+    key: str | None = Field(None, max_length=300, pattern=r"^courses/[a-z0-9]+(?:-[a-z0-9]+)*/[0-9a-f]{12}-[A-Za-z0-9._-]{1,100}$",
+                            description="Key S3 do /api/admin/uploads cấp (courses/<slug>/<id>-<file>); không nhận key khác")
     url: str | None = Field(None, max_length=1000)
     size: int = Field(0, ge=0, description="bytes, 0 nếu là link")
     content_type: str = Field("", max_length=100)

@@ -50,6 +50,15 @@ def safe_filename(name: str) -> str:
     return base[:100]
 
 
+# Key tài liệu bài học do make_key sinh: courses/<slug>/<12 hex>-<tên file an toàn>. Mọi key đọc/xóa qua API phải khớp mẫu này,
+# nếu không admin (hoặc dữ liệu bị sửa tay) có thể trỏ tới object khác trong bucket, vd backups/*.json.gz chứa dump DB.
+ATTACHMENT_KEY_RE = re.compile(r"^courses/[a-z0-9]+(?:-[a-z0-9]+)*/[0-9a-f]{12}-[A-Za-z0-9._-]{1,100}$")
+
+
+def is_attachment_key(key: str | None) -> bool:
+    return bool(key) and bool(ATTACHMENT_KEY_RE.match(key))
+
+
 def make_key(course_slug: str, filename: str, prefix: str = "courses") -> str:
     return f"{prefix}/{course_slug}/{uuid.uuid4().hex[:12]}-{safe_filename(filename)}"
 
@@ -67,6 +76,9 @@ def put(key: str, data: bytes, content_type: str) -> None:
 def presigned_get(key: str, filename: str, expires: int | None = None) -> str:
     if not enabled():
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Kho lưu trữ file chưa được cấu hình")
+    if not is_attachment_key(key):  # chốt chặn cuối: không bao giờ ký link cho object ngoài thư mục tài liệu
+        log.warning("Từ chối ký link cho key ngoài courses/: %s", key)
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Tài liệu không hợp lệ")
     try:
         return _client().generate_presigned_url(
             "get_object",
