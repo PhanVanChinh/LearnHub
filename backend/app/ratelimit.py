@@ -13,11 +13,17 @@ _buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
 def client_ip(request: Request) -> str:
-    """IP thật của khách: ưu tiên X-Forwarded-For (khi chạy sau proxy như Render/Railway)."""
+    """IP thật của khách khi chạy sau proxy (Render/Railway).
+
+    Proxy NỐI THÊM IP nó thấy vào cuối X-Forwarded-For, còn phần đầu là do khách tự gửi (giả được).
+    Lấy phần tử CUỐI → khách gửi "X-Forwarded-For: 1.2.3.4" vẫn bị tính theo IP thật, không vượt được rate limit.
+    (Chỉ đúng với một lớp proxy tin cậy ngay trước backend — đúng với Render/Railway/nginx đơn.)"""
     if settings.trust_proxy_headers:
         xff = request.headers.get("x-forwarded-for")
         if xff:
-            return xff.split(",")[0].strip()
+            last = xff.rsplit(",", 1)[-1].strip()
+            if last:
+                return last
     return request.client.host if request.client else "unknown"
 
 
