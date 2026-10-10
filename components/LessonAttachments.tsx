@@ -18,10 +18,16 @@ export default function LessonAttachments({ slug, index, attachments, locked, da
 
   const open = async (pos: number) => {
     setBusy(pos); setError("");
+    // Safari/iOS chỉ cho mở cửa sổ ngay trong cú bấm: mở tab trống TRƯỚC khi chờ API, có link rồi mới trỏ tab đó tới.
+    // Bị chặn popup (win = null) → điều hướng tab hiện tại; link ký kèm Content-Disposition nên trình duyệt tải file, không rời trang.
+    const win = window.open("", "_blank");
     try {
       const { url } = await coursesApi.attachmentLink(slug, index, pos);
-      window.open(url, "_blank", "noopener");
-    } catch (e) { setError((e as ApiError).message); } finally { setBusy(null); }
+      if (win) { win.opener = null; win.location.href = url; } else window.location.assign(url);
+    } catch (e) {
+      win?.close();
+      setError((e as ApiError).message);
+    } finally { setBusy(null); }
   };
 
   const wrap = dark ? "border-white/10 bg-white/5" : "border-slate-200 bg-white";
