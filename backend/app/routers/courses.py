@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .. import schemas, storage
 from ..database import get_db
+from ..enrollments import bump_views, ensure_enrollment
 from ..lessons import lesson_id_at
 from ..models import Course, Enrollment, LessonCompletion, LessonNote, QuizAttempt, User
 from ..ratelimit import rate_limit
@@ -117,7 +118,7 @@ def count_view(slug: str, db: Session = Depends(get_db)):
     course = db.query(Course).filter(Course.slug == slug).first()
     if not course:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
-    course.views += 1
+    bump_views(db, course.id)
     db.commit()
 
 
@@ -301,10 +302,9 @@ def enroll(slug: str, db: Session = Depends(get_db), user: User = Depends(requir
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy khóa học")
     if course.price > 0:
         raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, "Khóa học trả phí — cần thanh toán trước")
-    if not db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first():
-        db.add(Enrollment(user_id=user.id, course_id=course.id))
-        course.sold += 1
-        db.commit()
+    ensure_enrollment(db, user.id, course.id)
+    db.commit()
+    db.refresh(course)
     return _course_detail(course, db, user)
 
 

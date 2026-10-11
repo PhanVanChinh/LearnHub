@@ -13,6 +13,7 @@ from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
 
 from .. import audit, schemas, storage
+from ..enrollments import ensure_enrollment
 from ..lessons import assign_lesson_ids
 from ..config import settings
 from ..database import get_db
@@ -359,10 +360,15 @@ def confirm_order(order_id: int, payload: schemas.OrderAction, request: Request,
     o = _get_order(db, order_id)
     if o.status not in (PENDING, EXPIRED):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"Đơn đang ở trạng thái '{o.status}', không duyệt được")
-    o.status, o.paid_at, o.confirmed_by_id, o.note = PAID, datetime.utcnow(), admin.id, payload.note or o.note
-    if not db.query(Enrollment).filter_by(user_id=o.user_id, course_id=o.course_id).first():
-        db.add(Enrollment(user_id=o.user_id, course_id=o.course_id))
-        o.course.sold += 1
+    # Chuyển trạng thái bằng UPDATE có điều kiện: hai request cùng lúc thì chỉ một request đổi được dòng (rowcount=1),
+    # request kia nhận 409 thay vì cấp quyền và gửi mail lần hai.
+    changed = (db.query(Order).filter(Order.id == o.id, Order.status.in_((PENDING, EXPIRED)))
+               .update({Order.status: PAID, Order.paid_at: datetime.utcnow(), Order.confirmed_by_id: admin.id,
+                        Order.note: payload.note or o.note}, synchronize_session=False))
+    if changed != 1:
+        db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT, "Đơn vừa được xử lý bởi thao tác khác, tải lại danh sách")
+    ensure_enrollment(db, o.user_id, o.course_id)
     db.commit()
     db.refresh(o)
     audit.record(db, request, admin, "order.confirm", "order", o.id, f"Xác nhận đơn {o.code} · {o.user.email} · {o.amount:,}đ".replace(",", "."),
@@ -586,13 +592,11 @@ def create_enrollment(payload: schemas.AdminEnrollmentCreate, request: Request, 
     """Admin cấp quyền truy cập khóa học cho người dùng (kể cả khóa trả phí — ví dụ sau khi nhận chuyển khoản)."""
     user = _get_user(db, payload.user_id)
     course = _get_course(db, payload.course_id)
-    if db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first():
+    if not ensure_enrollment(db, user.id, course.id):
+        db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "Người dùng đã ghi danh khóa học này")
-    e = Enrollment(user_id=user.id, course_id=course.id)
-    course.sold += 1
-    db.add(e)
     db.commit()
-    db.refresh(e)
+    e = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first()
     audit.record(db, request, admin, "enrollment.create", "enrollment", e.id, f"Cấp quyền «{course.title}» cho {user.email}",
                  {"user": user.email, "course": course.slug})
     return _enrollment_out(e)

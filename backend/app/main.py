@@ -27,6 +27,7 @@ from . import ai_check as ai_check_svc
 from . import captcha, google_auth, mailer, storage
 from .security import require_admin
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 
 @asynccontextmanager
@@ -68,6 +69,13 @@ FIELD_LABELS = {
     "full_name": "Họ và tên", "accept_terms": "Điều khoản", "slug": "Slug", "title": "Tiêu đề",
     "name": "Họ và tên", "subject": "Chủ đề", "message": "Nội dung",
 }
+
+
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(_: Request, exc: IntegrityError):
+    """Vi phạm ràng buộc DB (trùng khóa, FK) do request đồng thời → 409 có thông báo, không phải 500 vô danh."""
+    logging.getLogger("learnhub").warning("IntegrityError: %s", str(exc.orig)[:200])
+    return JSONResponse(status_code=409, content={"detail": "Dữ liệu vừa bị thay đổi bởi thao tác khác, hãy tải lại và thử lại"})
 
 
 @app.exception_handler(RequestValidationError)
