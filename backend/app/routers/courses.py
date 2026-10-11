@@ -68,10 +68,14 @@ def categories(db: Session = Depends(get_db)):
 
 
 @router.get("/export", response_model=list[schemas.CoursePublic])
-def export_courses(db: Session = Depends(get_db)):
+def export_courses(include_hidden: bool = Query(False, description="Kèm khóa ẩn (có cờ hidden) — bản build tĩnh cần để người đã ghi danh vẫn mở được trang học"),
+                   db: Session = Depends(get_db)):
     """Toàn bộ khóa học ở dạng công khai, không phân trang. Frontend gọi lúc build tĩnh (CI) và khi cần đồng bộ danh sách.
     Video bài không free bị ẩn (chỉ còn has_video) — dữ liệu này nằm trong bundle công khai."""
-    return [_course_public(c) for c in db.query(Course).filter(Course.hidden.is_(False)).order_by(Course.id).all()]
+    q = db.query(Course)
+    if not include_hidden:
+        q = q.filter(Course.hidden.is_(False))
+    return [_course_public(c) for c in q.order_by(Course.id).all()]
 
 
 def _mark_lesson_flags(out_lessons: list[schemas.LessonOut], raw_lessons: list[dict]) -> None:

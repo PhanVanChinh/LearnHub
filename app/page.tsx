@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
-import { getCourses } from "@/lib/courses.server";
+import { getVisibleCourses } from "@/lib/courses.server";
 import { isComingSoon, site } from "@/lib/site";
 import { absUrl, pageMeta } from "@/lib/seo";
 
@@ -14,7 +14,7 @@ const features = [
 ];
 
 export default async function Home() {
-  const courses = await getCourses();
+  const courses = await getVisibleCourses();
   // Khóa nổi bật: bỏ danh mục sắp mở bán và khóa chưa có nội dung — vị trí đẹp nhất trang không quảng cáo thứ chưa bán được
   const hasContent = (c: (typeof courses)[number]) => c.lessons.some((l) => l.video || l.hasVideo || l.quizCount || l.content || l.hasContent || l.attachments?.length);
   const pick = courses.filter((c) => !isComingSoon(c.category));

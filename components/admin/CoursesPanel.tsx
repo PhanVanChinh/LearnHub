@@ -40,6 +40,14 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
   };
 
   const toggleHidden = async (c: AdminCourse) => {
+    if (!c.hidden && c.enrollment_count > 0) {
+      const r = await ask({
+        title: `Ẩn "${c.title}"?`,
+        message: `${c.enrollment_count} học viên đã ghi danh vẫn học bình thường qua "Khóa học của tôi" và link trực tiếp. Khóa chỉ biến mất khỏi danh sách, tìm kiếm và sitemap. Nhớ bấm "Xuất bản" sau khi ẩn.`,
+        confirmLabel: "Ẩn khóa học",
+      });
+      if (!r.ok) return;
+    }
     try { await adminApi.toggleCourseHidden(c.id); load(); onChanged(); } catch (e) { setError((e as Error).message); }
   };
   const hideEmpty = async () => {
@@ -77,7 +85,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
         <button onClick={() => setModal("create")} className="btn-primary">+ Thêm khóa học</button>
       </div>
       <p className="mt-2 text-xs text-slate-500">
-        Khóa ẩn không hiện trong danh sách, tìm kiếm, sitemap và bản build tĩnh; link trực tiếp vẫn mở được để bạn xem trước.
+        Khóa ẩn không hiện trong danh sách, tìm kiếm, sitemap; link trực tiếp vẫn mở được và người đã ghi danh vẫn học bình thường.
         Ẩn/hiện xong nhớ bấm <b>Xuất bản</b> để website cập nhật.
       </p>
       <div className="mt-3"><ErrorBox message={error} /></div>

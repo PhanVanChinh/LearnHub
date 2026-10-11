@@ -123,7 +123,7 @@ export type LessonOut = { title: string; duration: string; free: boolean; video:
 export type AttachmentLink = { name: string; url: string; expires_in: number | null };
 export type CourseDetail = {
   id: number; slug: string; title: string; category: string; faculty: string; tags: string[]; price: number; views: number; sold: number;
-  color: string; emoji: string; cover?: string; short: string; featured: boolean; description: string; includes: string[];
+  color: string; emoji: string; cover?: string; short: string; featured: boolean; hidden: boolean; description: string; includes: string[];
   lessons: LessonOut[]; enrolled: boolean;
 };
 export type CoursePublic = Omit<CourseDetail, "enrolled">;
@@ -137,7 +137,7 @@ export type QuizAttempts = { count: number; best: QuizAttempt | null; last: Quiz
 
 export type Progress = { completed: number[]; total: number; percent: number; next_index: number | null; last_index: number | null; last_seconds: number };
 export type LessonNote = { index: number; lesson_id: string; title: string; text: string; updated_at: string | null };
-export type EnrolledCourse = { slug: string; title: string; progress: Progress };
+export type EnrolledCourse = { slug: string; title: string; emoji: string; color: string; category: string; price: number; hidden: boolean; progress: Progress };
 
 export const coursesApi = {
   enroll: (slug: string) => api<CourseDetail>(`/api/courses/${slug}/enroll`, { method: "POST" }),

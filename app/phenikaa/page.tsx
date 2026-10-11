@@ -1,7 +1,7 @@
 import Link from "next/link";
 import CourseCard from "@/components/CourseCard";
 import PageHeader from "@/components/PageHeader";
-import { getCourses } from "@/lib/courses.server";
+import { getVisibleCourses } from "@/lib/courses.server";
 import { faculties } from "@/lib/faculties";
 import { pageMeta } from "@/lib/seo";
 import { isComingSoon, site } from "@/lib/site";
@@ -9,7 +9,7 @@ import { isComingSoon, site } from "@/lib/site";
 export const metadata = pageMeta({ path: "/phenikaa", title: `Dành cho ${site.university}`, description: `Khóa học và tài liệu ôn tập theo từng khoa cho sinh viên ${site.university}, bám sát đề cương từng môn.` });
 
 export default async function PhenikaaPage() {
-  const courses = await getCourses();
+  const courses = await getVisibleCourses();
   // Mỗi khoa: khóa thuộc khoa đó, "sắp mở bán" xếp cuối
   const groups = faculties.map((f) => ({
     ...f,

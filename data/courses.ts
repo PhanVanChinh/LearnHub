@@ -33,6 +33,7 @@ export type Course = {
   title: string;
   category: Category;
   faculty?: string; // khoa (lib/faculties.ts); từ API, trống = chưa xếp
+  hidden?: boolean; // admin ẩn: không liệt kê/tìm kiếm/sitemap, nhưng link trực tiếp và người đã ghi danh vẫn dùng được
   tags: Category[];
   price: number; // 0 = free
   // Lượt xem / số học viên KHÔNG nằm ở đây: lấy từ API /api/stats/courses (số thật, tăng theo hành vi người dùng)

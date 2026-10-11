@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
 import { absUrl } from "@/lib/seo";
 import CourseDetailView from "@/components/CourseDetailView";
-import { getCourse, getCourses } from "@/lib/courses.server";
+import { getCourse, getCourses, getVisibleCourses } from "@/lib/courses.server";
 
 export async function generateStaticParams() {
   return (await getCourses()).map((c) => ({ slug: c.slug }));
@@ -19,13 +19,14 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     alternates: { canonical: absUrl(`/courses/${c.slug}`) },
     openGraph: { type: "website", title: c.title, description, url: absUrl(`/courses/${c.slug}`), siteName: site.name, locale: "vi_VN" },
     twitter: { card: "summary_large_image", title: c.title, description },
+    ...(c.hidden ? { robots: { index: false, follow: false } } : {}), // khóa ẩn: trang vẫn có (người đã ghi danh / link trực tiếp) nhưng không index
   };
 }
 
 export default async function CourseDetail({ params }: { params: { slug: string } }) {
   const course = await getCourse(params.slug);
   if (!course) notFound();
-  const courses = await getCourses();
+  const courses = await getVisibleCourses();
   const related = courses.filter((c) => c.category === course.category && c.slug !== course.slug).slice(0, 4);
   // Dữ liệu có cấu trúc (schema.org/Course) để Google hiện rich result
   const jsonLd = {

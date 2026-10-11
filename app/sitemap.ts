@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getCourses } from "@/lib/courses.server";
+import { getVisibleCourses } from "@/lib/courses.server";
 import { absUrl } from "@/lib/seo";
 import { site } from "@/lib/site";
 
@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 
 /** Sitemap sinh lúc build từ DB (qua getCourses): trang tĩnh + mọi khóa học + chính sách. Trang cần đăng nhập không đưa vào. */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const courses = await getCourses();
+  const courses = await getVisibleCourses();
   const now = new Date();
   return [
     { url: absUrl("/"), lastModified: now, changeFrequency: "daily", priority: 1 },

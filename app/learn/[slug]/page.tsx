@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import LearnView from "@/components/LearnView";
-import { getCourse, getCourses } from "@/lib/courses.server";
+import { getCourse, getCourses, getVisibleCourses } from "@/lib/courses.server";
 import { pageMeta } from "@/lib/seo";
 import { isComingSoon } from "@/lib/site";
 
@@ -18,7 +18,7 @@ export default async function LearnPage({ params }: { params: { slug: string } }
   const course = await getCourse(params.slug);
   if (!course) notFound();
   // Gợi ý học tiếp ở màn tổng kết: cùng danh mục, đang bán, không phải khóa này
-  const related = (await getCourses()).filter((c) => c.category === course.category && c.slug !== course.slug && !isComingSoon(c.category)).slice(0, 3);
+  const related = (await getVisibleCourses()).filter((c) => c.category === course.category && c.slug !== course.slug && !isComingSoon(c.category)).slice(0, 3);
   // ?lesson=<index> đọc ở client nên cần Suspense để xuất tĩnh
   return <Suspense><LearnView course={course} related={related} /></Suspense>;
 }

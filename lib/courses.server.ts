@@ -6,10 +6,10 @@ import { API_URL } from "./api";
 import { Category, Course, courses as fallbackCourses } from "@/data/courses";
 
 type ApiLesson = { title: string; duration: string; free: boolean; video: string | null; has_video: boolean; quiz_count?: number; content?: string | null; has_content?: boolean; attachments?: { name: string; kind: "file" | "link"; size: number; content_type: string }[] };
-type ApiCourse = Omit<Course, "lessons" | "tags" | "category"> & { category: string; faculty?: string; tags: string[]; lessons: ApiLesson[] };
+type ApiCourse = Omit<Course, "lessons" | "tags" | "category"> & { category: string; faculty?: string; hidden?: boolean; tags: string[]; lessons: ApiLesson[] };
 
 const fromApi = (c: ApiCourse): Course => ({
-  slug: c.slug, title: c.title, category: c.category as Category, faculty: c.faculty || undefined, tags: c.tags as Category[], price: c.price,
+  slug: c.slug, title: c.title, category: c.category as Category, faculty: c.faculty || undefined, hidden: c.hidden || undefined, tags: c.tags as Category[], price: c.price,
   color: c.color, emoji: c.emoji, cover: c.cover || undefined, short: c.short, description: c.description, includes: c.includes, featured: c.featured,
   lessons: c.lessons.map((l) => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined, content: l.content ?? undefined, hasContent: l.has_content, attachments: l.attachments?.length ? l.attachments : undefined })),
 });
@@ -20,7 +20,8 @@ const BUILD_NONCE = Date.now().toString(36);
 
 async function fetchFromApi(): Promise<Course[] | null> {
   try {
-    const res = await fetch(`${API_URL}/api/courses/export?build=${BUILD_NONCE}`, {
+    // include_hidden: khóa ẩn vẫn cần trang chi tiết/học cho người đã ghi danh; các trang liệt kê dùng getVisibleCourses()
+    const res = await fetch(`${API_URL}/api/courses/export?include_hidden=true&build=${BUILD_NONCE}`, {
       signal: AbortSignal.timeout(15_000),
       // build: cache theo lần build; dev: luôn lấy mới để thấy thay đổi từ admin ngay
       cache: process.env.NODE_ENV === "production" ? "force-cache" : "no-store",
@@ -44,6 +45,11 @@ export function getCourses(): Promise<Course[]> {
     return r ?? fallbackCourses;
   });
   return cached;
+}
+
+/** Chỉ khóa đang hiện — cho trang chủ, danh sách, Phenikaa, sitemap, gợi ý liên quan. */
+export async function getVisibleCourses(): Promise<Course[]> {
+  return (await getCourses()).filter((c) => !c.hidden);
 }
 
 export async function getCourse(slug: string): Promise<Course | undefined> {
