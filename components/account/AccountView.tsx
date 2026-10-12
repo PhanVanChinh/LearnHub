@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
@@ -72,7 +73,7 @@ function AccountSummary() {
           {user.email_verified ? (
             <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">✓ Đã xác thực</span>
           ) : (
-            <a href="/verify?next=/account" className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 hover:bg-amber-100">Chưa xác thực →</a>
+            <Link href="/verify?next=/account" className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 hover:bg-amber-100">Chưa xác thực →</Link>
           )}
         </Row>
         <Row k="Vai trò">{user.role === "admin" ? "Quản trị viên" : "Học viên"}</Row>

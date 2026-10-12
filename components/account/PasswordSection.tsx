@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import NewPasswordFields from "@/components/NewPasswordFields";
@@ -93,7 +94,7 @@ function ChangePasswordForm() {
         {done && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">✓ Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.</p>}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : "Đổi mật khẩu"}</button>
-          <a href="/forgot-password" className="text-sm text-brand-700 hover:underline">Quên mật khẩu hiện tại?</a>
+          <Link href="/forgot-password" className="text-sm text-brand-700 hover:underline">Quên mật khẩu hiện tại?</Link>
         </div>
       </form>
     </Section>

@@ -53,7 +53,7 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
     try {
       const o = await ordersApi.create(slug);
       setOrder(o);
-      window.history.replaceState(null, "", `/checkout?order=${o.code}`); // F5 vẫn mở đúng đơn
+      window.history.replaceState(null, "", `${window.location.pathname}?order=${o.code}`); // F5 vẫn mở đúng đơn; pathname giữ basePath trên Pages
     } catch (e) {
       const ae = e as ApiError;
       if (ae.status === 409) setEnrolled(true); else setError(ae.message);

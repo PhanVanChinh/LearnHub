@@ -18,7 +18,7 @@ export default function CertificateView() {
   const lookup = async (c: string) => {
     if (!c.trim()) return;
     setCert(undefined); setError("");
-    try { setCert(await certificatesApi.verify(c)); window.history.replaceState(null, "", `/certificate?code=${encodeURIComponent(c.trim().toUpperCase())}`); }
+    try { setCert(await certificatesApi.verify(c)); window.history.replaceState(null, "", `${window.location.pathname}?code=${encodeURIComponent(c.trim().toUpperCase())}`); }
     catch (e) { setCert(null); setError((e as ApiError).message); }
   };
   useEffect(() => { if (initial) void lookup(initial); }, [initial]); // eslint-disable-line react-hooks/exhaustive-deps

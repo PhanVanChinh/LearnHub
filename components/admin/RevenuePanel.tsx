@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { adminApi, downloadFile, RevenueReport } from "@/lib/api";
 import { formatVND } from "@/lib/site";
@@ -96,7 +97,7 @@ export default function RevenuePanel() {
               const share = data.total ? Math.round((c.revenue * 100) / data.total) : 0;
               return (
                 <tr key={c.slug} className="border-t border-slate-100">
-                  <td className="py-2"><a href={`/courses/${c.slug}`} className="font-medium text-slate-800 hover:text-brand-700">{c.title}</a></td>
+                  <td className="py-2"><Link href={`/courses/${c.slug}`} className="font-medium text-slate-800 hover:text-brand-700">{c.title}</Link></td>
                   <td className="py-2 text-right">{c.orders}</td>
                   <td className="py-2 text-right font-medium">{formatVND(c.revenue)}</td>
                   <td className="py-2 text-right">
