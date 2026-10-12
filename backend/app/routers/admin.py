@@ -164,13 +164,23 @@ def revenue_report(days: int = Query(30, ge=1, le=365), db: Session = Depends(ge
 
 
 # ---------- export CSV ----------
+def _csv_cell(v):
+    """Chống CSV/formula injection: ô bắt đầu bằng = + - @ (hoặc tab/CR) được Excel/LibreOffice chạy như công thức
+    (vd tên người dùng "=HYPERLINK(...)" hay "-2+3+cmd|' /C calc'!A0"). Thêm dấu nháy đơn đầu ô → hiển thị như chữ."""
+    if v is None:
+        return ""
+    if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + v
+    return v
+
+
 def _csv_response(name: str, header: list[str], rows) -> Response:
-    """CSV UTF-8 có BOM để Excel mở đúng tiếng Việt; tải về dạng file."""
+    """CSV UTF-8 có BOM để Excel mở đúng tiếng Việt; tải về dạng file. Mọi ô đi qua _csv_cell."""
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(header)
     for r in rows:
-        w.writerow(["" if v is None else v for v in r])
+        w.writerow([_csv_cell(v) for v in r])
     body = "\ufeff" + buf.getvalue()
     return Response(body, media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="learnhub-{name}-{datetime.utcnow():%Y%m%d}.csv"'})
