@@ -77,6 +77,12 @@ def _strip_tags(html: str) -> str:
 
 
 # ---------- templates ----------
+def _e(v: str) -> str:
+    """Escape HTML cho mọi giá trị người dùng / admin nhập (tên, tên khóa, email...) trước khi chèn vào mail:
+    tên "<a href=...>Nhận quà</a>" không được thành link lừa đảo trong mail mang thương hiệu LearnHub."""
+    return _html.escape(v or "", quote=True)
+
+
 def _layout(title: str, body: str) -> str:
     return f"""<!doctype html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#0f172a">
 <div style="max-width:520px;margin:32px auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
@@ -88,6 +94,7 @@ def _layout(title: str, body: str) -> str:
 
 
 def verification_email(name: str, code: str, minutes: int) -> tuple[str, str]:
+    name = _e(name)
     subject = f"{code} là mã xác thực LearnHub của bạn"
     body = f"""<p>Chào {name},</p>
 <p>Nhập mã sau để xác thực email. Mã có hiệu lực trong <b>{minutes} phút</b>.</p>
@@ -96,6 +103,7 @@ def verification_email(name: str, code: str, minutes: int) -> tuple[str, str]:
 
 
 def reset_password_email(name: str, link: str, minutes: int) -> tuple[str, str]:
+    name, link = _e(name), _e(link)
     subject = "Đặt lại mật khẩu LearnHub"
     body = f"""<p>Chào {name},</p>
 <p>Bấm nút dưới để đặt lại mật khẩu. Link có hiệu lực trong <b>{minutes} phút</b> và chỉ dùng được một lần.</p>
@@ -105,6 +113,7 @@ def reset_password_email(name: str, link: str, minutes: int) -> tuple[str, str]:
 
 
 def _btn(link: str, label: str) -> str:
+    link = _e(link)
     return (f'<p style="text-align:center;margin:24px 0"><a href="{link}" style="background:#1d4ed8;color:#fff;text-decoration:none;'
             f'font-weight:700;padding:12px 24px;border-radius:10px;display:inline-block">{label}</a></p>')
 
@@ -115,7 +124,10 @@ def _vnd(n: int) -> str:
 
 def order_created_email(name: str, code: str, course_title: str, amount: int, bank: dict, expire_hours: int, link: str) -> tuple[str, str]:
     """Gửi người mua ngay khi tạo đơn: hướng dẫn chuyển khoản + link mở lại đơn."""
-    subject = f"Đơn {code} — hướng dẫn thanh toán {course_title}"
+    subject_title = course_title  # tiêu đề mail là text thuần, không escape
+    name, course_title = _e(name), _e(course_title)  # link đi qua _btn (đã escape)
+    bank = {k: _e(str(v)) if v else v for k, v in bank.items()}
+    subject = f"Đơn {code} — hướng dẫn thanh toán {subject_title}"
     rows = "".join(f'<tr><td style="padding:6px 0;color:#64748b">{k}</td><td style="padding:6px 0;text-align:right;font-weight:600">{v}</td></tr>'
                    for k, v in [("Ngân hàng", bank.get("bank_name")), ("Số tài khoản", bank.get("account_number")),
                                 ("Chủ tài khoản", bank.get("account_name")), ("Số tiền", _vnd(amount)),
@@ -130,7 +142,9 @@ def order_created_email(name: str, code: str, course_title: str, amount: int, ba
 
 def order_paid_email(name: str, code: str, course_title: str, learn_link: str) -> tuple[str, str]:
     """Gửi người mua khi admin xác nhận đã nhận tiền."""
-    subject = f"Đã xác nhận thanh toán — {course_title}"
+    subject_title = course_title
+    name, course_title = _e(name), _e(course_title)
+    subject = f"Đã xác nhận thanh toán — {subject_title}"
     body = f"""<p>Chào {name},</p>
 <p>Đơn <b>{code}</b> đã được xác nhận. Khóa học <b>{course_title}</b> đã mở trong tài khoản của bạn, học được trên mọi thiết bị.</p>
 {_btn(learn_link, "Vào học ngay")}
@@ -140,7 +154,9 @@ def order_paid_email(name: str, code: str, course_title: str, learn_link: str) -
 
 def order_cancelled_email(name: str, code: str, course_title: str, note: str | None, link: str) -> tuple[str, str]:
     """Gửi người mua khi admin hủy đơn đang chờ (vd. không nhận được tiền, sai nội dung chuyển khoản)."""
-    subject = f"Đơn {code} đã bị hủy — {course_title}"
+    subject_title = course_title
+    name, course_title = _e(name), _e(course_title)
+    subject = f"Đơn {code} đã bị hủy — {subject_title}"
     reason = f"<p>Lý do: {_html.escape(note)}</p>" if note else ""
     body = f"""<p>Chào {name},</p>
 <p>Đơn <b>{code}</b> cho khóa học <b>{course_title}</b> đã được hủy và không còn hiệu lực thanh toán.</p>
@@ -152,6 +168,7 @@ def order_cancelled_email(name: str, code: str, course_title: str, note: str | N
 
 def order_admin_notify_email(code: str, buyer_email: str, course_title: str, amount: int, admin_link: str) -> tuple[str, str]:
     """Báo admin có đơn mới cần đối soát."""
+    buyer_email, course_title = _e(buyer_email), _e(course_title)
     subject = f"[LearnHub] Đơn mới {code} — {_vnd(amount)}"
     body = f"""<p><b>{buyer_email}</b> vừa đặt <b>{course_title}</b>, số tiền <b>{_vnd(amount)}</b>.</p>
 <p>Kiểm tra giao dịch có nội dung <span style="font-family:monospace;color:#1d4ed8">{code}</span> trong app ngân hàng rồi bấm "Đã nhận tiền".</p>
