@@ -137,7 +137,7 @@ def get_order(code: str, db: Session = Depends(get_db), user: User = Depends(get
     return order_out(_my_order(db, user, code), detail=True)
 
 
-@router.post("/{code}/cancel", response_model=schemas.OrderDetail)
+@router.post("/{code}/cancel", response_model=schemas.OrderDetail, dependencies=[rate_limit("order-cancel", 20, 600)])
 def cancel_order(code: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     order = _my_order(db, user, code)
     if order.status != PENDING:

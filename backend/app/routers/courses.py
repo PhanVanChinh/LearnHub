@@ -208,7 +208,7 @@ def get_quiz(slug: str, index: int, db: Session = Depends(get_db), user: User | 
                               questions=[schemas.QuizQuestionPublic(q=q.q, options=q.options) for q in quiz.questions])
 
 
-@router.post("/{slug}/lessons/{index}/quiz/submit", response_model=schemas.QuizResult)
+@router.post("/{slug}/lessons/{index}/quiz/submit", response_model=schemas.QuizResult, dependencies=[rate_limit("quiz", 30, 600)])
 def submit_quiz(slug: str, index: int, payload: schemas.QuizSubmitIn, db: Session = Depends(get_db),
                 user: User | None = Depends(get_current_user_optional)):
     """Chấm điểm. Đăng nhập → lưu lần làm; đạt và đã ghi danh → đánh dấu bài hoàn thành."""
@@ -262,7 +262,7 @@ def get_note(slug: str, index: int, db: Session = Depends(get_db), user: User = 
     return _note_out(course, lesson["id"], note)
 
 
-@router.put("/{slug}/lessons/{index}/note", response_model=schemas.LessonNoteOut)
+@router.put("/{slug}/lessons/{index}/note", response_model=schemas.LessonNoteOut, dependencies=[rate_limit("note", 120, 600)])
 def save_note(slug: str, index: int, payload: schemas.LessonNoteIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """Lưu (tạo / cập nhật) ghi chú; text rỗng → xóa."""
     course, lesson = _lesson_for_access(slug, index, db, user)
@@ -364,7 +364,7 @@ def get_progress(slug: str, db: Session = Depends(get_db), user: User = Depends(
     return _progress(db, user, _require_enrolled(db, user, slug))
 
 
-@router.put("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
+@router.put("/{slug}/lessons/{index}/complete", response_model=schemas.Progress, dependencies=[rate_limit("complete", 120, 600)])
 def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Đánh dấu bài đã hoàn thành (idempotent)."""
     course = _require_enrolled(db, user, slug)
@@ -375,7 +375,7 @@ def complete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: 
     return _progress(db, user, course)
 
 
-@router.delete("/{slug}/lessons/{index}/complete", response_model=schemas.Progress)
+@router.delete("/{slug}/lessons/{index}/complete", response_model=schemas.Progress, dependencies=[rate_limit("complete", 120, 600)])
 def uncomplete_lesson(slug: str, index: int, db: Session = Depends(get_db), user: User = Depends(require_verified)):
     """Bỏ đánh dấu hoàn thành."""
     course = _require_enrolled(db, user, slug)
