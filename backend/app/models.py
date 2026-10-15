@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -178,6 +178,8 @@ class QuizAttempt(Base):
     """Một lần nộp bài trắc nghiệm của người dùng (chỉ lưu khi đã đăng nhập)."""
 
     __tablename__ = "quiz_attempts"
+    # Truy vấn chính (lịch sử làm bài, dọn dữ liệu) lọc theo cả ba cột → index tổ hợp thay vì 3 index đơn
+    __table_args__ = (Index("ix_quiz_attempts_user_course_lesson", "user_id", "course_id", "lesson_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)

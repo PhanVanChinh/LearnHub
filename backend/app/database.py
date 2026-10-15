@@ -55,6 +55,8 @@ def migrate() -> None:
             if "lesson_id" not in cols:
                 conn.execute(text("ALTER TABLE quiz_attempts ADD COLUMN lesson_id VARCHAR(32)"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_quiz_attempts_lesson_id ON quiz_attempts (lesson_id)"))
+            # DB tạo trước khi có index tổ hợp (create_all không thêm index cho bảng đã tồn tại)
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_quiz_attempts_user_course_lesson ON quiz_attempts (user_id, course_id, lesson_id)"))
     if "users" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("users")}
         with engine.begin() as conn:
