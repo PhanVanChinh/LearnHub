@@ -23,6 +23,7 @@ from .routers.account import purge_expired_tokens
 from .database import SessionLocal
 from .startup_checks import find_problems, run_startup_checks
 from .lessons import ensure_lesson_ids, migrate_lesson_refs
+from .retention import purge_old_data
 from . import ai_check as ai_check_svc
 from . import captcha, google_auth, mailer, storage
 from .security import require_admin
@@ -41,6 +42,7 @@ async def lifespan(app: FastAPI):
         backfill_faculty(db)  # khóa tạo trước khi có trường khoa
         migrate_lesson_refs(db)  # tiến độ / trắc nghiệm theo số thứ tự → theo mã bài
         purge_expired_tokens(db)
+        purge_old_data(db)  # nhật ký > 1 năm, AI Check > 90 ngày, chỉ giữ 20 lần làm gần nhất mỗi bài
         run_startup_checks(db)  # production: RuntimeError → tiến trình dừng, không chạy với cấu hình mặc định
     finally:
         db.close()
