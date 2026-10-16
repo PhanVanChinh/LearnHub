@@ -63,3 +63,58 @@ def test_legacy_token_without_jti_still_accepted(client):
     client.cookies.clear()
     r = client.post("/api/auth/refresh", json={"refresh_token": legacy})
     assert r.status_code == 200 and "jti" in jwt.get_unverified_claims(r.json()["refresh_token"])
+
+
+
+def _refresh(client, token):
+    client.cookies.clear()
+    return client.post("/api/auth/refresh", json={"refresh_token": token})
+
+
+def _new_user(client, email):
+    client.post("/api/auth/register", json={"email": email, "full_name": "RT", "password": "MatKhau2024"})
+    client.cookies.clear()
+
+
+def test_refresh_rotates_token(client):
+    _new_user(client, "rt3@example.com")
+    t1 = _login(client, "rt3@example.com")
+    r = _refresh(client, t1)
+    assert r.status_code == 200
+    t2 = r.json()["refresh_token"]
+    assert t2 != t1 and _refresh(client, t2).status_code == 200
+
+
+def test_reuse_within_grace_is_allowed(client):
+    """Hai tab gia hạn cùng lúc bằng cùng token: không ai bị đá ra."""
+    _new_user(client, "rt4@example.com")
+    t1 = _login(client, "rt4@example.com")
+    t2 = _refresh(client, t1).json()["refresh_token"]
+    again = _refresh(client, t1)
+    assert again.status_code == 200
+    assert _refresh(client, t2).status_code == 200
+
+
+def test_reuse_after_grace_revokes_whole_family(client, monkeypatch):
+    """Token đã bị thay mà vẫn có người dùng lại (kẻ gian chép được) → 401 và cả chuỗi bị thu hồi, chủ thật phải đăng nhập lại."""
+    from app.routers import auth as auth_router
+    monkeypatch.setattr(auth_router, "ROTATION_GRACE_SECONDS", -1)
+    _new_user(client, "rt5@example.com")
+    stolen = _login(client, "rt5@example.com")
+    legit = _refresh(client, stolen).json()["refresh_token"]
+    assert _refresh(client, stolen).status_code == 401
+    assert _refresh(client, legit).status_code == 401
+    # lần đăng nhập khác (chuỗi khác) không bị ảnh hưởng
+    other = _login(client, "rt5@example.com")
+    assert _refresh(client, other).status_code == 200
+
+
+def test_logout_with_rotated_token_ends_session(client):
+    """Đăng xuất bằng token cũ (đã xoay vòng) vẫn kết thúc lần đăng nhập đó; khoảng ân hạn không cứu được token cũ."""
+    _new_user(client, "rt6@example.com")
+    t1 = _login(client, "rt6@example.com")
+    t2 = _refresh(client, t1).json()["refresh_token"]
+    client.cookies.clear()
+    assert client.post("/api/auth/logout", json={"refresh_token": t1}).status_code == 204
+    assert _refresh(client, t1).status_code == 401
+    assert _refresh(client, t2).status_code == 401

@@ -51,11 +51,14 @@ def create_access_token(user: User) -> str:
     return _encode(user, "access", timedelta(minutes=settings.access_token_expire_minutes))
 
 
-def create_refresh_token(user: User, db: Session, family: str | None = None) -> str:
-    """Phát hành refresh token có `jti` và ghi vào bảng refresh_tokens (không commit — caller commit)."""
+def create_refresh_token(user: User, db: Session, family: str | None = None, replaces: RefreshToken | None = None) -> str:
+    """Phát hành refresh token có `jti` và ghi vào bảng refresh_tokens (không commit — caller commit).
+    `replaces`: token cũ đang được xoay vòng → đánh dấu đã thay (revoked_at + replaced_by)."""
     lifetime = timedelta(days=settings.refresh_token_expire_days)
     jti, family = secrets.token_hex(16), family or secrets.token_hex(16)
     db.add(RefreshToken(jti=jti, family=family, user_id=user.id, expires_at=datetime.utcnow() + lifetime))
+    if replaces is not None and replaces.revoked_at is None:
+        replaces.revoked_at, replaces.replaced_by = datetime.utcnow(), jti
     return _encode(user, "refresh", lifetime, {"jti": jti, "fam": family})
 
 
@@ -67,15 +70,21 @@ def refresh_row(token: str, db: Session) -> RefreshToken | None:
 
 
 def revoke_refresh(token: str, db: Session) -> bool:
-    """Thu hồi đúng refresh token này (đăng xuất thiết bị). Không commit."""
+    """Đăng xuất thiết bị: thu hồi cả chuỗi (family) của lần đăng nhập chứa token này — kể cả khi token trình ra là bản
+    cũ đã được xoay vòng, để không còn dùng được nhờ khoảng ân hạn. Lần đăng nhập khác (thiết bị khác) không ảnh hưởng. Không commit."""
     row = refresh_row(token, db)
-    if row and row.revoked_at is None:
-        row.revoked_at = datetime.utcnow()
-        return True
-    return False
+    if not row:
+        return False
+    n = db.query(RefreshToken).filter(RefreshToken.family == row.family, RefreshToken.revoked_at.is_(None)).update(
+        {RefreshToken.revoked_at: datetime.utcnow()}, synchronize_session=False)
+    return n > 0
 
 
-def user_from_token(token: str, db: Session, kind: str = "access") -> User | None:
+def family_alive(db: Session, family: str) -> bool:
+    return db.query(RefreshToken.id).filter(RefreshToken.family == family, RefreshToken.revoked_at.is_(None)).first() is not None
+
+
+def user_from_token(token: str, db: Session, kind: str = "access", check_row: bool = True) -> User | None:
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         user_id = int(payload.get("sub"))
@@ -85,7 +94,7 @@ def user_from_token(token: str, db: Session, kind: str = "access") -> User | Non
         return None
     if typ != kind:
         return None
-    if kind == "refresh" and payload.get("jti"):
+    if kind == "refresh" and check_row and payload.get("jti"):
         # Token mới: phải còn trong bảng và chưa bị thu hồi. Token cũ (trước khi có bảng, không jti) vẫn nhận tới khi hết hạn.
         row = db.query(RefreshToken).filter_by(jti=payload["jti"]).first()
         if not row or row.revoked_at is not None or row.user_id != user_id:

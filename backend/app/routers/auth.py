@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import secrets
 from datetime import datetime, timedelta
 
@@ -13,12 +14,13 @@ from ..database import get_db
 from ..models import EmailVerification, PasswordReset, User, RefreshToken
 from ..passwords import password_issues
 from ..ratelimit import client_ip, rate_limit
-from ..security import create_access_token, create_refresh_token, get_current_user, hash_password, revoke_refresh, user_from_token, verify_password
+from ..security import create_access_token, create_refresh_token, get_current_user, family_alive, hash_password, refresh_row, revoke_refresh, user_from_token, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 REFRESH_COOKIE = "learnhub_refresh"
+ROTATION_GRACE_SECONDS = 10  # gia hạn trùng do nhiều tab / mạng chập chờn trong khoảng này không bị coi là đánh cắp
 
 
 def set_refresh_cookie(response: Response, token: str) -> None:
@@ -33,10 +35,10 @@ def clear_refresh_cookie(response: Response) -> None:
     response.delete_cookie(REFRESH_COOKIE, path="/api/auth", secure=settings.cookie_secure_effective, samesite=settings.cookie_samesite)
 
 
-def _issue(user: User, response: Response, db: Session) -> schemas.Token:
+def _issue(user: User, response: Response, db: Session, family: str | None = None, replaces: RefreshToken | None = None) -> schemas.Token:
     """Cấp access + refresh token (refresh được ghi vào bảng để thu hồi được). Refresh luôn vào cookie;
     chỉ kèm trong JSON khi REFRESH_TOKEN_IN_BODY=true."""
-    refresh = create_refresh_token(user, db)
+    refresh = create_refresh_token(user, db, family=family, replaces=replaces)
     db.commit()
     set_refresh_cookie(response, refresh)
     return schemas.Token(access_token=create_access_token(user), refresh_token=refresh if settings.refresh_token_in_body else None,
@@ -231,13 +233,30 @@ def refresh(request: Request, response: Response, payload: schemas.RefreshIn | N
     token = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
     if not token:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Chưa đăng nhập")
+    def bad():
+        # Không raise HTTPException: header Set-Cookie trên `response` sẽ bị bỏ → trả JSONResponse riêng kèm lệnh xóa cookie hỏng
+        r = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"})
+        clear_refresh_cookie(r)
+        return r
+
+    # Xoay vòng: mỗi lần gia hạn, token cũ bị thay bằng token mới cùng "family" (chuỗi của một lần đăng nhập).
+    row = refresh_row(token, db)
+    if row is not None and row.revoked_at is not None:
+        if row.replaced_by and family_alive(db, row.family) and (datetime.utcnow() - row.revoked_at).total_seconds() <= ROTATION_GRACE_SECONDS:
+            # Hai tab / hai request gia hạn gần như cùng lúc bằng cùng token: cho qua, cấp token mới trong cùng chuỗi
+            user = user_from_token(token, db, kind="refresh", check_row=False)
+            return _issue(user, response, db, family=row.family) if user else bad()
+        if row.replaced_by:
+            # Token đã được thay từ lâu mà vẫn có người dùng lại → nhiều khả năng bị đánh cắp: thu hồi cả chuỗi
+            db.query(RefreshToken).filter(RefreshToken.family == row.family, RefreshToken.revoked_at.is_(None)).update(
+                {RefreshToken.revoked_at: datetime.utcnow()}, synchronize_session=False)
+            db.commit()
+            logging.getLogger("learnhub.auth").warning("Phát hiện refresh token cũ bị dùng lại (user %s) → thu hồi cả chuỗi", row.user_id)
+        return bad()
     user = user_from_token(token, db, kind="refresh")
     if not user:
-        # Không raise HTTPException: header Set-Cookie trên `response` sẽ bị bỏ → trả JSONResponse riêng kèm lệnh xóa cookie hỏng
-        bad = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"})
-        clear_refresh_cookie(bad)
-        return bad
-    return _issue(user, response, db)
+        return bad()
+    return _issue(user, response, db, family=row.family if row else None, replaces=row)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

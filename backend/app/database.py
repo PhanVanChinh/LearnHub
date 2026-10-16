@@ -49,6 +49,11 @@ def migrate() -> None:
                 conn.execute(text("ALTER TABLE enrollments ADD COLUMN last_seconds INTEGER NOT NULL DEFAULT 0"))
             if "last_seen_at" not in cols:
                 conn.execute(text(f"ALTER TABLE enrollments ADD COLUMN last_seen_at {DT}"))
+    if "refresh_tokens" in insp.get_table_names():
+        cols = {c["name"] for c in insp.get_columns("refresh_tokens")}
+        if "replaced_by" not in cols:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE refresh_tokens ADD COLUMN replaced_by VARCHAR(32)"))
     if "quiz_attempts" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("quiz_attempts")}
         with engine.begin() as conn:

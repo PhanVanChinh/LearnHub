@@ -277,6 +277,7 @@ class RefreshToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    replaced_by: Mapped[str | None] = mapped_column(String(32), nullable=True)  # jti token kế tiếp khi bị xoay vòng (khác thu hồi do đăng xuất)
 
     user: Mapped[User] = relationship(back_populates="refresh_tokens")
 
