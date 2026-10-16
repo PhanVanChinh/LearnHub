@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from .. import audit, schemas, storage
 from ..enrollments import ensure_enrollment
 from ..lessons import assign_lesson_ids
+from ..timeutil import to_vn, vn_day_start_utc, vn_today
 from ..config import settings
 from ..database import get_db
 from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review, User
@@ -143,16 +144,17 @@ def publish(request: Request, db: Session = Depends(get_db), admin: User = Depen
 # ---------- stats ----------
 @router.get("/stats/revenue", response_model=schemas.RevenueReport)
 def revenue_report(days: int = Query(30, ge=1, le=365), db: Session = Depends(get_db)):
-    """Doanh thu theo ngày và theo khóa trong `days` ngày gần nhất (đơn paid, tính theo paid_at, ngày UTC)."""
-    today = datetime.utcnow().date()
+    """Doanh thu theo ngày và theo khóa trong `days` ngày gần nhất (đơn paid, tính theo paid_at, NGÀY GIỜ VIỆT NAM —
+    đơn duyệt lúc 01:00 sáng giờ VN thuộc hôm đó, khớp với sao kê ngân hàng)."""
+    today = vn_today()
     since = today - timedelta(days=days - 1)
-    rows = (db.query(Order).filter(Order.status == PAID, Order.paid_at >= datetime.combine(since, datetime.min.time()))
+    rows = (db.query(Order).filter(Order.status == PAID, Order.paid_at >= vn_day_start_utc(since))
             .order_by(Order.paid_at).all())
     by_day = {(since + timedelta(days=i)).isoformat(): schemas.RevenueDay(date=(since + timedelta(days=i)).isoformat(), revenue=0, orders=0)
               for i in range(days)}
     by_course: dict[int, schemas.RevenueCourse] = {}
     for o in rows:
-        d = by_day.get(o.paid_at.date().isoformat())
+        d = by_day.get(to_vn(o.paid_at).date().isoformat())
         if d:
             d.revenue += o.amount
             d.orders += 1
