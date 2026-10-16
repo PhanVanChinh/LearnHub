@@ -189,7 +189,8 @@ def _csv_response(name: str, header: list[str], rows) -> Response:
 
 
 def _ts(d: datetime | None) -> str:
-    return d.strftime("%Y-%m-%d %H:%M:%S") if d else ""
+    """Giờ Việt Nam kèm hậu tố +07:00 (DB lưu UTC): admin đối chiếu với sao kê ngân hàng không phải tự cộng 7 giờ."""
+    return to_vn(d).strftime("%Y-%m-%d %H:%M:%S") + " +07:00" if d else ""
 
 
 @router.get("/export/orders.csv", response_class=Response)

@@ -28,3 +28,22 @@ def test_vn_helpers():
     from app.timeutil import to_vn
     assert to_vn(datetime(2026, 10, 15, 18, 30)) == datetime(2026, 10, 16, 1, 30)
     assert vn_day_start_utc(datetime(2026, 10, 16).date()) == datetime(2026, 10, 15, 17, 0)
+
+
+def test_csv_timestamps_in_vn_time(client):
+    import csv
+    import io
+    admin = _admin(client)
+    _, _, order = _paid_order(client, admin, "tzcsv@example.com")
+    db = SessionLocal()
+    try:
+        o = db.query(Order).filter_by(code=order["code"]).first()
+        o.paid_at = datetime(2026, 10, 15, 18, 30, 0)  # UTC
+        db.commit()
+    finally:
+        db.close()
+    text = client.get("/api/admin/export/orders.csv", headers=admin).content.decode("utf-8").lstrip("﻿")
+    rows = list(csv.reader(io.StringIO(text)))
+    i = rows[0].index("thanh_toan_luc")
+    row = next(r for r in rows[1:] if r[0] == order["code"])
+    assert row[i] == "2026-10-16 01:30:00 +07:00"
