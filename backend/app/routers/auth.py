@@ -10,10 +10,10 @@ from sqlalchemy.orm import Session
 from .. import captcha, google_auth, mailer, schemas
 from ..config import settings
 from ..database import get_db
-from ..models import EmailVerification, PasswordReset, User
+from ..models import EmailVerification, PasswordReset, User, RefreshToken
 from ..passwords import password_issues
 from ..ratelimit import client_ip, rate_limit
-from ..security import create_access_token, create_refresh_token, get_current_user, hash_password, user_from_token, verify_password
+from ..security import create_access_token, create_refresh_token, get_current_user, hash_password, revoke_refresh, user_from_token, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -33,9 +33,11 @@ def clear_refresh_cookie(response: Response) -> None:
     response.delete_cookie(REFRESH_COOKIE, path="/api/auth", secure=settings.cookie_secure_effective, samesite=settings.cookie_samesite)
 
 
-def _issue(user: User, response: Response) -> schemas.Token:
-    """Cấp access + refresh token. Refresh luôn vào cookie; chỉ kèm trong JSON khi REFRESH_TOKEN_IN_BODY=true."""
-    refresh = create_refresh_token(user)
+def _issue(user: User, response: Response, db: Session) -> schemas.Token:
+    """Cấp access + refresh token (refresh được ghi vào bảng để thu hồi được). Refresh luôn vào cookie;
+    chỉ kèm trong JSON khi REFRESH_TOKEN_IN_BODY=true."""
+    refresh = create_refresh_token(user, db)
+    db.commit()
     set_refresh_cookie(response, refresh)
     return schemas.Token(access_token=create_access_token(user), refresh_token=refresh if settings.refresh_token_in_body else None,
                          user=schemas.UserOut.model_validate(user))
@@ -73,7 +75,7 @@ def google_login(payload: schemas.GoogleLoginIn, response: Response, db: Session
     user.last_login_at = now
     db.commit()
     db.refresh(user)
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 @router.post("/google/link", response_model=schemas.UserOut, dependencies=[rate_limit("google", 20, 60)])
@@ -119,7 +121,7 @@ def register(payload: schemas.UserCreate, request: Request, response: Response, 
     db.commit()
     db.refresh(user)
     _send_verification(db, user)
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 # ---------- xác thực email ----------
@@ -220,7 +222,7 @@ def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(
     user.locked_until = None
     user.last_login_at = now
     db.commit()
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 @router.post("/refresh", response_model=schemas.Token, dependencies=[rate_limit("refresh", 30, 60)])
@@ -235,22 +237,29 @@ def refresh(request: Request, response: Response, payload: schemas.RefreshIn | N
         bad = JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại"})
         clear_refresh_cookie(bad)
         return bad
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout(response: Response):
-    """Xóa cookie refresh trên thiết bị này. Access token còn hạn vẫn dùng được tới khi hết (tối đa 60 phút)."""
+def logout(request: Request, response: Response, payload: schemas.RefreshIn | None = Body(None), db: Session = Depends(get_db)):
+    """Thu hồi refresh token của thiết bị này (token bị lộ cũng hết dùng được) và xóa cookie.
+    Access token còn hạn vẫn dùng được tới khi hết (tối đa 60 phút)."""
+    token = (payload.refresh_token if payload else None) or request.cookies.get(REFRESH_COOKIE)
+    if token and revoke_refresh(token, db):
+        db.commit()
     clear_refresh_cookie(response)
 
 
 @router.post("/logout-all", response_model=schemas.Token)
 def logout_all(response: Response, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Thu hồi mọi token đã phát hành (mọi thiết bị); trả token mới cho thiết bị hiện tại."""
-    user.sessions_revoked_at = datetime.utcnow()
+    now = datetime.utcnow()
+    user.sessions_revoked_at = now
+    db.query(RefreshToken).filter(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None)).update(
+        {RefreshToken.revoked_at: now}, synchronize_session=False)
     db.commit()
     db.refresh(user)
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 @router.post("/token", response_model=schemas.Token, include_in_schema=False)
@@ -280,7 +289,7 @@ def change_password(payload: schemas.PasswordChange, response: Response, user: U
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Mật khẩu hiện tại không đúng")
     _check_new_password(user, payload.new_password, payload.current_password)
     _set_password(db, user, payload.new_password)
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 @router.post("/set-password", response_model=schemas.Token)
@@ -290,7 +299,7 @@ def set_password(payload: schemas.PasswordSet, response: Response, user: User = 
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Tài khoản đã có mật khẩu, hãy dùng chức năng đổi mật khẩu")
     _check_new_password(user, payload.new_password)
     _set_password(db, user, payload.new_password)
-    return _issue(user, response)
+    return _issue(user, response, db)
 
 
 def _check_new_password(user: User, new_password: str, current: str | None = None) -> None:

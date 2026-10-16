@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .models import AiCheckRun, AuditLog, QuizAttempt
+from .models import AiCheckRun, AuditLog, QuizAttempt, RefreshToken
 
 AUDIT_KEEP_DAYS = 365          # nhật ký quản trị: đủ cho đối soát một năm
 AI_CHECK_KEEP_DAYS = 90        # lượt AI Check chỉ cần cho hạn mức 24 giờ + thống kê gần đây
@@ -28,6 +28,8 @@ def purge_old_data(db: Session, now: datetime | None = None) -> dict[str, int]:
     out["audit_logs"] = _delete_ids(db, AuditLog, ids)
     ids = [r.id for r in db.query(AiCheckRun.id).filter(AiCheckRun.created_at < now - timedelta(days=AI_CHECK_KEEP_DAYS)).limit(BATCH)]
     out["ai_check_runs"] = _delete_ids(db, AiCheckRun, ids)
+    ids = [r.id for r in db.query(RefreshToken.id).filter(RefreshToken.expires_at < now).limit(BATCH)]
+    out["refresh_tokens"] = _delete_ids(db, RefreshToken, ids)
 
     # Lần làm trắc nghiệm: nhóm (user, course, lesson) có > N lần → xóa các lần cũ hơn N lần gần nhất.
     # Giữ lại lần điểm cao nhất dù cũ, để "lần tốt nhất" không đổi sau khi dọn.

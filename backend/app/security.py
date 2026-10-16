@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session
 
 from .config import settings
 from .database import get_db
-from .models import User
+import secrets
+
+from .models import RefreshToken, User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
 
@@ -32,18 +34,45 @@ def _token_version(user: User) -> int:
     return int(mark.replace(tzinfo=timezone.utc).timestamp() * 1000) if mark else 0
 
 
-def _encode(user: User, kind: str, lifetime: timedelta) -> str:
+def _encode(user: User, kind: str, lifetime: timedelta, extra: dict | None = None) -> str:
     now = datetime.now(timezone.utc)
-    payload = {"sub": str(user.id), "typ": kind, "pv": _token_version(user), "iat": int(now.timestamp()), "exp": now + lifetime}
+    payload = {"sub": str(user.id), "typ": kind, "pv": _token_version(user), "iat": int(now.timestamp()), "exp": now + lifetime, **(extra or {})}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
+
+
+def _decode(token: str) -> dict | None:
+    try:
+        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError:
+        return None
 
 
 def create_access_token(user: User) -> str:
     return _encode(user, "access", timedelta(minutes=settings.access_token_expire_minutes))
 
 
-def create_refresh_token(user: User) -> str:
-    return _encode(user, "refresh", timedelta(days=settings.refresh_token_expire_days))
+def create_refresh_token(user: User, db: Session, family: str | None = None) -> str:
+    """Phát hành refresh token có `jti` và ghi vào bảng refresh_tokens (không commit — caller commit)."""
+    lifetime = timedelta(days=settings.refresh_token_expire_days)
+    jti, family = secrets.token_hex(16), family or secrets.token_hex(16)
+    db.add(RefreshToken(jti=jti, family=family, user_id=user.id, expires_at=datetime.utcnow() + lifetime))
+    return _encode(user, "refresh", lifetime, {"jti": jti, "fam": family})
+
+
+def refresh_row(token: str, db: Session) -> RefreshToken | None:
+    """Dòng refresh_tokens ứng với token (None với token cũ không có jti hoặc token hỏng)."""
+    p = _decode(token)
+    jti = p.get("jti") if p else None
+    return db.query(RefreshToken).filter_by(jti=jti).first() if jti else None
+
+
+def revoke_refresh(token: str, db: Session) -> bool:
+    """Thu hồi đúng refresh token này (đăng xuất thiết bị). Không commit."""
+    row = refresh_row(token, db)
+    if row and row.revoked_at is None:
+        row.revoked_at = datetime.utcnow()
+        return True
+    return False
 
 
 def user_from_token(token: str, db: Session, kind: str = "access") -> User | None:
@@ -56,6 +85,11 @@ def user_from_token(token: str, db: Session, kind: str = "access") -> User | Non
         return None
     if typ != kind:
         return None
+    if kind == "refresh" and payload.get("jti"):
+        # Token mới: phải còn trong bảng và chưa bị thu hồi. Token cũ (trước khi có bảng, không jti) vẫn nhận tới khi hết hạn.
+        row = db.query(RefreshToken).filter_by(jti=payload["jti"]).first()
+        if not row or row.revoked_at is not None or row.user_id != user_id:
+            return None
     user = db.get(User, user_id)
     if not user or not user.is_active or pwd_version != _token_version(user):
         return None

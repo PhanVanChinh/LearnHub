@@ -50,6 +50,7 @@ class User(Base):
         marks = [d for d in (self.password_changed_at, self.sessions_revoked_at) if d]
         return max(marks) if marks else None
     completions: Mapped[list["LessonCompletion"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     notes: Mapped[list["LessonNote"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="user", foreign_keys="Order.user_id", cascade="all, delete-orphan")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -260,6 +261,24 @@ class LessonCompletion(Base):
 
     user: Mapped[User] = relationship(back_populates="completions")
     course: Mapped[Course] = relationship(back_populates="completions")
+
+
+class RefreshToken(Base):
+    """Refresh token đã phát hành (chỉ lưu mã `jti`, không lưu token). Cho phép thu hồi TỪNG thiết bị: đăng xuất thu hồi
+    đúng token đó thay vì chỉ xóa cookie (token bị lộ vẫn dùng được tới 30 ngày như trước).
+    `family` gom các token sinh ra từ một lần đăng nhập — dùng cho phát hiện token cũ bị dùng lại."""
+
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    jti: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    family: Mapped[str] = mapped_column(String(32), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="refresh_tokens")
 
 
 class LessonNote(Base):

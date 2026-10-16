@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import audit, schemas
 from ..database import get_db
-from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonCompletion, LessonNote, LessonProgress, Order, PasswordReset, QuizAttempt, Review, User
+from ..models import AiCheckRun, Certificate, ContactMessage, EmailVerification, Enrollment, LessonCompletion, LessonNote, LessonProgress, Order, PasswordReset, QuizAttempt, RefreshToken, Review, User
 from ..ratelimit import rate_limit
 from ..security import get_current_user, verify_password
 from .orders import CANCELLED, PENDING
@@ -89,7 +89,7 @@ def anonymize_user(db: Session, user: User) -> None:
     """
     now = datetime.utcnow()
     uid = user.id
-    for model in (Enrollment, LessonCompletion, LessonProgress, LessonNote, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review):
+    for model in (Enrollment, LessonCompletion, LessonProgress, LessonNote, QuizAttempt, AiCheckRun, EmailVerification, PasswordReset, Certificate, Review, RefreshToken):
         db.query(model).filter(model.user_id == uid).delete(synchronize_session=False)
     db.query(Order).filter(Order.user_id == uid, Order.status == PENDING).update({"status": CANCELLED}, synchronize_session=False)
     db.query(ContactMessage).filter(ContactMessage.user_id == uid).update(
