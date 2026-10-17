@@ -127,6 +127,8 @@ export type CourseDetail = {
   lessons: LessonOut[]; enrolled: boolean;
 };
 export type CoursePublic = Omit<CourseDetail, "enrolled">;
+/** Thẻ khóa học gọn (GET /api/courses): không có bài học, mô tả dài hay Markdown — dùng để làm mới giá/tên ở trang danh sách */
+export type CourseCardData = Omit<CourseDetail, "enrolled" | "description" | "includes" | "lessons">;
 export type LessonVideo = { index: number; title: string; video: string | null };
 
 export type QuizPublic = { index: number; title: string; pass_percent: number; total: number; questions: { q: string; options: string[] }[] };
@@ -146,6 +148,8 @@ export const coursesApi = {
   view: (slug: string) => api<void>(`/api/courses/${slug}/view`, { method: "POST" }),
   /** Toàn bộ khóa học dạng công khai (bản mới nhất từ DB) — dùng để làm mới danh sách đã build tĩnh */
   exportAll: () => api<CoursePublic[]>("/api/courses/export"),
+  /** Danh sách thẻ khóa đang hiện (tối đa 200), nhẹ hơn export nhiều lần */
+  cards: () => api<CourseCardData[]>("/api/courses?limit=200"),
   mine: () => api<EnrolledCourse[]>("/api/courses/me/enrolled"),
   progress: (slug: string) => api<Progress>(`/api/courses/${slug}/progress`),
   /** Bài + giây đang xem, để "Học tiếp" mở đúng chỗ trên mọi thiết bị (trình phát gọi định kỳ) */

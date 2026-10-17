@@ -4,7 +4,7 @@
 // Không có backend → giữ nguyên dữ liệu tĩnh, không báo lỗi.
 import { useEffect, useMemo, useState } from "react";
 import type { Category, Course, Lesson } from "@/data/courses";
-import { CourseDetail, CoursePublic, coursesApi, LessonOut } from "./api";
+import { CourseCardData, CourseDetail, CoursePublic, coursesApi, LessonOut } from "./api";
 
 const TTL = 5_000; // gộp các lời gọi trong cùng một lần tải trang → 1 request, 1 lượt xem
 
@@ -19,13 +19,23 @@ export function fetchCourseDetail(slug: string, fresh = false): Promise<CourseDe
   return p;
 }
 
-let exportCache: { at: number; p: Promise<CoursePublic[]> } | null = null;
-function fetchExport(): Promise<CoursePublic[]> {
-  if (exportCache && Date.now() - exportCache.at < TTL) return exportCache.p;
-  const p = coursesApi.exportAll();
-  exportCache = { at: Date.now(), p };
-  p.catch(() => { exportCache = null; });
+// Trang danh sách chỉ cần làm mới thông tin trên thẻ (giá, tên, ảnh, nhãn) → gọi endpoint thẻ gọn thay vì export đầy đủ
+// (export kèm toàn bộ bài học, mô tả, Markdown nội dung — nặng hơn nhiều lần mà thẻ không dùng tới).
+let cardsCache: { at: number; p: Promise<CourseCardData[]> } | null = null;
+function fetchCards(): Promise<CourseCardData[]> {
+  if (cardsCache && Date.now() - cardsCache.at < TTL) return cardsCache.p;
+  const p = coursesApi.cards();
+  cardsCache = { at: Date.now(), p };
+  p.catch(() => { cardsCache = null; });
   return p;
+}
+
+/** Trộn dữ liệu thẻ mới nhất vào bản tĩnh; bài học / mô tả giữ nguyên bản build (cập nhật ở lần Xuất bản sau). */
+function mergeCard(base: Course, d: CourseCardData): Course {
+  return {
+    ...base, title: d.title, category: d.category as Category, faculty: d.faculty || undefined, hidden: d.hidden || undefined,
+    tags: d.tags as Category[], price: d.price, color: d.color, emoji: d.emoji, cover: d.cover || undefined, short: d.short, featured: d.featured,
+  };
 }
 
 const toLesson = (l: LessonOut): Lesson => ({ title: l.title, duration: l.duration, free: l.free || undefined, video: l.video ?? undefined, hasVideo: l.has_video, quizCount: l.quiz_count || undefined, content: l.content ?? undefined, hasContent: l.has_content, attachments: l.attachments?.length ? l.attachments : undefined });
@@ -53,15 +63,15 @@ export function useLiveCourse(initial: Course, deps: unknown[] = []) {
 
 /** Danh sách: cập nhật các khóa ĐÃ có trong bản tĩnh. Khóa mới trong DB chưa có trang tĩnh (sẽ 404) nên chờ rebuild. */
 export function useLiveCourses(initial: Course[]): Course[] {
-  const [rows, setRows] = useState<CoursePublic[] | null>(null);
+  const [rows, setRows] = useState<CourseCardData[] | null>(null);
   useEffect(() => {
     let alive = true;
-    fetchExport().then((r) => alive && setRows(r)).catch(() => alive && setRows(null));
+    fetchCards().then((r) => alive && setRows(r)).catch(() => alive && setRows(null));
     return () => { alive = false; };
   }, []);
   return useMemo(() => {
     if (!rows) return initial;
     const bySlug = new Map(rows.map((r) => [r.slug, r]));
-    return initial.map((c) => { const d = bySlug.get(c.slug); return d ? mergeCourse(c, d) : c; });
+    return initial.map((c) => { const d = bySlug.get(c.slug); return d ? mergeCard(c, d) : c; });
   }, [initial, rows]);
 }
