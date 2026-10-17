@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import String, Text, cast, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from .. import schemas, storage
 from ..database import get_db
@@ -314,15 +314,21 @@ def _mark_completed(db: Session, user: User, course: Course, lesson_id: str | No
         db.add(LessonCompletion(user_id=user.id, course_id=course.id, lesson_id=lesson_id))
 
 
-def _progress(db: Session, user: User, course: Course) -> schemas.Progress:
-    """Tiến độ tính theo mã bài: bài đã xóa không còn tính, bài mới thêm làm % giảm. API vẫn trả chỉ số để frontend dùng."""
+_UNSET = object()
+
+
+def _progress(db: Session, user: User, course: Course, en=_UNSET, done_ids: set[str] | None = None) -> schemas.Progress:
+    """Tiến độ tính theo mã bài: bài đã xóa không còn tính, bài mới thêm làm % giảm. API vẫn trả chỉ số để frontend dùng.
+    `en` / `done_ids` truyền sẵn khi tính cho nhiều khóa một lúc (my_courses) để không query lại từng khóa."""
     lessons = course.lessons or []
     total = len(lessons)
     index_of = {l.get("id"): i for i, l in enumerate(lessons) if l.get("id")}
-    done = sorted({index_of[r.lesson_id] for r in db.query(LessonCompletion).filter_by(user_id=user.id, course_id=course.id).all()
-                   if r.lesson_id in index_of})
+    if done_ids is None:
+        done_ids = {r.lesson_id for r in db.query(LessonCompletion.lesson_id).filter_by(user_id=user.id, course_id=course.id)}
+    done = sorted({index_of[lid] for lid in done_ids if lid in index_of})
     next_index = next((i for i in range(total) if i not in done), None)
-    en = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first()
+    if en is _UNSET:
+        en = db.query(Enrollment).filter_by(user_id=user.id, course_id=course.id).first()
     last_index = index_of.get(en.last_lesson_id) if en and en.last_lesson_id else None
     return schemas.Progress(completed=done, total=total, percent=round(len(done) * 100 / total) if total else 0, next_index=next_index,
                             last_index=last_index, last_seconds=en.last_seconds if en and last_index is not None else 0)
@@ -352,11 +358,14 @@ def _require_enrolled(db: Session, user: User, slug: str) -> Course:
 
 @router.get("/me/enrolled", response_model=list[schemas.EnrolledCourseOut])
 def my_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    out = []
-    for e in user.enrollments:
-        out.append(schemas.EnrolledCourseOut(**schemas.CourseOut.model_validate(e.course).model_dump(),
-                                             progress=_progress(db, user, e.course)))
-    return out
+    # 2 query cho mọi khóa: ghi danh kèm khóa (join) + toàn bộ bài đã hoàn thành của người dùng. Trước đây 3 query / khóa.
+    enrollments = db.query(Enrollment).options(joinedload(Enrollment.course)).filter(Enrollment.user_id == user.id).order_by(Enrollment.id).all()
+    done_by_course: dict[int, set[str]] = {}
+    for cid, lid in db.query(LessonCompletion.course_id, LessonCompletion.lesson_id).filter(LessonCompletion.user_id == user.id):
+        done_by_course.setdefault(cid, set()).add(lid)
+    return [schemas.EnrolledCourseOut(**schemas.CourseOut.model_validate(e.course).model_dump(),
+                                      progress=_progress(db, user, e.course, en=e, done_ids=done_by_course.get(e.course_id, set())))
+            for e in enrollments]
 
 
 @router.get("/{slug}/progress", response_model=schemas.Progress)
