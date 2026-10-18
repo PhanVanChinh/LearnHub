@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile, status
 from sqlalchemy import String, func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager, joinedload
 
 from .. import audit, schemas, storage
 from ..enrollments import ensure_enrollment
@@ -40,6 +40,13 @@ def _user_out(user: User, count: int | None = None) -> schemas.AdminUserOut:
     out = schemas.AdminUserOut.model_validate(user)
     out.enrollment_count = len(user.enrollments) if count is None else count
     return out
+
+
+def _enrollment_counts(db: Session, column, ids: list[int]) -> dict[int, int]:
+    """Số ghi danh theo khóa / người cho cả trang trong MỘT câu GROUP BY (thay cho len(x.enrollments) tải hết dòng từng mục)."""
+    if not ids:
+        return {}
+    return dict(db.query(column, func.count(Enrollment.id)).filter(column.in_(ids)).group_by(column).all())
 
 
 def _enrollment_out(e: Enrollment) -> schemas.AdminEnrollmentOut:
@@ -363,7 +370,8 @@ def list_orders(
         query = query.filter(or_(Order.code.ilike(kw), User.email.ilike(kw)))
     total = query.count()
     # đơn chờ lên đầu, rồi mới nhất trước
-    items = query.order_by((Order.status == PENDING).desc(), Order.id.desc()).offset(offset).limit(limit).all()
+    items = (query.options(contains_eager(Order.user), joinedload(Order.course), joinedload(Order.confirmed_by))
+             .order_by((Order.status == PENDING).desc(), Order.id.desc()).offset(offset).limit(limit).all())
     return schemas.PaginatedOrders(total=total, limit=limit, offset=offset, items=[_admin_order_out(o) for o in items])
 
 
@@ -427,7 +435,8 @@ def list_courses(
         query = query.filter(Course.hidden.is_(hidden))
     total = query.count()
     items = query.order_by(Course.id).offset(offset).limit(limit).all()
-    return schemas.PaginatedCourses(total=total, limit=limit, offset=offset, items=[_course_out(c) for c in items])
+    counts = _enrollment_counts(db, Enrollment.course_id, [c.id for c in items])
+    return schemas.PaginatedCourses(total=total, limit=limit, offset=offset, items=[_course_out(c, counts.get(c.id, 0)) for c in items])
 
 
 @router.post("/courses", response_model=schemas.AdminCourseOut, status_code=status.HTTP_201_CREATED)
@@ -512,7 +521,8 @@ def list_users(
         query = query.filter(User.is_active == is_active)
     total = query.count()
     items = query.order_by(User.id).offset(offset).limit(limit).all()
-    return schemas.PaginatedUsers(total=total, limit=limit, offset=offset, items=[_user_out(u) for u in items])
+    counts = _enrollment_counts(db, Enrollment.user_id, [u.id for u in items])
+    return schemas.PaginatedUsers(total=total, limit=limit, offset=offset, items=[_user_out(u, counts.get(u.id, 0)) for u in items])
 
 
 @router.post("/users", response_model=schemas.AdminUserOut, status_code=status.HTTP_201_CREATED)
@@ -596,7 +606,7 @@ def list_enrollments(
     if course_id is not None:
         query = query.filter(Enrollment.course_id == course_id)
     total = query.count()
-    items = query.order_by(Enrollment.id.desc()).offset(offset).limit(limit).all()
+    items = query.options(joinedload(Enrollment.user), joinedload(Enrollment.course)).order_by(Enrollment.id.desc()).offset(offset).limit(limit).all()
     return schemas.PaginatedEnrollments(total=total, limit=limit, offset=offset, items=[_enrollment_out(e) for e in items])
 
 
@@ -692,7 +702,7 @@ def list_all_reviews(
         kw = f"%{q.strip()}%"
         query = query.filter(or_(Review.comment.ilike(kw), User.email.ilike(kw)))
     total = query.count()
-    items = query.order_by(Review.id.desc()).offset(offset).limit(limit).all()
+    items = query.options(contains_eager(Review.user), joinedload(Review.course)).order_by(Review.id.desc()).offset(offset).limit(limit).all()
     return schemas.PaginatedReviews(total=total, limit=limit, offset=offset, items=[_admin_review_out(r) for r in items])
 
 
