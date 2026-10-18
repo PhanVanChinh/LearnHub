@@ -203,7 +203,7 @@ def _ts(d: datetime | None) -> str:
 @router.get("/export/orders.csv", response_class=Response)
 def export_orders_csv(status_filter: str | None = Query(None, alias="status", pattern=r"^(pending|paid|cancelled|expired)$"),
                       db: Session = Depends(get_db)):
-    q = db.query(Order)
+    q = db.query(Order).options(joinedload(Order.user), joinedload(Order.course), joinedload(Order.confirmed_by))
     if status_filter:
         q = q.filter(Order.status == status_filter)
     rows = ((o.code, o.user.email, o.user.full_name, o.course.slug, o.course.title, o.amount, o.status, o.payment_method,
@@ -215,8 +215,9 @@ def export_orders_csv(status_filter: str | None = Query(None, alias="status", pa
 
 @router.get("/export/users.csv", response_class=Response)
 def export_users_csv(db: Session = Depends(get_db)):
+    counts = dict(db.query(Enrollment.user_id, func.count(Enrollment.id)).group_by(Enrollment.user_id).all())  # 1 câu cho mọi người dùng
     rows = ((u.id, u.email, u.full_name, u.role, "1" if u.is_active else "0", _ts(u.email_verified_at), "1" if u.has_google else "0",
-             len(u.enrollments), _ts(u.created_at), _ts(u.last_login_at))
+             counts.get(u.id, 0), _ts(u.created_at), _ts(u.last_login_at))
             for u in db.query(User).order_by(User.id).all())
     return _csv_response("nguoi-dung", ["id", "email", "ho_ten", "vai_tro", "hoat_dong", "xac_thuc_email_luc", "google",
                                         "so_khoa_ghi_danh", "tao_luc", "dang_nhap_gan_nhat"], rows)
@@ -225,7 +226,7 @@ def export_users_csv(db: Session = Depends(get_db)):
 @router.get("/export/enrollments.csv", response_class=Response)
 def export_enrollments_csv(db: Session = Depends(get_db)):
     rows = ((e.id, e.user.email, e.user.full_name, e.course.slug, e.course.title, _ts(e.created_at), _ts(e.last_seen_at))
-            for e in db.query(Enrollment).order_by(Enrollment.id).all())
+            for e in db.query(Enrollment).options(joinedload(Enrollment.user), joinedload(Enrollment.course)).order_by(Enrollment.id).all())
     return _csv_response("ghi-danh", ["id", "email", "ho_ten", "khoa_slug", "khoa", "ghi_danh_luc", "hoc_gan_nhat"], rows)
 
 

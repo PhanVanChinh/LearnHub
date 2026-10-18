@@ -57,3 +57,25 @@ def test_admin_lists_constant_queries(client):
         with count_queries() as many:
             client.get(path, params={"limit": 200}, headers=admin)
         assert many["q"] == one["q"], (path, one["q"], many["q"])
+
+
+def test_csv_exports_constant_queries(client):
+    """Xuất CSV: số câu SQL không tăng khi thêm người dùng / ghi danh / đơn."""
+    admin = _admin(client)
+    paths = ("/api/admin/export/orders.csv", "/api/admin/export/users.csv", "/api/admin/export/enrollments.csv")
+    before = {}
+    for p in paths:
+        with count_queries() as n:
+            assert client.get(p, headers=admin).status_code == 200
+        before[p] = n["q"]
+    for i in range(3):
+        h = _student(client, f"csv-nq{i}@example.com")
+        free = [c for c in client.get("/api/courses?limit=200").json() if c["price"] == 0][:2]
+        for c in free:
+            client.post(f"/api/courses/{c['slug']}/enroll", headers=h)
+        paid = next(c for c in client.get("/api/courses?limit=200").json() if c["price"] > 0 and c["category"] != "ai-check")
+        client.post("/api/orders", json={"course_slug": paid["slug"]}, headers=h)
+    for p in paths:
+        with count_queries() as n:
+            client.get(p, headers=admin)
+        assert n["q"] == before[p], (p, before[p], n["q"])
