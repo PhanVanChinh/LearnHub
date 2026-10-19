@@ -1,11 +1,14 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 
 /* Hộp thoại dùng chung toàn site (thay prompt/confirm/alert của trình duyệt). Render qua portal vào <body>
    nên gọi được từ trong <form> hay trang nền tối mà không lồng DOM sai. Admin re-export từ components/admin/ui.tsx. */
 
 export function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
+  // id riêng mỗi hộp thoại: form khóa học (Modal) mở thêm hộp xác nhận bên trong thì 2 tiêu đề không trùng id,
+  // trình đọc màn hình đọc đúng tiêu đề của hộp đang mở.
+  const titleId = useId();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
@@ -13,9 +16,9 @@ export function Modal({ title, onClose, children, wide = false }: { title: strin
   }, [onClose]);
   return (
     <div role="presentation" className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-slate-900/50 p-4" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div role="dialog" aria-modal="true" aria-labelledby="modal-title" className={`my-8 w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-2xl bg-white p-6 shadow-xl`}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`my-8 w-full ${wide ? "max-w-3xl" : "max-w-lg"} rounded-2xl bg-white p-6 shadow-xl`}>
         <div className="flex items-center justify-between">
-          <h2 id="modal-title" className="text-lg font-bold text-slate-900">{title}</h2>
+          <h2 id={titleId} className="text-lg font-bold text-slate-900">{title}</h2>
           <button onClick={onClose} aria-label="Đóng" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">✕</button>
         </div>
         <div className="mt-4">{children}</div>
