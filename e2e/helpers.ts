@@ -48,7 +48,8 @@ export async function registerAndVerify(page: Page, email: string, next = "/") {
   await expect.poll(() => { try { return otpFor(email); } catch { return null; } }, { timeout: 15_000 }).not.toBeNull();
   await page.getByLabel("Mã xác thực 6 số").fill(otpFor(email));
   // Form tự gửi khi đủ 6 số; bấm "Xác nhận" chỉ khi vẫn còn ở trang xác thực
-  await page.getByRole("button", { name: "Xác nhận" }).click({ timeout: 2_000 }).catch(() => {});
+  // exact: nếu trang đã chuyển sang /checkout thì "Xác nhận" (khớp chuỗi con) sẽ bấm nhầm nút "Xác nhận đặt hàng"
+  await page.getByRole("button", { name: "Xác nhận", exact: true }).click({ timeout: 2_000 }).catch(() => {});
   await expect(page).toHaveURL(new RegExp(next.replace(/[/?=&.]/g, "\\$&")));
 }
 
