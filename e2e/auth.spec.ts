@@ -20,3 +20,19 @@ test.describe("Đăng nhập", () => {
     await expect(page.getByRole("link", { name: "Đăng nhập" }).first()).toBeVisible();
   });
 });
+
+test("menu tài khoản: bấm ra ngoài thì đóng, Escape đóng và trả focus về nút", async ({ page }) => {
+  await loginUi(page, "admin@example.com", "admin123");
+  const button = page.getByRole("button", { name: /Tài khoản Admin/ });
+  await button.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.locator("main").click({ position: { x: 5, y: 5 } });
+  await expect(page.getByRole("menu")).toBeHidden();
+
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+  await expect(button).toBeFocused();
+});
