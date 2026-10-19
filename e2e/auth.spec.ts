@@ -16,13 +16,14 @@ test.describe("Đăng nhập", () => {
     await expect(menu).toBeVisible();
     await menu.click();
     await expect(page.getByRole("menu")).toContainText("Khóa học của tôi");
-    await page.getByRole("button", { name: "Đăng xuất" }).click();
+    await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
     await expect(page.getByRole("link", { name: "Đăng nhập" }).first()).toBeVisible();
   });
 });
 
 test("menu tài khoản: bấm ra ngoài thì đóng, Escape đóng và trả focus về nút", async ({ page }) => {
   await loginUi(page, "admin@example.com", "admin123");
+  await expect(page).toHaveURL(/\/$/); // chờ chuyển trang xong, không thì menu bị đóng theo đổi trang
   const button = page.getByRole("button", { name: /Tài khoản Admin/ });
   await button.click();
   await expect(page.getByRole("menu")).toBeVisible();
@@ -34,5 +35,28 @@ test("menu tài khoản: bấm ra ngoài thì đóng, Escape đóng và trả fo
   await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toBeHidden();
+  await expect(button).toBeFocused();
+});
+
+test("menu tài khoản: mở bằng bàn phím focus mục đầu, mũi tên / Home / End di chuyển", async ({ page }) => {
+  await loginUi(page, "admin@example.com", "admin123");
+  await expect(page).toHaveURL(/\/$/); // chờ chuyển trang xong, không thì menu bị đóng theo đổi trang
+  const button = page.getByRole("button", { name: /Tài khoản Admin/ });
+  await button.focus();
+  await page.keyboard.press("Enter");
+  const items = page.getByRole("menuitem");
+  await expect(items.first()).toBeFocused();
+  await expect(items.first()).toHaveText("Khóa học của tôi");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.getByRole("menuitem", { name: "Đơn hàng của tôi" })).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(page.getByRole("menuitem", { name: "Đăng xuất" })).toBeFocused();
+  await page.keyboard.press("ArrowDown"); // vòng về đầu
+  await expect(items.first()).toBeFocused();
+  await page.keyboard.press("ArrowUp"); // vòng về cuối
+  await expect(page.getByRole("menuitem", { name: "Đăng xuất" })).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(items.first()).toBeFocused();
+  await page.keyboard.press("Escape");
   await expect(button).toBeFocused();
 });
