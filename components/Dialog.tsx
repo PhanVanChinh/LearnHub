@@ -5,6 +5,25 @@ import { createPortal } from "react-dom";
 /* Hộp thoại dùng chung toàn site (thay prompt/confirm/alert của trình duyệt). Render qua portal vào <body>
    nên gọi được từ trong <form> hay trang nền tối mà không lồng DOM sai. Admin re-export từ components/admin/ui.tsx. */
 
+// Khóa cuộn trang phía sau khi có hộp thoại. Đếm số hộp đang mở để hộp lồng nhau đóng hộp trong không mở khóa sớm.
+let scrollLocks = 0;
+let savedBody: { overflow: string; paddingRight: string } | null = null;
+function lockScroll() {
+  if (scrollLocks++ > 0) return;
+  const body = document.body;
+  savedBody = { overflow: body.style.overflow, paddingRight: body.style.paddingRight };
+  // bù độ rộng thanh cuộn vừa biến mất để nội dung phía sau không bị giật sang phải
+  const gap = window.innerWidth - document.documentElement.clientWidth;
+  body.style.overflow = "hidden";
+  if (gap > 0) body.style.paddingRight = `${gap}px`;
+}
+function unlockScroll() {
+  if (--scrollLocks > 0 || !savedBody) return;
+  document.body.style.overflow = savedBody.overflow;
+  document.body.style.paddingRight = savedBody.paddingRight;
+  savedBody = null;
+}
+
 export function Modal({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) {
   // id riêng mỗi hộp thoại: form khóa học (Modal) mở thêm hộp xác nhận bên trong thì 2 tiêu đề không trùng id,
   // trình đọc màn hình đọc đúng tiêu đề của hộp đang mở.
@@ -15,6 +34,8 @@ export function Modal({ title, onClose, children, wide = false }: { title: strin
   // Đóng: trả focus về đúng nút đó — người dùng bàn phím không bị đẩy về đầu trang.
   // Ghi nhớ ngay lúc render đầu (trước khi autoFocus của nút/ô bên trong chiếm focus ở bước commit)
   const [opener] = useState(() => (typeof document !== "undefined" ? (document.activeElement as HTMLElement | null) : null));
+  useEffect(() => { lockScroll(); return unlockScroll; }, []);
+
   useEffect(() => {
     const box = boxRef.current;
     if (box && !box.contains(document.activeElement)) (focusables(box)[0] ?? box).focus();
