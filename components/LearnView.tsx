@@ -269,7 +269,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               <div>
                 <p className="text-5xl">⚠️</p>
                 <p className="mt-3 text-lg font-semibold">Không kết nối được máy chủ</p>
-                <p className="mt-1 text-sm text-slate-300">Video bài trả phí được lấy từ backend. Hãy kiểm tra backend đã chạy chưa.</p>
+                <p className="mt-1 text-sm text-slate-300">Chưa tải được bài học. Kiểm tra kết nối mạng rồi tải lại trang; nếu vẫn lỗi, <Link href="/contact" className="font-semibold text-white underline">báo cho chúng tôi</Link>.</p>
               </div>
             </div>
           )}

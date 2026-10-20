@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
-import { aiCheckApi, AiCheckResult, AiCheckStatus, ApiError } from "@/lib/api";
+import { aiCheckApi, AiCheckResult, AiCheckStatus, ApiError, OFFLINE_MESSAGE } from "@/lib/api";
 
 const CONF: Record<AiCheckResult["confidence"], { label: string; cls: string }> = {
   low: { label: "Độ tin cậy thấp", cls: "bg-slate-100 text-slate-600" },
@@ -50,7 +50,7 @@ export default function AiCheckTool() {
   return (
     <div className="space-y-4">
       {/* Trạng thái / điều kiện dùng */}
-      {status === null && <Notice tone="rose" text="Không kết nối được máy chủ. Hãy kiểm tra backend đã chạy chưa." />}
+      {status === null && <Notice tone="rose" text={OFFLINE_MESSAGE} />}
       {status && !status.enabled && (
         <Notice tone="amber" text="AI Check chưa được kích hoạt trên hệ thống này (thiếu khóa dịch vụ phân tích). Quản trị viên cần cấu hình trước khi dùng." />
       )}

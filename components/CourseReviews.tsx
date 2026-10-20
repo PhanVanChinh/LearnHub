@@ -28,7 +28,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
   };
 
   if (data === undefined) return <div className="mt-4 h-32 animate-pulse rounded-2xl bg-slate-100" />;
-  if (data === null) return <p className="mt-4 text-sm text-slate-500">Không tải được đánh giá (backend chưa chạy).</p>;
+  if (data === null) return <p className="mt-4 text-sm text-slate-500">Chưa tải được đánh giá, vui lòng thử lại sau.</p>;
   const { summary, mine, can_review } = data;
   const max = Math.max(1, ...Object.values(summary.distribution));
 

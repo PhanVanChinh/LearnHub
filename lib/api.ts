@@ -1,4 +1,8 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+/** Thông báo mất kết nối máy chủ: người dùng cuối thấy câu dễ hiểu; chỉ khi chạy dev mới kèm gợi ý kỹ thuật. */
+export const OFFLINE_MESSAGE = process.env.NODE_ENV === "production"
+  ? "Không kết nối được máy chủ. Vui lòng thử lại sau ít phút."
+  : "Không kết nối được máy chủ. Backend đã chạy chưa? (gợi ý này chỉ hiện khi chạy dev)";
 const REFRESH_KEY = "learnhub_refresh";   // chỉ dùng khi backend REFRESH_TOKEN_IN_BODY=true (frontend khác site với API)
 const SESSION_FLAG = "learnhub_session";   // "1" = đã đăng nhập trên trình duyệt này → lúc tải trang thử refresh bằng cookie
 
@@ -69,7 +73,7 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
   try {
     res = await fetch(`${API_URL}${path}`, { credentials: "include", ...init, headers });
   } catch {
-    throw new ApiError(0, "Không kết nối được máy chủ. Backend đã chạy chưa?");
+    throw new ApiError(0, OFFLINE_MESSAGE);
   }
   // Access token hết hạn → gia hạn bằng refresh token rồi gọi lại đúng 1 lần
   // 401 → thử gia hạn (kể cả khi chưa có access token trong bộ nhớ, vd vừa tải lại trang) rồi gọi lại đúng 1 lần
