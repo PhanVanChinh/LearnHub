@@ -1,6 +1,7 @@
 import Link from "next/link";
 import CourseBrowser from "@/components/CourseBrowser";
 import HeroStats from "@/components/HeroStats";
+import AccountDeletedNotice from "@/components/AccountDeletedNotice";
 import { getVisibleCourses } from "@/lib/courses.server";
 import { isComingSoon, site } from "@/lib/site";
 import { absUrl, pageMeta } from "@/lib/seo";
@@ -27,6 +28,7 @@ export default async function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <AccountDeletedNotice />
       <section className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-indigo-700 text-white">
         <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute -bottom-32 -left-16 h-80 w-80 rounded-full bg-fuchsia-400/20 blur-3xl" />

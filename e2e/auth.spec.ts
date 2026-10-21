@@ -60,3 +60,11 @@ test("menu tài khoản: mở bằng bàn phím focus mục đầu, mũi tên / 
   await page.keyboard.press("Escape");
   await expect(button).toBeFocused();
 });
+
+test("sau khi xóa tài khoản, trang chủ báo đã xóa và bỏ tham số khỏi URL", async ({ page }) => {
+  await page.goto("/?deleted=1");
+  await expect(page.getByRole("status").filter({ hasText: "Tài khoản của bạn đã được xóa" })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await page.reload();
+  await expect(page.getByText("Tài khoản của bạn đã được xóa")).toHaveCount(0);
+});
