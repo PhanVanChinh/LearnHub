@@ -35,6 +35,17 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   const isAdmin = !!user && user.role === "admin";
+  const onTabKey = (e: React.KeyboardEvent) => {
+    const i = TABS.findIndex((t) => t.key === tab);
+    const next = e.key === "ArrowRight" ? (i + 1) % TABS.length : e.key === "ArrowLeft" ? (i - 1 + TABS.length) % TABS.length
+      : e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    setTab(TABS[next].key);
+    const el = document.getElementById(`tab-${TABS[next].key}`);
+    el?.focus();
+    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  };
   const loadStats = useCallback(() => { if (isAdmin) adminApi.stats().then(setStats).catch(() => {}); }, [isAdmin]);
 
   useEffect(() => {
@@ -80,10 +91,13 @@ export default function AdminDashboard() {
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2"><PublishButton /><SystemStatus /></div>
 
-        <div className="mt-8 flex gap-1 border-b border-slate-200">
+        {/* Màn hẹp: 8 tab cuộn ngang trong thanh riêng thay vì đẩy cả trang tràn ngang. Mẫu tablist: ←/→/Home/End chuyển tab. */}
+        <div role="tablist" aria-label="Khu quản trị"
+          className="mt-8 -mx-4 flex gap-1 overflow-x-auto border-b border-slate-200 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`-mb-px border-b-2 px-4 py-2.5 text-sm font-medium transition ${tab === t.key ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
+            <button key={t.key} id={`tab-${t.key}`} role="tab" aria-selected={tab === t.key} aria-controls="admin-tabpanel" tabIndex={tab === t.key ? 0 : -1}
+              onClick={() => setTab(t.key)} onKeyDown={onTabKey}
+              className={`-mb-px shrink-0 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition ${tab === t.key ? "border-brand-600 text-brand-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
               {t.label}
               {t.key === "orders" && !!stats?.pending_orders && (
                 <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-700">{stats.pending_orders}</span>
@@ -95,7 +109,7 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        <div className="mt-6">
+        <div id="admin-tabpanel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-6">
           {tab === "orders" && <OrdersPanel onChanged={loadStats} />}
           {tab === "revenue" && <RevenuePanel />}
           {tab === "contacts" && <ContactsPanel onChanged={loadStats} />}
