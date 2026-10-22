@@ -20,3 +20,14 @@ test("admin: thanh tab không làm trang tràn ngang ở 360px, phím mũi tên 
   await expect(page.getByRole("tab", { name: "Nhật ký" })).toHaveAttribute("aria-selected", "true");
   await expect(page.getByRole("tabpanel")).toBeVisible();
 });
+
+test("admin: tab nằm trên URL, tải lại vẫn mở đúng tab", async ({ page }) => {
+  await loginUi(page, "admin@example.com", "admin123", "/admin/");
+  await expect(page).toHaveURL(/\/admin/);
+  await page.getByRole("tab", { name: "Doanh thu" }).click();
+  await expect(page).toHaveURL(/\?tab=revenue/);
+  await page.reload();
+  await expect(page.getByRole("tab", { name: "Doanh thu" })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: /Đơn hàng/ }).click();
+  await expect(page).not.toHaveURL(/tab=/);
+});

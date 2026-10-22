@@ -31,7 +31,20 @@ type Tab = (typeof TABS)[number]["key"];
 export default function AdminDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("orders");
+  const [tab, setTabState] = useState<Tab>("orders");
+  // Tab nằm trên URL (?tab=revenue): F5 / chia sẻ link mở đúng tab. Trang xuất tĩnh nên đọc sau khi mount,
+  // ghi bằng replaceState để không thêm mục lịch sử mỗi lần đổi tab.
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && TABS.some((x) => x.key === t)) setTabState(t as Tab);
+  }, []);
+  const setTab = (t: Tab) => {
+    setTabState(t);
+    const sp = new URLSearchParams(window.location.search);
+    if (t === "orders") sp.delete("tab"); else sp.set("tab", t);
+    const qs = sp.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+  };
   const [stats, setStats] = useState<AdminStats | null>(null);
 
   const isAdmin = !!user && user.role === "admin";
