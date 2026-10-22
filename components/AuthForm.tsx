@@ -117,10 +117,12 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 <form onSubmit={onSubmit} noValidate className={`${GOOGLE_CLIENT_ID ? "" : "mt-6"} space-y-4`}>
                     {!login && (
                         <div>
+                            <label htmlFor="auth-name" className="mb-1 block text-sm font-medium text-slate-700">Họ và tên</label>
                             <input
+                                id="auth-name"
                                 className={`input ${fieldError("full_name") ? "!border-rose-400" : ""}`}
                                 {...aria("full_name")}
-                                placeholder="Họ và tên" aria-label="Họ và tên"
+                                placeholder="Nguyễn Văn A"
                                 value={form.full_name}
                                 onChange={set("full_name")}
                                 onBlur={blur("full_name")}
@@ -131,11 +133,13 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         </div>
                     )}
                     <div>
+                        <label htmlFor="auth-email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
                         <input
+                            id="auth-email"
                             className={`input ${fieldError("email") ? "!border-rose-400" : ""}`}
-                                {...aria("email")}
+                            {...aria("email")}
                             type="email"
-                            placeholder="Email" aria-label="Email"
+                            placeholder="ban@example.com"
                             value={form.email}
                             onChange={set("email")}
                             onBlur={blur("email")}
@@ -146,9 +150,11 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         <Err k="email" />
                     </div>
                     <div>
+                        <label htmlFor="auth-password" className="mb-1 block text-sm font-medium text-slate-700">Mật khẩu</label>
                         <PasswordInput
+                            id="auth-password"
                             invalid={!!fieldError("password")} {...aria("password")}
-                            placeholder={login ? "Mật khẩu" : "Mật khẩu (tối thiểu 8 ký tự, có chữ và số)"}
+                            placeholder={login ? undefined : "Tối thiểu 8 ký tự, có chữ và số"}
                             value={form.password}
                             onChange={set("password")}
                             onBlur={blur("password")}
@@ -185,9 +191,10 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                     </div>
                     {!login && (
                         <div>
+                            <label htmlFor="auth-confirm" className="mb-1 block text-sm font-medium text-slate-700">Nhập lại mật khẩu</label>
                             <PasswordInput
+                                id="auth-confirm"
                                 invalid={!!fieldError("confirm")}
-                                placeholder="Nhập lại mật khẩu" aria-label="Nhập lại mật khẩu"
                                 value={form.confirm}
                                 onChange={set("confirm")}
                                 onBlur={blur("confirm")}

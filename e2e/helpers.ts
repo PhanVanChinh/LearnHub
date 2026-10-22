@@ -37,10 +37,10 @@ export function otpFor(email: string): string {
 /** Đăng ký qua giao diện rồi nhập OTP ở trang xác thực. Kết thúc: đã đăng nhập, email đã xác thực, đang ở `next`. */
 export async function registerAndVerify(page: Page, email: string, next = "/") {
   await page.goto(`/register/?next=${encodeURIComponent(next)}`);
-  await page.getByPlaceholder("Họ và tên").fill("Học viên E2E");
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Mật khẩu (tối thiểu 8 ký tự, có chữ và số)").fill(PASSWORD);
-  await page.getByPlaceholder("Nhập lại mật khẩu").fill(PASSWORD);
+  await page.getByLabel("Họ và tên").fill("Học viên E2E");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Mật khẩu", { exact: true }).fill(PASSWORD);
+  await page.getByLabel("Nhập lại mật khẩu").fill(PASSWORD);
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: "Đăng ký" }).click();
   await expect(page).toHaveURL(/\/verify/);
@@ -55,7 +55,7 @@ export async function registerAndVerify(page: Page, email: string, next = "/") {
 
 export async function loginUi(page: Page, email: string, password: string, next = "/") {
   await page.goto(`/login/?next=${encodeURIComponent(next)}`);
-  await page.getByPlaceholder("Email").fill(email);
-  await page.getByPlaceholder("Mật khẩu", { exact: true }).fill(password);
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Mật khẩu", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Đăng nhập" }).click();
 }
