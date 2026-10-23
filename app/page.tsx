@@ -60,10 +60,11 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="container-x -mt-8 relative z-10 grid gap-4 md:grid-cols-3">
+      <section aria-labelledby="features-title" className="container-x -mt-8 relative z-10 grid gap-4 md:grid-cols-3">
+        <h2 id="features-title" className="sr-only">Vì sao chọn LearnHub</h2>
         {features.map((f) => (
           <div key={f.t} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-            <div className="text-2xl">{f.icon}</div>
+            <div className="text-2xl" aria-hidden="true">{f.icon}</div>
             <h3 className="mt-2 font-semibold text-slate-900">{f.t}</h3>
             <p className="mt-1 text-sm text-slate-600">{f.d}</p>
           </div>

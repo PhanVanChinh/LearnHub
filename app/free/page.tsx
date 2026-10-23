@@ -12,6 +12,7 @@ export default async function FreePage() {
     <>
       <PageHeader eyebrow="Miễn phí 100%" title="Tài liệu miễn phí" subtitle="Đăng nhập là học được ngay, không cần thanh toán." />
       <div className="container-x py-10">
+        <h2 className="sr-only">Danh sách tài liệu miễn phí</h2>
         <CourseBrowser courses={free} initial="free" pageSize={12} syncUrl />
       </div>
     </>

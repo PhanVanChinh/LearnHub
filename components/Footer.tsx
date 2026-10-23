@@ -15,7 +15,7 @@ export default function Footer() {
           <p className="mt-4 max-w-sm text-sm leading-6 text-slate-600">{site.description}</p>
         </div>
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Chính sách</h4>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Chính sách</h2>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
             {site.footerLinks.map((l) => (
               <li key={l.href}>
@@ -25,7 +25,7 @@ export default function Footer() {
           </ul>
         </div>
         <div>
-          <h4 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Liên hệ</h4>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Liên hệ</h2>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
             <li>📍 {site.contact.address}</li>
             <li>📞 <a href={`tel:${site.contact.phone}`} className="hover:text-brand-700">{site.contact.phone}</a></li>

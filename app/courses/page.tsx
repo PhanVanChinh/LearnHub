@@ -11,6 +11,7 @@ export default async function CoursesPage() {
     <>
       <PageHeader eyebrow="Thư viện" title="Tất cả khóa học" subtitle="Video, PDF, trắc nghiệm, source code — lọc theo danh mục hoặc tìm theo tên môn." />
       <div className="container-x py-10">
+        <h2 className="sr-only">Danh sách khóa học</h2>
         <CourseBrowser courses={courses} pageSize={12} syncUrl />
       </div>
     </>

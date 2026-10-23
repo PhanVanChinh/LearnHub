@@ -181,9 +181,9 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs uppercase tracking-wider text-slate-400">Tổng kết</p>
-                  <h2 className="mt-1 text-2xl font-bold text-white">
-                    {progress.percent === 100 ? "🎉 Bạn đã hoàn thành khóa học!" : `Bạn đã tới bài cuối · còn ${remaining.length} bài chưa hoàn thành`}
-                  </h2>
+                  <p className="mt-1 text-2xl font-bold text-white">
+                    {progress.percent === 100 ? <><span aria-hidden="true">🎉 </span>Bạn đã hoàn thành khóa học!</> : `Bạn đã tới bài cuối · còn ${remaining.length} bài chưa hoàn thành`}
+                  </p>
                 </div>
                 <button onClick={() => setSummary(false)} aria-label="Đóng tổng kết" className="rounded-lg px-2 py-1 text-slate-400 hover:bg-white/10 hover:text-white">✕</button>
               </div>

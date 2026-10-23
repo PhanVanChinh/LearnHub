@@ -21,15 +21,19 @@ export default function AiCheckPage() {
     <>
       <PageHeader eyebrow="Công cụ" title="AI Check bài viết" subtitle="Rà soát dấu hiệu văn bản do AI viết trong tiểu luận, báo cáo, khóa luận và nhận gợi ý chỉnh sửa trước khi nộp." />
       <div className="container-x grid gap-8 py-12 lg:grid-cols-5">
-        <div className="lg:col-span-3"><AiCheckTool /></div>
-        <div className="space-y-4 lg:col-span-2">
+        <section aria-labelledby="tool-title" className="lg:col-span-3">
+          <h2 id="tool-title" className="sr-only">Kiểm tra bài viết</h2>
+          <AiCheckTool />
+        </section>
+        <section aria-labelledby="steps-title" className="space-y-4 lg:col-span-2">
+          <h2 id="steps-title" className="sr-only">Cách hoạt động</h2>
           {steps.map(([n, t, d]) => (
             <div key={n} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-600 font-bold text-white">{n}</span>
               <div><h3 className="font-semibold text-slate-900">{t}</h3><p className="mt-1 text-sm text-slate-600">{d}</p></div>
             </div>
           ))}
-        </div>
+        </section>
       </div>
       <section className="container-x pb-12">
         <h2 className="text-xl font-bold text-slate-900">Giới hạn bạn cần biết</h2>
