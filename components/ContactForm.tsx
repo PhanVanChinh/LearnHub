@@ -62,20 +62,26 @@ export default function ContactForm() {
     <form onSubmit={submit} noValidate className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <input className={cls("name")} aria-invalid={!!err("name") || undefined} aria-describedby={err("name") ? "contact-err-name" : undefined} placeholder="Họ và tên" aria-label="Họ và tên" value={form.name} onChange={set("name")} autoComplete="name" />
+          <label htmlFor="contact-name" className="mb-1 block text-sm font-medium text-slate-700">Họ và tên</label>
+          <input id="contact-name" className={cls("name")} aria-invalid={!!err("name") || undefined} aria-describedby={err("name") ? "contact-err-name" : undefined} placeholder="Nguyễn Văn A" value={form.name} onChange={set("name")} autoComplete="name" />
           {err("name") && <p id="contact-err-name" role="alert" className="mt-1 text-xs text-rose-600">{err("name")}</p>}
         </div>
         <div>
-          <input className={cls("email")} type="email" aria-invalid={!!err("email") || undefined} aria-describedby={err("email") ? "contact-err-email" : undefined} placeholder="Email" aria-label="Email" value={form.email} onChange={set("email")} autoComplete="email" />
+          <label htmlFor="contact-email" className="mb-1 block text-sm font-medium text-slate-700">Email</label>
+          <input id="contact-email" className={cls("email")} type="email" aria-invalid={!!err("email") || undefined} aria-describedby={err("email") ? "contact-err-email" : undefined} placeholder="ban@example.com" value={form.email} onChange={set("email")} autoComplete="email" />
           {err("email") && <p id="contact-err-email" role="alert" className="mt-1 text-xs text-rose-600">{err("email")}</p>}
         </div>
       </div>
-      <input className="input" placeholder="Chủ đề (tùy chọn)" aria-label="Chủ đề" value={form.subject} onChange={set("subject")} maxLength={255} />
       <div>
-        <textarea className={`${cls("message")} resize-y`} rows={6} aria-invalid={!!err("message") || undefined} aria-describedby={err("message") ? "contact-err-message" : undefined} placeholder="Nội dung…" aria-label="Nội dung tin nhắn" value={form.message} onChange={set("message")} maxLength={5000} />
+        <label htmlFor="contact-subject" className="mb-1 block text-sm font-medium text-slate-700">Chủ đề <span className="font-normal text-slate-500">(tùy chọn)</span></label>
+        <input id="contact-subject" className="input" placeholder="VD: Chưa mở được khóa học sau khi chuyển khoản" value={form.subject} onChange={set("subject")} maxLength={255} />
+      </div>
+      <div>
+        <label htmlFor="contact-message" className="mb-1 block text-sm font-medium text-slate-700">Nội dung</label>
+        <textarea id="contact-message" className={`${cls("message")} resize-y`} rows={6} aria-invalid={!!err("message") || undefined} aria-describedby={err("message") ? "contact-err-message" : undefined} placeholder="Mô tả vấn đề, kèm mã đơn hàng nếu có" value={form.message} onChange={set("message")} maxLength={5000} />
         <div className="mt-1 flex justify-between text-xs">
           <span id="contact-err-message" role="alert" className="text-rose-600">{err("message")}</span>
-          <span className="text-slate-400">{form.message.length}/5000</span>
+          <span className="text-slate-500">{form.message.length}/5000</span>
         </div>
       </div>
       <Turnstile onToken={setCaptcha} resetKey={captchaKey} />
