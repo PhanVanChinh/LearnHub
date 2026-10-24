@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Lesson } from "@/data/courses";
 import { fetchCourseDetail } from "@/lib/liveCourse";
 import VideoPlayer from "./VideoPlayer";
+import Emoji from "@/components/Emoji";
 
 /** Danh sách bài học trên trang chi tiết. Bài `free` có video thì bấm để xem thử ngay tại đây. */
 export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug: string }) {
@@ -51,16 +52,16 @@ export default function LessonList({ lessons, slug }: { lessons: Lesson[]; slug:
             <>
               <div className="flex min-w-0 items-center gap-3">
                 <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-semibold ${isActive ? "bg-brand-600 text-white" : "bg-brand-50 text-brand-700"}`}>
-                  {isActive ? "▶" : i + 1}
+                  {isActive ? <Emoji label="Đang xem">▶</Emoji> : i + 1}
                 </span>
                 <span className={`truncate font-medium ${isActive ? "text-brand-700" : "text-slate-800"}`}>{l.title}</span>
                 {l.free && <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">Xem thử</span>}
               </div>
               <div className="flex shrink-0 items-center gap-3 text-sm text-slate-500">
-                {hasVideo(i) ? <span title="Bài giảng video">🎬</span> : l.quizCount ? <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span> : l.content || l.hasContent ? <span title="Bài đọc">📖</span> : <span title="Tài liệu đọc">📄</span>}
-                {!!l.quizCount && hasVideo(i) && <span title={`Trắc nghiệm ${l.quizCount} câu`}>📝</span>}
-                {!!l.attachments?.length && <span title={`${l.attachments.length} tài liệu`}>📎</span>}
-                {!l.free && <span title="Cần ghi danh">🔒</span>}
+                {hasVideo(i) ? <Emoji label="Bài giảng video">🎬</Emoji> : l.quizCount ? <Emoji label={`Trắc nghiệm ${l.quizCount} câu`}>📝</Emoji> : l.content || l.hasContent ? <Emoji label="Bài đọc">📖</Emoji> : <Emoji label="Tài liệu đọc">📄</Emoji>}
+                {!!l.quizCount && hasVideo(i) && <Emoji label={`Trắc nghiệm ${l.quizCount} câu`}>📝</Emoji>}
+                {!!l.attachments?.length && <Emoji label={`${l.attachments.length} tài liệu`}>📎</Emoji>}
+                {!l.free && <Emoji label="Cần ghi danh">🔒</Emoji>}
                 <span>{l.duration}</span>
               </div>
             </>

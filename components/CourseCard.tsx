@@ -4,6 +4,7 @@ import { formatVND, isComingSoon } from "@/lib/site";
 import CourseStatsLine from "./CourseStatsLine";
 import { highlight, type Match } from "@/lib/search";
 import { coverUrl } from "@/lib/cover";
+import Emoji from "@/components/Emoji";
 
 const labels: Record<string, string> = {
   "ai-check": "AI Check", pdf: "PDF", quiz: "Trắc nghiệm", free: "Miễn phí", source: "Source code", video: "Video",
@@ -50,8 +51,8 @@ export default function CourseCard({ course, action, progress, match, query }: {
         {match && (match.where === "lesson" || match.where === "attachment") && (
           <Link href={`/learn/${course.slug}?lesson=${match.index}`} className="mt-2 block truncate rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 hover:bg-amber-100">
             {match.where === "lesson"
-              ? <>📍 Bài {match.index + 1}: <Hl text={match.title} query={query} /></>
-              : <>📎 Bài {match.index + 1} · <Hl text={match.name} query={query} /></>}
+              ? <><Emoji>📍</Emoji> Bài {match.index + 1}: <Hl text={match.title} query={query} /></>
+              : <><Emoji>📎</Emoji> Bài {match.index + 1} · <Hl text={match.name} query={query} /></>}
           </Link>
         )}
         {match?.where === "description" && <p className="mt-2 text-xs text-slate-400">Khớp trong mô tả chi tiết</p>}
@@ -59,7 +60,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
         {progress && (
           <div className="mt-3">
             <div className="flex justify-between text-xs text-slate-500">
-              <span>{percent === 100 ? "🎉 Hoàn thành" : `${progress.completed}/${progress.total} bài`}</span>
+              <span>{percent === 100 ? <><Emoji>🎉</Emoji> Hoàn thành</> : `${progress.completed}/${progress.total} bài`}</span>
               <span className="font-semibold text-slate-700">{percent}%</span>
             </div>
             <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
