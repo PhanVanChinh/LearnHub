@@ -5,6 +5,7 @@ import { useAuth } from "./AuthProvider";
 import { coursesApi } from "@/lib/api";
 import { fetchCourseDetail } from "@/lib/liveCourse";
 import { isComingSoon } from "@/lib/site";
+import Emoji from "@/components/Emoji";
 
 export default function EnrollButton({ slug, price, category = "" }: { slug: string; price: number; category?: string }) {
   const { user, loading } = useAuth();
@@ -28,7 +29,7 @@ export default function EnrollButton({ slug, price, category = "" }: { slug: str
   }
   if (price > 0) {
     if (enrolled) {
-      return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3">▶ Vào học ngay</Link>;
+      return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3"><Emoji>▶</Emoji> Vào học ngay</Link>;
     }
     return <Link href={`/checkout?course=${slug}`} className="btn-primary mt-4 w-full !py-3">Mua ngay</Link>;
   }
@@ -38,12 +39,12 @@ export default function EnrollButton({ slug, price, category = "" }: { slug: str
   if (!user.email_verified) {
     return (
       <Link href={`/verify?next=/courses/${slug}`} className="btn mt-4 w-full !py-3 bg-amber-500 text-white hover:bg-amber-600">
-        ✉️ Xác thực email để ghi danh
+        <Emoji>✉️</Emoji> Xác thực email để ghi danh
       </Link>
     );
   }
   if (enrolled) {
-    return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3">▶ Vào học ngay</Link>;
+    return <Link href={`/learn/${slug}`} className="btn-success mt-4 w-full !py-3"><Emoji>▶</Emoji> Vào học ngay</Link>;
   }
   const enroll = async () => {
     setBusy(true); setMsg("");

@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ApiError, coursesApi } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 type Att = { name: string; kind: "file" | "link"; size: number; content_type: string };
 
@@ -41,12 +42,12 @@ export default function LessonAttachments({ slug, index, attachments, locked, da
           <li key={i}>
             <button onClick={() => open(i)} disabled={busy !== null || locked}
               className={`flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${row}`}>
-              <span className="text-xl">{a.kind === "link" ? "🔗" : ICON[ext(a.name)] ?? "📎"}</span>
+              <span className="text-xl" aria-hidden="true">{a.kind === "link" ? "🔗" : ICON[ext(a.name)] ?? "📎"}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">{a.name}</span>
                 <span className={`text-xs ${sub}`}>{a.kind === "link" ? "Liên kết ngoài" : `${ext(a.name).toUpperCase()}${a.size ? ` · ${fmtSize(a.size)}` : ""}`}</span>
               </span>
-              <span className={`shrink-0 text-xs ${sub}`}>{locked ? "🔒" : busy === i ? "Đang mở…" : a.kind === "link" ? "Mở ↗" : "Tải ⬇"}</span>
+              <span className={`shrink-0 text-xs ${sub}`}>{locked ? <Emoji label="Cần ghi danh">🔒</Emoji> : busy === i ? "Đang mở…" : a.kind === "link" ? "Mở ↗" : "Tải ⬇"}</span>
             </button>
           </li>
         ))}

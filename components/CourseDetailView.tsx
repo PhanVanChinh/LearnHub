@@ -13,6 +13,7 @@ import { useLiveCourse } from "@/lib/liveCourse";
 import { formatVND } from "@/lib/site";
 import { coursesApi } from "@/lib/api";
 import { coverUrl } from "@/lib/cover";
+import Emoji from "@/components/Emoji";
 
 /** Thân trang chi tiết. Nhận bản tĩnh (build) rồi tự làm mới giá / mô tả / bài học từ API. */
 export default function CourseDetailView({ course: initial, related }: { course: Course; related: Course[] }) {
@@ -83,7 +84,7 @@ export default function CourseDetailView({ course: initial, related }: { course:
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={youtubeThumb(previewVideo)} alt="" className="h-full w-full object-cover opacity-90 transition group-hover:scale-105 group-hover:opacity-100" />
                 <span className="absolute inset-0 grid place-items-center">
-                  <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-2xl text-brand-700 shadow-lg transition group-hover:scale-110">▶</span>
+                  <span className="grid h-14 w-14 place-items-center rounded-full bg-white/90 text-2xl text-brand-700 shadow-lg transition group-hover:scale-110" aria-hidden="true">▶</span>
                 </span>
                 <span className="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-medium text-white">Xem thử miễn phí</span>
               </Link>
@@ -96,7 +97,7 @@ export default function CourseDetailView({ course: initial, related }: { course:
             <p className={`mt-5 text-3xl font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</p>
             <EnrollButton slug={course.slug} price={course.price} category={course.category} />
             <ul className="mt-5 space-y-2 text-sm text-slate-600">
-              {course.includes.map((x) => <li key={x}>✅ {x}</li>)}
+              {course.includes.map((x) => <li key={x}><Emoji>✅</Emoji> {x}</li>)}
             </ul>
           </div>
         </aside>

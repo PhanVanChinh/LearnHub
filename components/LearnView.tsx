@@ -14,6 +14,7 @@ import LessonContent from "./LessonContent";
 import LessonNotes from "./LessonNotes";
 import ReviewPrompt from "./ReviewPrompt";
 import CertificateButton from "./CertificateButton";
+import Emoji from "@/components/Emoji";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
@@ -128,16 +129,16 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
                     <button onClick={() => go(i)}
                       className={`flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/10 ${isActive ? "bg-brand-600/30" : ""}`}>
                       <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${isActive ? "bg-brand-500 text-white" : isDone(i) ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-slate-300"}`}>
-                        {isActive ? "▶" : isDone(i) ? "✓" : i + 1}
+                        {isActive ? <Emoji label="Đang xem">▶</Emoji> : isDone(i) ? <Emoji label="Đã hoàn thành">✓</Emoji> : i + 1}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className={`block truncate text-sm ${isActive ? "font-semibold text-white" : "text-slate-200"}`}>{l.title}</span>
                         <span className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
-                          <span>{hasVideo(i) ? "🎬" : l.quizCount ? "📝" : l.content || l.hasContent ? "📖" : l.attachments?.length ? "📚" : "📄"} {l.duration}</span>
+                          <span>{hasVideo(i) ? <Emoji label="Video">🎬</Emoji> : l.quizCount ? <Emoji label="Trắc nghiệm">📝</Emoji> : l.content || l.hasContent ? <Emoji label="Bài đọc">📖</Emoji> : l.attachments?.length ? <Emoji label="Tài liệu">📚</Emoji> : <Emoji label="Bài học">📄</Emoji>} {l.duration}</span>
                           {!!l.quizCount && <span>{l.quizCount} câu</span>}
-                          {!!l.attachments?.length && <span>📎 {l.attachments.length}</span>}
+                          {!!l.attachments?.length && <span><Emoji>📎</Emoji> {l.attachments.length}<span className="sr-only"> tài liệu</span></span>}
                           {l.free && <span className="rounded-full bg-emerald-500/20 px-1.5 text-emerald-300">Xem thử</span>}
-                          {locked && <span>🔒</span>}
+                          {locked && <Emoji label="Cần ghi danh">🔒</Emoji>}
                         </span>
                       </span>
                     </button>
@@ -151,7 +152,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
   const progressBlock = progress && (
     <div>
       <div className="flex justify-between text-xs text-slate-300">
-        <span>{progress.percent === 100 ? "🎉 Đã hoàn thành khóa học" : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
+        <span>{progress.percent === 100 ? <><Emoji>🎉</Emoji> Đã hoàn thành khóa học</> : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
         <span className="font-semibold">{progress.percent}%</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
@@ -248,7 +249,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {access === "granted" && !video && !lesson.content && !lesson.quizCount && !lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
-                <p className="text-5xl">📄</p>
+                <p className="text-5xl" aria-hidden="true">📄</p>
                 <p className="mt-3 text-lg font-semibold text-white">Nội dung bài này đang được cập nhật</p>
                 <p className="mt-1 text-sm text-white/80">Bài chưa có video hay tài liệu. Hãy chuyển sang bài kế tiếp hoặc quay lại sau.</p>
               </div>
@@ -257,7 +258,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {access === "granted" && !video && !lesson.content && !!lesson.attachments?.length && (
             <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
               <div>
-                <p className="text-5xl">📚</p>
+                <p className="text-5xl" aria-hidden="true">📚</p>
                 <p className="mt-3 text-lg font-semibold text-white">Bài học dạng tài liệu</p>
                 <p className="mt-1 text-sm text-white/80">Tải {lesson.attachments.length} tài liệu bên dưới để học.{lesson.quizCount ? " Làm trắc nghiệm sau khi đọc xong." : ""}</p>
               </div>
@@ -267,7 +268,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {access === "offline" && (
             <div className="grid aspect-video place-items-center rounded-xl border border-rose-500/30 bg-rose-500/10 p-8 text-center">
               <div>
-                <p className="text-5xl">⚠️</p>
+                <p className="text-5xl" aria-hidden="true">⚠️</p>
                 <p className="mt-3 text-lg font-semibold">Không kết nối được máy chủ</p>
                 <p className="mt-1 text-sm text-slate-300">Chưa tải được bài học. Kiểm tra kết nối mạng rồi tải lại trang; nếu vẫn lỗi, <Link href="/contact" className="font-semibold text-white underline">báo cho chúng tôi</Link>.</p>
               </div>
@@ -276,7 +277,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {access === "verify" && (
             <div className="grid aspect-video place-items-center rounded-xl border border-amber-500/30 bg-amber-500/10 p-8 text-center">
               <div>
-                <p className="text-5xl">✉️</p>
+                <p className="text-5xl" aria-hidden="true">✉️</p>
                 <p className="mt-3 text-lg font-semibold">Xác thực email để tiếp tục học</p>
                 <p className="mt-1 text-sm text-slate-300">Chúng tôi đã gửi mã 6 số tới {user?.email}.</p>
                 <Link href={`/verify?next=/learn/${course.slug}?lesson=${index}`} className="btn-primary mt-4">Nhập mã xác thực</Link>
@@ -286,7 +287,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {(access === "login" || access === "enroll") && (
             <div className="grid aspect-video place-items-center rounded-xl border border-white/10 bg-white/5 p-8 text-center">
               <div>
-                <p className="text-5xl">🔒</p>
+                <p className="text-5xl" aria-hidden="true">🔒</p>
                 <p className="mt-3 text-lg font-semibold">Bài học dành cho học viên đã ghi danh</p>
                 {access === "login" ? (
                   <Link href={`/login?next=/learn/${course.slug}?lesson=${index}`} className="btn-primary mt-4">Đăng nhập để tiếp tục</Link>
@@ -308,13 +309,13 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               {enrolled && (
                 <button onClick={toggleDone} disabled={saving}
                   className={`btn disabled:opacity-60 ${isDone(index) ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" : "btn-success"}`}>
-                  {isDone(index) ? "✓ Đã hoàn thành · Bỏ đánh dấu" : "✓ Hoàn thành bài này"}
+                  <Emoji>✓</Emoji> {isDone(index) ? "Đã hoàn thành · Bỏ đánh dấu" : "Hoàn thành bài này"}
                 </button>
               )}
               <button onClick={() => go(index - 1)} disabled={index === 0} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-40">← Bài trước</button>
               {isLast && enrolled ? (
                 <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-success">
-                  {progress?.percent === 100 ? "🎉 Hoàn tất khóa học" : "Tổng kết khóa học"}
+                  {progress?.percent === 100 ? <><Emoji>🎉</Emoji> Hoàn tất khóa học</> : "Tổng kết khóa học"}
                 </button>
               ) : (
                 <button onClick={() => go(index + 1)} disabled={isLast} className="btn-primary disabled:opacity-40">Bài tiếp →</button>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ReviewForm from "./ReviewForm";
 import Stars from "./Stars";
 import { Review, reviewsApi } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 /** Nhắc đánh giá trong sidebar trang học khi đã học ≥ 50% (đã ghi danh chắc chắn). Đã đánh giá → hiện sao + link sửa. */
 export default function ReviewPrompt({ slug, completed }: { slug: string; completed: boolean }) {
@@ -28,7 +29,7 @@ export default function ReviewPrompt({ slug, completed }: { slug: string; comple
   if (!open) {
     return (
       <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-3 text-xs text-amber-100">
-        <p>{completed ? "🎉 Bạn đã hoàn thành! Khóa học này thế nào?" : "Bạn đã học được nửa khóa. Đánh giá giúp người sau chọn đúng khóa."}</p>
+        <p>{completed ? <><Emoji>🎉</Emoji> Bạn đã hoàn thành! Khóa học này thế nào?</> : "Bạn đã học được nửa khóa. Đánh giá giúp người sau chọn đúng khóa."}</p>
         <div className="mt-2 flex gap-2">
           <button onClick={() => setOpen(true)} className="btn-primary btn-xs">Đánh giá ngay</button>
           {!completed && <button onClick={() => { setDismissed(true); try { localStorage.setItem(`review-dismissed-${slug}`, "1"); } catch { /* bỏ qua */ } }} className="text-amber-200/80 hover:underline">Để sau</button>}

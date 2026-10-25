@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { coursesApi } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 type Status = "loading" | "idle" | "typing" | "saving" | "saved" | "error";
 const DEBOUNCE_MS = 1200;
@@ -59,13 +60,13 @@ export default function LessonNotes({ slug, index }: { slug: string; index: numb
 
   if (status === "loading") return null;
 
-  const label = { idle: "", typing: "Đang gõ…", saving: "Đang lưu…", saved: "✓ Đã lưu", error: "Không lưu được, sẽ thử lại khi bạn gõ tiếp", loading: "" }[status];
+  const label = { idle: "", typing: "Đang gõ…", saving: "Đang lưu…", saved: "Đã lưu", error: "Không lưu được, sẽ thử lại khi bạn gõ tiếp", loading: "" }[status];
 
   return (
     <section aria-label="Ghi chú của tôi" className="mt-6 rounded-xl border border-white/10 bg-white/5">
       <button type="button" onClick={() => setOpen(!open)} aria-expanded={open}
         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-white">
-        <span>📝 Ghi chú của tôi <span className="font-normal text-slate-400">· chỉ mình bạn thấy</span></span>
+        <span><Emoji>📝</Emoji> Ghi chú của tôi <span className="font-normal text-slate-400">· chỉ mình bạn thấy</span></span>
         <span className="flex items-center gap-3">
           <span className={`text-xs font-normal ${status === "error" ? "text-rose-300" : "text-slate-400"}`} aria-live="polite">{label}</span>
           <span className="text-slate-400" aria-hidden="true">{open ? "▴" : "▾"}</span>

@@ -2,6 +2,7 @@
 import { useDialog } from "@/components/Dialog";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, coursesApi, QuizAttempts, QuizPublic, QuizResult } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 type Props = {
   slug: string;
@@ -72,7 +73,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
 
       {result && (
         <div id="quiz-result" role="status" className={`mt-4 rounded-xl border p-4 ${result.passed ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/10"}`}>
-          <p className="text-2xl font-bold text-white">{result.passed ? "🎉 Đạt!" : "Chưa đạt"} <span className="text-lg font-semibold text-slate-200">{result.score}/{result.total} câu · {result.percent}%</span></p>
+          <p className="text-2xl font-bold text-white">{result.passed ? <><Emoji>🎉</Emoji> Đạt!</> : "Chưa đạt"} <span className="text-lg font-semibold text-slate-200">{result.score}/{result.total} câu · {result.percent}%</span></p>
           <p className="mt-1 text-sm text-slate-300">
             {result.lesson_completed ? "Bài học đã được đánh dấu hoàn thành." : result.passed && !result.saved ? "Đăng nhập và ghi danh để lưu kết quả và tính tiến độ." : result.passed ? "Ghi danh khóa học để kết quả được tính vào tiến độ." : `Cần đạt ${result.pass_percent}% để hoàn thành bài. Xem giải thích bên dưới rồi làm lại.`}
           </p>
@@ -123,7 +124,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
               </div>
               {result && r && (
                 <p id={`quiz-q-${qi}-explain`} className={`mt-3 text-sm ${r.correct ? "text-emerald-300" : "text-amber-200"}`}>
-                  {r.correct ? "✓ Chính xác." : r.chosen === null ? "Bạn bỏ trống câu này." : "✕ Chưa đúng."}
+                  {r.correct ? <><Emoji>✓</Emoji> Chính xác.</> : r.chosen === null ? "Bạn bỏ trống câu này." : <><Emoji>✕</Emoji> Chưa đúng.</>}
                   {r.explain && <span className="text-slate-300"> {r.explain}</span>}
                 </p>
               )}
