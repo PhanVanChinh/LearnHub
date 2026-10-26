@@ -2,10 +2,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminApi, AuditLog } from "@/lib/api";
 import { ErrorBox, Pager } from "./ui";
+import { fmtDateTimeSec } from "@/lib/date";
 
 const LIMIT = 30;
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 const GROUPS: { key: string; label: string }[] = [
   { key: "", label: "Tất cả" }, { key: "order", label: "Đơn hàng" }, { key: "course", label: "Khóa học" }, { key: "user", label: "Người dùng" },
@@ -55,7 +54,7 @@ export default function AuditPanel() {
           return (
             <li key={l.id}>
               <button onClick={() => setOpen(isOpen ? null : l.id)} className="flex w-full flex-wrap items-start gap-x-3 gap-y-1 px-4 py-3 text-left text-sm hover:bg-slate-50/60">
-                <span className="w-36 shrink-0 font-mono text-xs text-slate-500">{fmt(l.created_at)}</span>
+                <span className="w-36 shrink-0 font-mono text-xs text-slate-500">{fmtDateTimeSec(l.created_at)}</span>
                 <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-xs font-semibold ${TONE[verb(l.action)] ?? "bg-slate-100 text-slate-600"}`}>{l.action}</span>
                 <span className="min-w-0 flex-1 text-slate-800">{l.summary}</span>
                 <span className="shrink-0 text-xs text-slate-500">{l.actor_email ?? "người dùng"}</span>

@@ -3,6 +3,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { AdminUser, adminApi } from "@/lib/api";
 import { Badge, ErrorBox, Field, Modal, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { fmtDate } from "@/lib/date";
 
 const LIMIT = 20;
 type Role = "user" | "admin";
@@ -67,7 +68,7 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
                   <td className={tdCls}><Badge tone={u.role === "admin" ? "amber" : "slate"}>{u.role}</Badge></td>
                   <td className={tdCls}><Badge tone={u.is_active ? "green" : "rose"}>{u.is_active ? "Hoạt động" : "Đã khóa"}</Badge></td>
                   <td className={`${tdCls} text-slate-600`}>{u.enrollment_count}</td>
-                  <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{new Date(u.created_at).toLocaleDateString("vi-VN")}</td>
+                  <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{fmtDate(u.created_at)}</td>
                   <td className={`${tdCls} whitespace-nowrap text-right`}>
                     <button onClick={() => setModal(u)} className="btn-outline btn-xs">Sửa</button>
                     <button disabled={self} onClick={() => toggleRole(u)} className="btn-outline ml-1 btn-xs disabled:opacity-40">{u.role === "admin" ? "Hạ quyền" : "Cấp admin"}</button>

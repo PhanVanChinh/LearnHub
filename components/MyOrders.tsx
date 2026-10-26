@@ -6,9 +6,8 @@ import { useAuth } from "@/components/AuthProvider";
 import PageHeader from "@/components/PageHeader";
 import { Order, OrderStatus, ordersApi } from "@/lib/api";
 import { formatVND } from "@/lib/site";
+import { fmtDateTime } from "@/lib/date";
 
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export const ORDER_STATUS: Record<OrderStatus, { label: string; cls: string }> = {
   pending: { label: "Chờ thanh toán", cls: "bg-amber-50 text-amber-700" },
@@ -57,9 +56,9 @@ export default function MyOrders() {
                         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${st.cls}`}>{st.label}</span>
                       </div>
                       <p className="mt-1 text-sm text-slate-500">
-                        Mã <span className="font-mono font-semibold text-slate-700">{o.code}</span> · {fmt(o.created_at)}
-                        {o.status === "pending" && <> · hết hạn {fmt(o.expires_at)}</>}
-                        {o.status === "paid" && o.paid_at && <> · duyệt {fmt(o.paid_at)}</>}
+                        Mã <span className="font-mono font-semibold text-slate-700">{o.code}</span> · {fmtDateTime(o.created_at)}
+                        {o.status === "pending" && <> · hết hạn {fmtDateTime(o.expires_at)}</>}
+                        {o.status === "paid" && o.paid_at && <> · duyệt {fmtDateTime(o.paid_at)}</>}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">

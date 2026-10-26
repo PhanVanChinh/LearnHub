@@ -2,6 +2,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AdminCourse, AdminEnrollment, AdminUser, adminApi } from "@/lib/api";
 import { ErrorBox, Field, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
 
@@ -69,7 +70,7 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
                   <div className="font-medium text-slate-900">{en.course_title}</div>
                   <div className="font-mono text-xs text-slate-500">/{en.course_slug}</div>
                 </td>
-                <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{new Date(en.created_at).toLocaleString("vi-VN")}</td>
+                <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{fmtDateTime(en.created_at)}</td>
                 <td className={`${tdCls} text-right`}>
                   <button onClick={() => revoke(en)} className="btn-outline-danger btn-xs">Thu hồi</button>
                 </td>

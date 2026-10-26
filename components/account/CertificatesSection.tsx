@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Section from "./Section";
 import { ApiError, Certificate, certificatesApi } from "@/lib/api";
 import Emoji from "@/components/Emoji";
+import { fmtDate } from "@/lib/date";
 
-const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 /** Mục "Chứng nhận của tôi" trong trang tài khoản: mọi chứng nhận đã nhận, xem / tải / sao chép link xác thực.
  *  Trước đây mã chỉ hiện một lần trong trang học; quên mã là không tìm lại được. */

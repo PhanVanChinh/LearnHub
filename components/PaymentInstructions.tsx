@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import type { OrderDetail } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import Emoji from "@/components/Emoji";
+import { fmtShort } from "@/lib/date";
 
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmtTime = (iso: string) => utc(iso).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
 
 /** Khối hướng dẫn chuyển khoản + trạng thái đơn. */
 export default function PaymentInstructions({ order, onRefresh, onCancel, busy, learnHref }: {
@@ -19,7 +18,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
         <p className="text-5xl" aria-hidden="true">🎉</p>
         <p className="mt-3 text-lg font-semibold text-emerald-800">Thanh toán đã được xác nhận</p>
-        <p className="mt-1 text-sm text-emerald-700">Đơn {order.code} · {order.paid_at && fmtTime(order.paid_at)}. Khóa học đã mở trong tài khoản của bạn.</p>
+        <p className="mt-1 text-sm text-emerald-700">Đơn {order.code} · {order.paid_at && fmtShort(order.paid_at)}. Khóa học đã mở trong tài khoản của bạn.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Link href={learnHref} className="btn-primary">▶ Vào học ngay</Link>
           <Link href="/my-courses" className="btn-outline">Khóa học của tôi</Link>
@@ -47,7 +46,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold text-slate-900">Chuyển khoản để hoàn tất</h2>
-          <p className="mt-1 text-sm text-slate-500">Đơn tạo lúc {fmtTime(order.created_at)} · hết hạn {fmtTime(order.expires_at)}</p>
+          <p className="mt-1 text-sm text-slate-500">Đơn tạo lúc {fmtShort(order.created_at)} · hết hạn {fmtShort(order.expires_at)}</p>
         </div>
         <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
           <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" /> Đang chờ thanh toán

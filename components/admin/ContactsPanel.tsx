@@ -2,10 +2,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { AdminContact, adminApi } from "@/lib/api";
 import { ErrorBox, Pager, useDialog } from "./ui";
+import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export default function ContactsPanel({ onChanged }: { onChanged: () => void }) {
   const [status, setStatus] = useState<"new" | "replied" | "">("new");
@@ -58,7 +57,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
                     <span className="font-semibold text-slate-900">{m.name}</span>
                     <span className="text-slate-500">{m.email}</span>
                     {m.user_id && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">thành viên</span>}
-                    <span className="ml-auto text-xs text-slate-400">{fmt(m.created_at)}</span>
+                    <span className="ml-auto text-xs text-slate-400">{fmtDateTime(m.created_at)}</span>
                   </span>
                   <span className="mt-0.5 block truncate text-sm text-slate-700">
                     {m.subject && <span className="font-medium">{m.subject} · </span>}
@@ -75,7 +74,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
                       {m.status === "new" ? "✓ Đã trả lời" : "↩ Chưa trả lời"}
                     </button>
                     <button onClick={() => remove(m)} className="btn-outline-danger ml-auto btn-sm">Xóa</button>
-                    {m.replied_at && <span className="w-full text-xs text-slate-500">Đã trả lời lúc {fmt(m.replied_at)}</span>}
+                    {m.replied_at && <span className="w-full text-xs text-slate-500">Đã trả lời lúc {fmtDateTime(m.replied_at)}</span>}
                   </div>
                 </div>
               )}

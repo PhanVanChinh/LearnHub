@@ -4,10 +4,9 @@ import { AdminOrder, adminApi, OrderStatus } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { ORDER_STATUS } from "@/components/MyOrders";
 import { ErrorBox, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { fmtShort } from "@/lib/date";
 
 const LIMIT = 20;
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
   const [status, setStatus] = useState<OrderStatus | "">("pending");
@@ -89,9 +88,9 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
                     {o.confirmed_by_email && <div className="mt-0.5 text-xs text-slate-500">bởi {o.confirmed_by_email}</div>}
                   </td>
                   <td className={`${tdCls} whitespace-nowrap text-xs text-slate-600`}>
-                    <div>tạo {fmt(o.created_at)}</div>
-                    {o.status === "pending" && <div className="text-amber-700">hạn {fmt(o.expires_at)}</div>}
-                    {o.paid_at && <div className="text-emerald-700">duyệt {fmt(o.paid_at)}</div>}
+                    <div>tạo {fmtShort(o.created_at)}</div>
+                    {o.status === "pending" && <div className="text-amber-700">hạn {fmtShort(o.expires_at)}</div>}
+                    {o.paid_at && <div className="text-emerald-700">duyệt {fmtShort(o.paid_at)}</div>}
                   </td>
                   <td className={`${tdCls} whitespace-nowrap text-right`}>
                     {(o.status === "pending" || o.status === "expired") && (

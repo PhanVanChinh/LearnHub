@@ -6,10 +6,9 @@ import ReviewForm from "./ReviewForm";
 import Stars from "./Stars";
 import { Review, ReviewList, reviewsApi } from "@/lib/api";
 import Emoji from "@/components/Emoji";
+import { fmtDate } from "@/lib/date";
 
 const PAGE = 10;
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 /** Khối đánh giá trên trang chi tiết: tóm tắt sao + phân bố, form của tôi, danh sách nhận xét có "Xem thêm". */
 export default function CourseReviews({ slug }: { slug: string }) {
@@ -83,7 +82,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
                 <p className="text-sm font-semibold text-slate-800">Đánh giá của bạn</p>
                 <Stars value={mine.rating} />
                 {mine.comment && <p className="mt-1 text-sm text-slate-700">{mine.comment}</p>}
-                <p className="mt-1 text-xs text-slate-400">{fmt(mine.updated_at)}</p>
+                <p className="mt-1 text-xs text-slate-400">{fmtDate(mine.updated_at)}</p>
               </div>
               <button onClick={() => setEditing(true)} className="btn-outline btn-sm">Sửa</button>
             </div>
@@ -105,7 +104,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">{r.user_initial}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-800">{r.user_name}{r.mine && <span className="ml-2 rounded-full bg-slate-100 px-1.5 text-xs font-normal text-slate-500">bạn</span>}</p>
-                  <div className="flex items-center gap-2 text-xs text-slate-400"><Stars value={r.rating} size="text-sm" /><span>{fmt(r.created_at)}</span></div>
+                  <div className="flex items-center gap-2 text-xs text-slate-400"><Stars value={r.rating} size="text-sm" /><span>{fmtDate(r.created_at)}</span></div>
                 </div>
               </div>
               {r.comment && <p className="mt-3 text-sm leading-6 text-slate-700">{r.comment}</p>}

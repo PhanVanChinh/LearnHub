@@ -4,13 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import Section from "./Section";
+import { fmtDateTime } from "@/lib/date";
 
-const fmt = (iso?: string | null) => {
-  if (!iso) return "—";
-  // Backend lưu UTC không có hậu tố Z → thêm vào để trình duyệt đổi sang giờ máy
-  const d = new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-  return d.toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-};
+const fmt = (iso?: string | null) => fmtDateTime(iso) || "—";
 
 export default function SecuritySection() {
   const { user, logout, logoutAll } = useAuth();

@@ -11,6 +11,7 @@ import SecuritySection from "./SecuritySection";
 import DataSection from "./DataSection";
 import CertificatesSection from "./CertificatesSection";
 import Emoji from "@/components/Emoji";
+import { fmtDate } from "@/lib/date";
 
 /** Trang /account: khung chung, từng mục là một section riêng để dễ mở rộng. */
 export default function AccountView() {
@@ -54,7 +55,7 @@ function AccountSummary() {
   const { user } = useAuth();
   if (!user) return null;
   const initial = user.full_name.trim().charAt(0).toUpperCase() || "U";
-  const since = new Date(user.created_at).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const since = fmtDate(user.created_at);
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-card">
       <div className="flex items-center gap-4">

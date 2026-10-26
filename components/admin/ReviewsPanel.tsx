@@ -4,10 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Stars from "@/components/Stars";
 import { AdminCourse, AdminReview, adminApi } from "@/lib/api";
 import { ErrorBox, Pager, useDialog } from "./ui";
+import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmt = (iso: string) => utc(iso).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 /** Kiểm duyệt đánh giá: xem, lọc, ẩn/hiện kèm lý do. Không sửa nội dung của người dùng. */
 export default function ReviewsPanel() {
@@ -76,7 +75,7 @@ export default function ReviewsPanel() {
                   {r.hidden && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">Đã ẩn{r.hidden_reason ? `: ${r.hidden_reason}` : ""}</span>}
                 </div>
                 <p className={`mt-1.5 text-sm leading-6 ${r.comment ? "text-slate-700" : "italic text-slate-400"}`}>{r.comment || "(không có nhận xét)"}</p>
-                <p className="mt-1 text-xs text-slate-400">Gửi {fmt(r.created_at)}{r.updated_at !== r.created_at && <> · sửa {fmt(r.updated_at)}</>}</p>
+                <p className="mt-1 text-xs text-slate-400">Gửi {fmtDateTime(r.created_at)}{r.updated_at !== r.created_at && <> · sửa {fmtDateTime(r.updated_at)}</>}</p>
               </div>
               <button onClick={() => toggle(r)} disabled={busyId === r.id}
                 className={`${r.hidden ? "btn-outline-success" : "btn-outline-danger"} shrink-0 btn-sm disabled:opacity-60`}>

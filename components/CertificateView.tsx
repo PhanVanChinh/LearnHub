@@ -5,9 +5,8 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError, Certificate, certificatesApi } from "@/lib/api";
 import { site } from "@/lib/site";
 import Emoji from "@/components/Emoji";
+import { fmtDate } from "@/lib/date";
 
-const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
-const fmtDate = (iso: string) => utc(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 /** /certificate?code=LH-CERT-… : xem + xác thực công khai + tải PNG. Không có code → ô nhập mã. */
 export default function CertificateView() {
