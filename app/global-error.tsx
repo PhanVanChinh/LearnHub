@@ -9,7 +9,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
     <html lang="vi">
       <body style={{ fontFamily: "system-ui, sans-serif", background: "#f8fafc", color: "#0f172a", margin: 0 }}>
         <div style={{ maxWidth: 480, margin: "15vh auto", padding: 24, textAlign: "center" }}>
-          <p style={{ fontSize: 56, margin: 0 }}>😵</p>
+          <p style={{ fontSize: 56, margin: 0 }} aria-hidden="true">😵</p>
           <h1 style={{ fontSize: 22, margin: "12px 0 8px" }}>LearnHub gặp lỗi không mong muốn</h1>
           <p style={{ color: "#475569" }}>Sự cố đã được ghi nhận. Hãy tải lại trang.</p>
           {error.digest && <p style={{ fontFamily: "monospace", fontSize: 12, color: "#94a3b8" }}>Mã: {error.digest}</p>}

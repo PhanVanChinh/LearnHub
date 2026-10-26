@@ -13,7 +13,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
 
   return (
     <div className="container-x py-24 text-center">
-      <p className="text-6xl">{offline ? "📡" : "😵"}</p>
+      <p className="text-6xl" aria-hidden="true">{offline ? "📡" : "😵"}</p>
       <h1 className="mt-4 text-2xl font-bold text-slate-900">{offline ? "Không kết nối được máy chủ" : "Có lỗi xảy ra"}</h1>
       <p className="mx-auto mt-2 max-w-md text-slate-600">
         {offline ? "Kiểm tra mạng của bạn rồi thử lại. Nếu vẫn lỗi, máy chủ có thể đang bảo trì." : "Chúng tôi đã ghi nhận sự cố. Hãy thử tải lại; nếu lỗi lặp lại, liên hệ hỗ trợ kèm mã bên dưới."}

@@ -5,6 +5,7 @@ import { useAuth } from "./AuthProvider";
 import ReviewForm from "./ReviewForm";
 import Stars from "./Stars";
 import { Review, ReviewList, reviewsApi } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 const PAGE = 10;
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
@@ -59,7 +60,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
             const n = summary.distribution[String(s)] ?? 0;
             return (
               <li key={s} className="flex items-center gap-2 text-sm">
-                <span className="w-8 text-slate-600">{s} ★</span>
+                <span className="w-8 text-slate-600">{s} <Emoji>★</Emoji><span className="sr-only"> sao</span></span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full bg-amber-400" style={{ width: `${(n / max) * 100}%` }} /></div>
                 <span className="w-6 text-right text-xs text-slate-500">{n}</span>
               </li>

@@ -153,7 +153,7 @@ function Shell({ title, children }: { title: string; children: React.ReactNode }
 function Notice({ icon, title, text, children }: { icon: string; title: string; text: string; children?: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-card">
-      <p className="text-5xl">{icon}</p>
+      <p className="text-5xl" aria-hidden="true">{icon}</p>
       <p className="mt-3 text-lg font-semibold text-slate-900">{title}</p>
       <p className="mt-1 text-sm text-slate-600">{text}</p>
       {children && <div className="mt-5 flex flex-wrap justify-center gap-3">{children}</div>}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { OrderDetail } from "@/lib/api";
 import { formatVND } from "@/lib/site";
+import Emoji from "@/components/Emoji";
 
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
 const fmtTime = (iso: string) => utc(iso).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
@@ -16,7 +17,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
   if (order.status === "paid") {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
-        <p className="text-5xl">🎉</p>
+        <p className="text-5xl" aria-hidden="true">🎉</p>
         <p className="mt-3 text-lg font-semibold text-emerald-800">Thanh toán đã được xác nhận</p>
         <p className="mt-1 text-sm text-emerald-700">Đơn {order.code} · {order.paid_at && fmtTime(order.paid_at)}. Khóa học đã mở trong tài khoản của bạn.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
@@ -30,7 +31,7 @@ export default function PaymentInstructions({ order, onRefresh, onCancel, busy, 
     const label = order.status === "cancelled" ? "Đơn đã hủy" : "Đơn đã hết hạn thanh toán";
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-card">
-        <p className="text-5xl">{order.status === "cancelled" ? "🗑️" : "⌛"}</p>
+        <p className="text-5xl" aria-hidden="true">{order.status === "cancelled" ? "🗑️" : "⌛"}</p>
         <p className="mt-3 text-lg font-semibold text-slate-900">{label}</p>
         <p className="mt-1 text-sm text-slate-600">Nếu bạn đã chuyển khoản cho đơn này, hãy liên hệ hỗ trợ kèm mã <b>{order.code}</b>.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
@@ -98,7 +99,7 @@ function Row({ k, v, copy, highlight }: { k: string; v: string; copy?: boolean |
         {copy && (
           <button type="button" onClick={() => { navigator.clipboard?.writeText(text).then(() => setDone(true)).catch(() => {}); }}
             className="rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-slate-200" aria-label={`Sao chép ${k}`}>
-            {done ? "✓" : "Sao chép"}
+            {done ? <><Emoji>✓</Emoji><span className="sr-only">Đã sao chép</span></> : "Sao chép"}
           </button>
         )}
       </dd>

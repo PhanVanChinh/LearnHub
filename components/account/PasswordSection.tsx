@@ -7,6 +7,7 @@ import PasswordInput from "@/components/PasswordInput";
 import { ApiError } from "@/lib/api";
 import { passwordValid } from "@/lib/password";
 import Section from "./Section";
+import Emoji from "@/components/Emoji";
 
 export default function PasswordSection() {
   const { user } = useAuth();
@@ -91,7 +92,7 @@ function ChangePasswordForm() {
         <NewPasswordFields password={pw} confirm={confirm} onPassword={(v) => { setPw(v); setError(""); setDone(false); }} onConfirm={setConfirm}
           touched={touched} onBlur={() => setTouched(true)} email={email} />
         {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
-        {done && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">✓ Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.</p>}
+        {done && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700"><Emoji>✓</Emoji> Đã đổi mật khẩu. Các thiết bị khác đã bị đăng xuất.</p>}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <button type="submit" disabled={busy} className="btn-primary disabled:opacity-60">{busy ? "Đang lưu…" : "Đổi mật khẩu"}</button>
           <Link href="/forgot-password" className="text-sm text-brand-700 hover:underline">Quên mật khẩu hiện tại?</Link>

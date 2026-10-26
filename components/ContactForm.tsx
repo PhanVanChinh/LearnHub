@@ -49,7 +49,7 @@ export default function ContactForm() {
   if (sent) {
     return (
       <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center">
-        <p className="text-5xl">📨</p>
+        <p className="text-5xl" aria-hidden="true">📨</p>
         <p className="mt-3 text-lg font-semibold text-emerald-800">Đã gửi!</p>
         <p className="mt-1 text-sm text-emerald-700">{sent}</p>
         <p className="mt-1 text-xs text-emerald-700">Một email xác nhận đã được gửi tới {form.email}.</p>

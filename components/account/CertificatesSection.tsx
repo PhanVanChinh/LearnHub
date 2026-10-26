@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Section from "./Section";
 import { ApiError, Certificate, certificatesApi } from "@/lib/api";
+import Emoji from "@/components/Emoji";
 
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
 
@@ -36,7 +37,7 @@ export default function CertificatesSection() {
         {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
         {certs && certs.length === 0 && !error && (
           <div className="rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
-            <p className="text-3xl">🎓</p>
+            <p className="text-3xl" aria-hidden="true">🎓</p>
             <p className="mt-2">Bạn chưa có chứng nhận nào.</p>
             <Link href="/my-courses" className="mt-3 inline-block font-semibold text-brand-700 hover:underline">Học tiếp các khóa của tôi →</Link>
           </div>
@@ -52,7 +53,7 @@ export default function CertificatesSection() {
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-2">
-                  <button onClick={() => copy(c)} className="btn-outline btn-sm text-xs">{copied === c.code ? "✓ Đã sao chép" : "Sao chép link"}</button>
+                  <button onClick={() => copy(c)} className="btn-outline btn-sm text-xs">{copied === c.code ? <><Emoji>✓</Emoji> Đã sao chép</> : "Sao chép link"}</button>
                   <Link href={`/certificate?code=${c.code}`} className="btn-primary btn-sm text-xs">Xem & tải</Link>
                 </div>
               </li>

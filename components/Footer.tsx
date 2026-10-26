@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { site } from "@/lib/site";
 import Logo from "./Logo";
+import Emoji from "@/components/Emoji";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -27,9 +28,9 @@ export default function Footer() {
         <div>
           <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-900">Liên hệ</h2>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
-            <li>📍 {site.contact.address}</li>
-            <li>📞 <a href={`tel:${site.contact.phone}`} className="hover:text-brand-700">{site.contact.phone}</a></li>
-            <li>✉️ <a href={`mailto:${site.contact.email}`} className="hover:text-brand-700">{site.contact.email}</a></li>
+            <li><Emoji>📍</Emoji> {site.contact.address}</li>
+            <li><Emoji>📞</Emoji> <a href={`tel:${site.contact.phone}`} className="hover:text-brand-700">{site.contact.phone}</a></li>
+            <li><Emoji>✉️</Emoji> <a href={`mailto:${site.contact.email}`} className="hover:text-brand-700">{site.contact.email}</a></li>
           </ul>
           {process.env.NEXT_PUBLIC_SHOW_WIP_BADGE === "1" && (
             <div className="mt-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-600">

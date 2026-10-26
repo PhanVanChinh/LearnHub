@@ -10,6 +10,7 @@ import GoogleSection from "./GoogleSection";
 import SecuritySection from "./SecuritySection";
 import DataSection from "./DataSection";
 import CertificatesSection from "./CertificatesSection";
+import Emoji from "@/components/Emoji";
 
 /** Trang /account: khung chung, từng mục là một section riêng để dễ mở rộng. */
 export default function AccountView() {
@@ -71,7 +72,7 @@ function AccountSummary() {
       <dl className="mt-5 space-y-2 text-sm">
         <Row k="Email">
           {user.email_verified ? (
-            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">✓ Đã xác thực</span>
+            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700"><Emoji>✓</Emoji> Đã xác thực</span>
           ) : (
             <Link href="/verify?next=/account" className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 hover:bg-amber-100">Chưa xác thực →</Link>
           )}

@@ -5,6 +5,7 @@ import AccountDeletedNotice from "@/components/AccountDeletedNotice";
 import { getVisibleCourses } from "@/lib/courses.server";
 import { isComingSoon, site } from "@/lib/site";
 import { absUrl, pageMeta } from "@/lib/seo";
+import Emoji from "@/components/Emoji";
 
 export const metadata = pageMeta({ path: "/" });
 
@@ -35,7 +36,7 @@ export default async function Home() {
         <div className="container-x relative grid items-center gap-10 py-20 lg:grid-cols-2 lg:py-28">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur">
-              🎓 Dành cho sinh viên {site.university}
+              <Emoji>🎓</Emoji> Dành cho sinh viên {site.university}
             </span>
             <h1 className="mt-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
               Khám phá các khóa học <span className="whitespace-nowrap text-yellow-300">nổi bật</span>

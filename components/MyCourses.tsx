@@ -51,7 +51,7 @@ export default function MyCourses({ courses }: { courses: Course[] }) {
                 <CourseCard key={c.slug} course={c}
                   progress={{ completed: p.completed.length, total: p.total }}
                   action={p.percent === 100
-                    ? { href: `/learn/${c.slug}?lesson=${p.last_index ?? 0}`, label: "🎓 Xem lại / chứng nhận" }
+                    ? { href: `/learn/${c.slug}?lesson=${p.last_index ?? 0}`, label: "Xem lại / chứng nhận" }
                     : { href: `/learn/${c.slug}?lesson=${resume}`, label: started ? `▶ Học tiếp bài ${resume + 1}` : "▶ Vào học" }} />
               );
             })}

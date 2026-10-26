@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { authApi } from "@/lib/api";
 import Logo from "./Logo";
 import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
+import Emoji from "@/components/Emoji";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -36,7 +37,7 @@ export default function ForgotPasswordForm() {
         <p className="mt-1 text-center text-sm text-slate-500">Nhập email đã đăng ký, chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
         {sent ? (
           <div role="status" className="mt-6 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">
-            <p>✅ {sent}</p>
+            <p><Emoji>✅</Emoji> {sent}</p>
             <p className="mt-2 text-emerald-700">Link có hiệu lực 30 phút. Không thấy mail? Kiểm tra mục Spam hoặc thử lại sau 1 phút.</p>
           </div>
         ) : (

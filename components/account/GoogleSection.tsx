@@ -27,7 +27,7 @@ export default function GoogleSection() {
       {user.has_google ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-50 text-lg">✓</span>
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-emerald-50 text-lg" aria-hidden="true">✓</span>
             <div>
               <p className="text-sm font-medium text-slate-800">Đã liên kết Google</p>
               <p className="text-xs text-slate-500">

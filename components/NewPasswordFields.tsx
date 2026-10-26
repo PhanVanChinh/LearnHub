@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { passwordRules, passwordStrength, passwordValid } from "@/lib/password";
 import PasswordInput from "./PasswordInput";
+import Emoji from "@/components/Emoji";
 
 type Props = {
   password: string;
@@ -32,7 +33,7 @@ export default function NewPasswordFields({ password, confirm, onPassword, onCon
           </div>
         )}
         <ul className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
-          {rules.map((r) => <li key={r.key} className={r.ok ? "text-emerald-600" : "text-slate-500"}>{r.ok ? "✓" : "○"} {r.label}</li>)}
+          {rules.map((r) => <li key={r.key} className={r.ok ? "text-emerald-600" : "text-slate-500"}>{r.ok ? <Emoji label="Đạt:">✓</Emoji> : <Emoji label="Chưa đạt:">○</Emoji>} {r.label}</li>)}
         </ul>
       </div>
       <div>

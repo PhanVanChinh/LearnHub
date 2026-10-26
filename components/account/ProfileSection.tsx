@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { ApiError, authApi } from "@/lib/api";
 import Section from "./Section";
+import Emoji from "@/components/Emoji";
 
 export default function ProfileSection() {
   const { user, setUser } = useAuth();
@@ -45,7 +46,7 @@ export default function ProfileSection() {
         </div>
         <div className="flex items-center gap-3">
           <button type="submit" disabled={busy || !dirty} className="btn-primary disabled:opacity-50">{busy ? "Đang lưu…" : "Lưu thay đổi"}</button>
-          {saved && <span className="text-sm text-emerald-600">✓ Đã lưu</span>}
+          {saved && <span role="status" className="text-sm text-emerald-600"><Emoji>✓</Emoji> Đã lưu</span>}
         </div>
       </form>
     </Section>

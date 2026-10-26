@@ -6,6 +6,7 @@ import { authApi, ApiError } from "@/lib/api";
 import { passwordValid } from "@/lib/password";
 import Logo from "./Logo";
 import NewPasswordFields from "./NewPasswordFields";
+import Emoji from "@/components/Emoji";
 
 export default function ResetPasswordForm() {
   const token = useSearchParams().get("token") || "";
@@ -55,7 +56,7 @@ export default function ResetPasswordForm() {
   if (done) {
     return (
       <Card>
-        <h1 className="mt-6 text-center text-2xl font-bold text-slate-900">Đã đặt lại mật khẩu 🎉</h1>
+        <h1 className="mt-6 text-center text-2xl font-bold text-slate-900">Đã đặt lại mật khẩu <Emoji>🎉</Emoji></h1>
         <p className="mt-2 text-center text-sm text-slate-500">Mọi phiên đăng nhập cũ đã bị đăng xuất. Hãy đăng nhập lại bằng mật khẩu mới.</p>
         <Link href="/login" className="btn-primary mt-6 w-full">Đăng nhập</Link>
       </Card>

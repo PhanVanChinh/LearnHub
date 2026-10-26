@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError, Certificate, certificatesApi } from "@/lib/api";
 import { site } from "@/lib/site";
+import Emoji from "@/components/Emoji";
 
 const utc = (iso: string) => new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : iso + "Z");
 const fmtDate = (iso: string) => utc(iso).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -90,12 +91,12 @@ function CertificateCard({ cert }: { cert: Certificate }) {
         </div>
       </div>
       <div className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${cert.valid ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
-        <span className="text-lg">{cert.valid ? "✅" : "⚠️"}</span>
+        <span className="text-lg" aria-hidden="true">{cert.valid ? "✅" : "⚠️"}</span>
         <span>{cert.valid ? `Chứng nhận hợp lệ, do ${site.name} cấp cho ${cert.holder_name}.` : "Tài khoản của người nhận đã bị khóa hoặc xóa; chứng nhận không còn xác thực được."}</span>
       </div>
       <div className="mt-4 flex flex-wrap gap-2">
         <button onClick={download} className="btn-primary">⬇ Tải ảnh PNG</button>
-        <button onClick={copy} className="btn-outline">{copied ? "✓ Đã sao chép" : "Sao chép link xác thực"}</button>
+        <button onClick={copy} className="btn-outline">{copied ? <><Emoji>✓</Emoji> Đã sao chép</> : "Sao chép link xác thực"}</button>
         <Link href={`/courses/${cert.course_slug}`} className="btn-outline">Xem khóa học</Link>
       </div>
       <canvas ref={canvasRef} className="hidden" />
