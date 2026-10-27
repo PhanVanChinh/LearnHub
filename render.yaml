@@ -80,6 +80,15 @@ services:
         sync: false
       - key: SENTRY_DSN
         sync: false
+      # Gắn vào Sentry release để biết lỗi thuộc lần deploy nào (vd dán commit sha khi deploy tay); bỏ trống được
+      - key: APP_VERSION
+        sync: false
+      # Nhận mail "có đơn mới" để đối soát; bỏ trống → gửi tới ADMIN_EMAIL
+      - key: ORDER_NOTIFY_EMAIL
+        sync: false
+      # Repo cho nút "Xuất bản" trong admin (cùng GITHUB_TOKEN)
+      - key: GITHUB_REPO
+        value: PhanVanChinh/LearnHub
 
   # Backup toàn bộ DB lên R2 (thư mục backups/) mỗi ngày 2:00 sáng giờ VN (19:00 UTC), giữ 14 bản.
   # Khôi phục: Render Shell của learnhub-api → python restore_db.py --list → python restore_db.py <key> --yes

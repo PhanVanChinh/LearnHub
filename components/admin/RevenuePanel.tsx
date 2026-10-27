@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { adminApi, downloadFile, RevenueReport } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { ErrorBox } from "./ui";
+import ProgressBar from "@/components/ProgressBar";
 
 const RANGES = [7, 30, 90] as const;
 const fmtDay = (iso: string) => { const [, m, d] = iso.split("-"); return `${d}/${m}`; };
@@ -101,7 +102,7 @@ export default function RevenuePanel() {
                   <td className="py-2 text-right">{c.orders}</td>
                   <td className="py-2 text-right font-medium">{formatVND(c.revenue)}</td>
                   <td className="py-2 text-right">
-                    <span className="inline-flex items-center gap-2"><span className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-brand-600" style={{ width: `${share}%` }} /></span>{share}%</span>
+                    <span className="inline-flex items-center gap-2"><ProgressBar percent={share} label={`Tỷ trọng ${c.title}`} className="h-1.5 w-16" />{share}%</span>
                   </td>
                 </tr>
               );

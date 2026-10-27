@@ -136,8 +136,10 @@ def health():
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
     except Exception as e:  # noqa: BLE001 — mọi lỗi DB đều là unhealthy
-        return JSONResponse(status_code=503, content={"status": "error", "db": "down", "detail": str(e)[:200]})
-    return {"status": "ok", "db": "ok", "env": settings.app_env}
+        # Chi tiết lỗi (host, user, tên DB trong thông báo psycopg) chỉ ghi log; endpoint công khai không trả ra
+        logging.getLogger("learnhub").error("Health check: DB không phản hồi: %s", str(e)[:300])
+        return JSONResponse(status_code=503, content={"status": "error", "db": "down"})
+    return {"status": "ok", "db": "ok"}  # môi trường (APP_ENV) chỉ admin xem qua /api/health/config
 
 
 @app.get("/api/health/config", tags=["meta"], dependencies=[Depends(require_admin)])

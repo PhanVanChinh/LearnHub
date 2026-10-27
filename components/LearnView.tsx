@@ -15,6 +15,7 @@ import LessonNotes from "./LessonNotes";
 import ReviewPrompt from "./ReviewPrompt";
 import CertificateButton from "./CertificateButton";
 import Emoji from "@/components/Emoji";
+import ProgressBar from "@/components/ProgressBar";
 
 type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
 
@@ -155,9 +156,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
         <span>{progress.percent === 100 ? <><Emoji>🎉</Emoji> Đã hoàn thành khóa học</> : `Đã học ${progress.completed.length}/${progress.total} bài`}</span>
         <span className="font-semibold">{progress.percent}%</span>
       </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
-      </div>
+      <ProgressBar percent={progress.percent} label="Tiến độ khóa học" className="mt-1 h-1.5" track="bg-white/10" bar={progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"} />
       {progress.percent === 100 && <CertificateButton slug={course.slug} />}
       {progress.percent >= 50 && <ReviewPrompt slug={course.slug} completed={progress.percent === 100} />}
     </div>
@@ -193,9 +192,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
                   <span>Đã học {progress.completed.length}/{progress.total} bài</span>
                   <span className="font-semibold text-white">{progress.percent}%</span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/10">
-                  <div className={`h-full rounded-full transition-all ${progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"}`} style={{ width: `${progress.percent}%` }} />
-                </div>
+                <ProgressBar percent={progress.percent} label="Tiến độ khóa học" className="mt-1 h-2" track="bg-white/10" bar={progress.percent === 100 ? "bg-emerald-400" : "bg-brand-500"} />
               </div>
 
               {progress.percent < 100 ? (

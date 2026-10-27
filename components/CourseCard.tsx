@@ -5,6 +5,7 @@ import CourseStatsLine from "./CourseStatsLine";
 import { highlight, type Match } from "@/lib/search";
 import { coverUrl } from "@/lib/cover";
 import Emoji from "@/components/Emoji";
+import ProgressBar from "@/components/ProgressBar";
 
 const labels: Record<string, string> = {
   "ai-check": "AI Check", pdf: "PDF", quiz: "Trắc nghiệm", free: "Miễn phí", source: "Source code", video: "Video",
@@ -63,9 +64,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
               <span>{percent === 100 ? <><Emoji>🎉</Emoji> Hoàn thành</> : `${progress.completed}/${progress.total} bài`}</span>
               <span className="font-semibold text-slate-700">{percent}%</span>
             </div>
-            <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className={`h-full rounded-full transition-all ${percent === 100 ? "bg-emerald-500" : "bg-brand-600"}`} style={{ width: `${percent}%` }} />
-            </div>
+            <ProgressBar percent={percent} label={`Tiến độ ${course.title}`} className="mt-1 h-2" bar={percent === 100 ? "bg-emerald-500" : "bg-brand-600"} />
           </div>
         )}
         <div className="mt-auto flex items-center justify-between pt-4">

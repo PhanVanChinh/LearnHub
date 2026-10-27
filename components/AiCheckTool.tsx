@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthProvider";
 import { aiCheckApi, AiCheckResult, AiCheckStatus, ApiError, OFFLINE_MESSAGE } from "@/lib/api";
+import ProgressBar from "@/components/ProgressBar";
 
 const CONF: Record<AiCheckResult["confidence"], { label: string; cls: string }> = {
   low: { label: "Độ tin cậy thấp", cls: "bg-slate-100 text-slate-600" },
@@ -108,7 +109,7 @@ function ResultView({ r }: { r: AiCheckResult }) {
           <div>
             <p className="text-sm text-slate-600">Khả năng do AI viết</p>
             <p className={`mt-1 text-5xl font-extrabold ${scoreTone(r.ai_score)}`}>{r.ai_score}%</p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full ${barTone(r.ai_score)}`} style={{ width: `${r.ai_score}%` }} /></div>
+            <ProgressBar percent={r.ai_score} label="Khả năng do AI viết" className="mt-3 h-2" bar={barTone(r.ai_score)} />
             <span className={`mt-3 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${conf.cls}`}>{conf.label}</span>
           </div>
           <div>

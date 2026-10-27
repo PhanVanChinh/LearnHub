@@ -17,8 +17,9 @@ RUN useradd -r -u 10001 learnhub && chown -R learnhub /app
 USER learnhub
 
 EXPOSE 8000
+# Gọi đúng cổng server đang nghe (PORT do nền tảng cấp), không cứng 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).status == 200 else 1)"
+  CMD python -c "import os,urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:%s/api/health' % os.environ.get('PORT','8000'), timeout=3).status == 200 else 1)"
 
 # --proxy-headers + forwarded-allow-ips: chạy sau reverse proxy (Render, Railway, nginx) đọc đúng IP khách cho rate limit
 # PORT do nền tảng cấp (Render đặt PORT), mặc định 8000
