@@ -10,7 +10,6 @@ export type User = { id: number; email: string; full_name: string; role: "user" 
   last_login_at?: string | null; password_changed_at?: string | null; sessions_revoked_at?: string | null };
 export type VerificationStatus = { email_verified: boolean; sent: boolean; cooldown_seconds: number; mail_provider: "resend" | "console" };
 export type Token = { access_token: string; refresh_token?: string | null; token_type: string; user: User };
-export type AuthConfig = { captcha_enabled: boolean; mail_provider: "resend" | "console"; access_token_minutes: number; google_client_id: string };
 
 const ls = (fn: () => string | null | void) => { try { return fn() ?? null; } catch { return null; } };
 // Access token CHỈ giữ trong bộ nhớ (mất khi tải lại trang → lấy lại bằng refresh cookie httpOnly). Không còn nằm trong
@@ -93,7 +92,6 @@ export async function api<T>(path: string, init: RequestInit = {}, _retried = fa
 }
 
 export const authApi = {
-  config: () => api<AuthConfig>("/api/auth/config"),
   logoutAll: () => api<Token>("/api/auth/logout-all", { method: "POST" }),
   /** Xóa cookie refresh trên thiết bị này */
   logout: () => api<void>("/api/auth/logout", { method: "POST" }),
@@ -161,7 +159,6 @@ export const coursesApi = {
   /** Ghi chú riêng của tôi cho một bài (cần đăng nhập; bài khóa cần ghi danh). Lưu text rỗng = xóa. */
   note: (slug: string, index: number) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`),
   saveNote: (slug: string, index: number, text: string) => api<LessonNote>(`/api/courses/${slug}/lessons/${index}/note`, { method: "PUT", body: JSON.stringify({ text }) }),
-  notes: (slug: string) => api<LessonNote[]>(`/api/courses/${slug}/notes`),
   complete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "PUT" }),
   uncomplete: (slug: string, index: number) => api<Progress>(`/api/courses/${slug}/lessons/${index}/complete`, { method: "DELETE" }),
   /** Video của một bài: bài free → công khai; bài khác → 401 chưa đăng nhập, 403 chưa ghi danh */

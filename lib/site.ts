@@ -10,7 +10,6 @@ export const site = {
         address: "Hà Nội, Việt Nam",
         phone: "0886876079",
         email: "phanvanchinh32@gmail.com",
-        facebook: "https://facebook.com",
     },
     nav: [
         { href: "/free", label: "Tài liệu miễn phí" },
@@ -29,7 +28,7 @@ export const site = {
 };
 
 /** Danh mục chưa mở bán: hiện "Sắp mở bán", không tạo được đơn. Gói AI Check chờ cơ chế cấp lượt theo gói. */
-export const comingSoonCategories: string[] = ["ai-check"];
+const comingSoonCategories: string[] = ["ai-check"];
 export const isComingSoon = (category: string) => comingSoonCategories.includes(category);
 
 export const formatVND = (n: number) =>
