@@ -1,16 +1,18 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-sqlalchemy>=2.0
-pydantic[email]>=2.7
-pydantic-settings>=2.3
-bcrypt>=4.0
-python-jose[cryptography]>=3.3
-python-multipart>=0.0.9
-httpx>=0.27
-anthropic>=1.0
-boto3>=1.34
-psycopg[binary]>=3.1
-sentry-sdk[fastapi]>=2.0
+# Khóa đúng phiên bản (==) để CI, Docker và Render cài ra cùng một bộ thư viện như máy dev đã test.
+# Nâng cấp: đổi số ở đây, chạy pytest (SQLite + Postgres) rồi mới push. anthropic khóa chặt vì ai_check.py dùng tham số beta.
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+sqlalchemy==2.0.52
+pydantic[email]==2.13.5
+pydantic-settings==2.15.0
+bcrypt==5.0.0
+python-jose[cryptography]==3.5.0
+python-multipart==0.0.32
+httpx==0.28.1
+anthropic==1.6.0
+boto3==1.43.98
+psycopg[binary]==3.3.6
+sentry-sdk[fastapi]==2.69.2
 
 # chỉ để chạy test trên Postgres thật không cần Docker (pip install -r requirements-dev.txt)
-pytest>=8
+pytest==9.1.1
