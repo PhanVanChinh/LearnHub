@@ -215,7 +215,7 @@ def submit_quiz(slug: str, index: int, payload: schemas.QuizSubmitIn, db: Sessio
     course, lesson = _lesson_for_access(slug, index, db, user)
     quiz = _quiz_of(lesson)
     if len(payload.answers) != len(quiz.questions):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Cần đúng {len(quiz.questions)} câu trả lời")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"Cần đúng {len(quiz.questions)} câu trả lời")
     results = []
     for i, (q, chosen) in enumerate(zip(quiz.questions, payload.answers)):
         if chosen is not None and not (0 <= chosen < len(q.options)):

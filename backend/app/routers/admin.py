@@ -271,7 +271,7 @@ async def upload_file(request: Request, file: UploadFile = File(...), course_slu
         raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Không hỗ trợ loại file {ctype or 'không rõ'}. Cho phép: PDF, Word, PowerPoint, Excel, ZIP, TXT, ảnh")
     data = await file.read()
     if len(data) > settings.upload_max_mb * 1024 * 1024:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, f"File tối đa {settings.upload_max_mb} MB")
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, f"File tối đa {settings.upload_max_mb} MB")
     if not data:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "File rỗng")
     name = (file.filename or "tai-lieu").strip()[:200]

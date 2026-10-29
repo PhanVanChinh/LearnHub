@@ -41,9 +41,9 @@ def run_ai_check(payload: schemas.AiCheckIn, db: Session = Depends(get_db), user
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "AI Check chưa được cấu hình trên hệ thống (thiếu ANTHROPIC_API_KEY)")
     text = payload.text.strip()
     if len(text) > settings.ai_check_max_chars:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Văn bản tối đa {settings.ai_check_max_chars:,} ký tự, hãy kiểm tra theo từng phần".replace(",", "."))
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"Văn bản tối đa {settings.ai_check_max_chars:,} ký tự, hãy kiểm tra theo từng phần".replace(",", "."))
     if len(text.split()) < settings.ai_check_min_words:
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Cần ít nhất {settings.ai_check_min_words} từ để phân tích có ý nghĩa")
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, f"Cần ít nhất {settings.ai_check_min_words} từ để phân tích có ý nghĩa")
     st = _status(db, user)
     if st.remaining <= 0:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, f"Bạn đã dùng hết {st.daily_limit} lượt trong 24 giờ. Thử lại sau")
