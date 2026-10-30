@@ -6,7 +6,6 @@ import type { Course } from "@/data/courses";
 import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { useAuth } from "./AuthProvider";
-import VideoPlayer from "./VideoPlayer";
 import QuizPlayer from "./QuizPlayer";
 import LessonAttachments from "./LessonAttachments";
 import LessonContent from "./LessonContent";
@@ -17,8 +16,7 @@ import Emoji from "@/components/Emoji";
 import ProgressBar from "@/components/ProgressBar";
 import LessonList from "@/components/learn/LessonList";
 import CourseSummary from "@/components/learn/CourseSummary";
-
-type Access = "checking" | "granted" | "login" | "verify" | "enroll" | "offline";
+import LessonStage, { type Access } from "@/components/learn/LessonStage";
 
 export default function LearnView({ course: staticCourse, related = [] }: { course: Course; related?: Course[] }) {
   const { user, loading } = useAuth();
@@ -152,61 +150,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
           {summary && enrolled && progress && (
             <CourseSummary course={course} progress={progress} related={related} onClose={() => setSummary(false)} onSelect={go} />
           )}
-          {access === "granted" && video && (
-            <VideoPlayer videoId={video} title={lesson.title} autoplay className="!rounded-xl" startSeconds={resumeAt} onProgress={savePosition} />
-          )}
-          {access === "granted" && !video && !lesson.content && !lesson.quizCount && !lesson.attachments?.length && (
-            <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
-              <div>
-                <p className="text-5xl" aria-hidden="true">📄</p>
-                <p className="mt-3 text-lg font-semibold text-white">Nội dung bài này đang được cập nhật</p>
-                <p className="mt-1 text-sm text-white/80">Bài chưa có video hay tài liệu. Hãy chuyển sang bài kế tiếp hoặc quay lại sau.</p>
-              </div>
-            </div>
-          )}
-          {access === "granted" && !video && !lesson.content && !!lesson.attachments?.length && (
-            <div className={`grid aspect-video place-items-center rounded-xl bg-gradient-to-br ${course.color} p-8 text-center`}>
-              <div>
-                <p className="text-5xl" aria-hidden="true">📚</p>
-                <p className="mt-3 text-lg font-semibold text-white">Bài học dạng tài liệu</p>
-                <p className="mt-1 text-sm text-white/80">Tải {lesson.attachments.length} tài liệu bên dưới để học.{lesson.quizCount ? " Làm trắc nghiệm sau khi đọc xong." : ""}</p>
-              </div>
-            </div>
-          )}
-          {access === "checking" && <div className="aspect-video animate-pulse rounded-xl bg-white/10" />}
-          {access === "offline" && (
-            <div className="grid aspect-video place-items-center rounded-xl border border-rose-500/30 bg-rose-500/10 p-8 text-center">
-              <div>
-                <p className="text-5xl" aria-hidden="true">⚠️</p>
-                <p className="mt-3 text-lg font-semibold">Không kết nối được máy chủ</p>
-                <p className="mt-1 text-sm text-slate-300">Chưa tải được bài học. Kiểm tra kết nối mạng rồi tải lại trang; nếu vẫn lỗi, <Link href="/contact" className="font-semibold text-white underline">báo cho chúng tôi</Link>.</p>
-              </div>
-            </div>
-          )}
-          {access === "verify" && (
-            <div className="grid aspect-video place-items-center rounded-xl border border-amber-500/30 bg-amber-500/10 p-8 text-center">
-              <div>
-                <p className="text-5xl" aria-hidden="true">✉️</p>
-                <p className="mt-3 text-lg font-semibold">Xác thực email để tiếp tục học</p>
-                <p className="mt-1 text-sm text-slate-300">Chúng tôi đã gửi mã 6 số tới {user?.email}.</p>
-                <Link href={`/verify?next=/learn/${course.slug}?lesson=${index}`} className="btn-primary mt-4">Nhập mã xác thực</Link>
-              </div>
-            </div>
-          )}
-          {(access === "login" || access === "enroll") && (
-            <div className="grid aspect-video place-items-center rounded-xl border border-white/10 bg-white/5 p-8 text-center">
-              <div>
-                <p className="text-5xl" aria-hidden="true">🔒</p>
-                <p className="mt-3 text-lg font-semibold">Bài học dành cho học viên đã ghi danh</p>
-                {access === "login" ? (
-                  <Link href={`/login?next=/learn/${course.slug}?lesson=${index}`} className="btn-primary mt-4">Đăng nhập để tiếp tục</Link>
-                ) : (
-                  <Link href={`/courses/${course.slug}`} className="btn-primary mt-4">{course.price === 0 ? "Ghi danh miễn phí" : "Mua khóa học"}</Link>
-                )}
-                <p className="mt-3 text-xs text-slate-400">Bạn vẫn có thể xem các bài gắn nhãn “Xem thử” ở danh sách bên.</p>
-              </div>
-            </div>
-          )}
+          <LessonStage access={access} video={video} course={course} lesson={lesson} index={index} email={user?.email} resumeAt={resumeAt} onProgress={savePosition} />
 
           <div className="mt-5 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
