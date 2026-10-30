@@ -7,7 +7,8 @@ import { coverUrl } from "@/lib/cover";
 import { parseQuizText, quizToText } from "@/lib/quizText";
 import { ErrorBox, Field, useDialog } from "./ui";
 import AttachmentEditor from "./AttachmentEditor";
-import LessonContent from "@/components/LessonContent";
+import ContentEditor from "./ContentEditor";
+import QuizEditor from "./QuizEditor";
 
 const COLORS = [
   "from-brand-500 to-brand-700", "from-violet-500 to-fuchsia-600", "from-sky-500 to-indigo-600", "from-emerald-500 to-teal-600",
@@ -174,101 +175,6 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   );
 }
 
-
-const CONTENT_PLACEHOLDER = `## Mục tiêu bài học
-- Hiểu khái niệm con trỏ
-- Viết được hàm hoán đổi hai số
-
-Đoạn văn bình thường, **in đậm**, *in nghiêng*, [link](https://example.com).
-
-\`\`\`c
-void swap(int *a, int *b) { int t = *a; *a = *b; *b = t; }
-\`\`\`
-
-| Toán tử | Ý nghĩa |
-|---|---|
-| & | lấy địa chỉ |
-| * | trỏ tới |`;
-
-/** Soạn nội dung bài đọc (Markdown) cho từng bài, xem trước đúng như trang học. Cùng ô chọn bài với trắc nghiệm / tài liệu. */
-function ContentEditor({ lessonsText, content, setContent, lesson, setLesson }: {
-  lessonsText: string; content: Record<number, string>; setContent: (v: Record<number, string>) => void;
-  lesson: number; setLesson: (i: number) => void;
-}) {
-  const [preview, setPreview] = useState(false);
-  const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
-  const idx = Math.min(lesson, Math.max(0, titles.length - 1));
-  const text = content[idx] ?? "";
-  if (titles.length === 0) return null;
-  return (
-    <Field label="Nội dung bài đọc (Markdown)" hint="Chọn bài rồi soạn. Hỗ trợ tiêu đề #, danh sách, **đậm**, bảng, code ```. Bài khóa: người chưa ghi danh không thấy nội dung, chỉ thấy có bài đọc.">
-      <div className="flex flex-wrap gap-1.5">
-        {titles.map((t, i) => (
-          <button key={i} type="button" onClick={() => setLesson(i)}
-            className={`chip !py-1 text-xs ${i === idx ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}>
-            {i + 1}. {t.length > 24 ? t.slice(0, 24) + "…" : t}{(content[i] ?? "").trim() ? " · 📖" : ""}
-          </button>
-        ))}
-      </div>
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-        <span>{text.length.toLocaleString("vi-VN")} / 50.000 ký tự</span>
-        <button type="button" onClick={() => setPreview(!preview)} className="font-medium text-brand-700 hover:underline">{preview ? "Soạn thảo" : "Xem trước"}</button>
-      </div>
-      {preview ? (
-        <div className="mt-1 rounded-xl bg-slate-950 p-3">
-          {text.trim() ? <LessonContent markdown={text} /> : <p className="p-4 text-sm text-slate-400">Chưa có nội dung.</p>}
-        </div>
-      ) : (
-        <textarea className="input mt-1 font-mono text-xs" rows={10} value={text} placeholder={CONTENT_PLACEHOLDER} maxLength={50_000}
-          onChange={(e) => setContent({ ...content, [idx]: e.target.value })} />
-      )}
-    </Field>
-  );
-}
-
-const QUIZ_PLACEHOLDER = `đạt: 70
-1. Triết học Mác – Lênin ra đời vào thời gian nào?
-A. Đầu thế kỷ XVIII
-B. Những năm 40 của thế kỷ XIX *
-C. Đầu thế kỷ XX
-> Gắn với hoạt động của C. Mác và Ph. Ăngghen từ những năm 1840.
-
-2. Câu tiếp theo...
-A. ...
-B. ... *`;
-
-/** Soạn trắc nghiệm cho từng bài bằng văn bản (xem định dạng ở lib/quizText.ts). Kiểm tra lỗi ngay khi gõ. */
-function QuizEditor({ lessonsText, quizText, setQuizText, lesson, setLesson }: {
-  lessonsText: string; quizText: Record<number, string>; setQuizText: (v: Record<number, string>) => void;
-  lesson: number; setLesson: (i: number) => void;
-}) {
-  const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
-  const idx = Math.min(lesson, Math.max(0, titles.length - 1));
-  const text = quizText[idx] ?? "";
-  let status = "";
-  let bad = false;
-  if (text.trim()) {
-    try { const q = parseQuizText(text); status = q ? `✓ ${q.questions.length} câu · đạt ${q.pass_percent}%` : ""; }
-    catch (e) { status = (e as Error).message; bad = true; }
-  }
-  const counts = titles.map((_, i) => { try { return parseQuizText(quizText[i] ?? "")?.questions.length ?? 0; } catch { return 0; } });
-  if (titles.length === 0) return null;
-  return (
-    <Field label="Trắc nghiệm theo bài" hint="Chọn bài rồi soạn câu hỏi. Dấu * ở cuối phương án = đáp án đúng; dòng > là giải thích. Đạt ngưỡng → bài tự đánh dấu hoàn thành.">
-      <div className="flex flex-wrap gap-1.5">
-        {titles.map((t, i) => (
-          <button key={i} type="button" onClick={() => setLesson(i)}
-            className={`chip !py-1 text-xs ${i === idx ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}>
-            {i + 1}. {t.length > 24 ? t.slice(0, 24) + "…" : t}{counts[i] ? ` · ${counts[i]} câu` : ""}
-          </button>
-        ))}
-      </div>
-      <textarea className={`input mt-2 font-mono text-xs ${bad ? "!border-rose-400" : ""}`} rows={8} value={text} placeholder={QUIZ_PLACEHOLDER}
-        onChange={(e) => setQuizText({ ...quizText, [idx]: e.target.value })} />
-      {status && <p className={`mt-1 text-xs ${bad ? "text-rose-600" : "text-emerald-600"}`}>{status}</p>}
-    </Field>
-  );
-}
 
 /** Ảnh bìa khóa học: tải file lên S3 hoặc dán URL ảnh ngoài. Trống → thẻ dùng gradient + emoji như trước. */
 function CoverField({ slug, value, onChange, color, emoji }: { slug: string; value: string; onChange: (v: string) => void; color: string; emoji: string }) {

@@ -3,14 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import { adminApi, Attachment, UploadStatus } from "@/lib/api";
 import { fmtSize } from "@/components/LessonAttachments";
 import { AskFn, Field } from "./ui";
+import { clampLesson, lessonTitles } from "./LessonChips";
 
 /** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu. */
 export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, setLesson, ask }: {
   lessonsText: string; slug: string; attachments: Record<number, Attachment[]>;
   setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; setLesson: (i: number) => void; ask: AskFn;
 }) {
-  const titles = lessonsText.split("\n").map((l) => l.split("|")[0].trim()).filter(Boolean);
-  const idx = Math.min(lesson, Math.max(0, titles.length - 1));
+  const titles = lessonTitles(lessonsText);
+  const idx = clampLesson(lesson, titles);
   const list = attachments[idx] ?? [];
   const [status, setStatus] = useState<UploadStatus | null>(null);
   const [uploading, setUploading] = useState<string[]>([]);
