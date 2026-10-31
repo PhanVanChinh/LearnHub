@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Category, categories, Course } from "@/data/courses";
 import CourseCard from "./CourseCard";
 import { useLiveCourses } from "@/lib/liveCourse";
-import { searchCourses, type Match } from "@/lib/search";
+import { searchCourses } from "@/lib/search";
 import { isComingSoon } from "@/lib/site";
 import { loadCourseStats } from "@/lib/useCourseStats";
 import type { CourseStats } from "@/lib/api";

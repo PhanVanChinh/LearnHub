@@ -161,7 +161,7 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
       </div>
       <ContentEditor lessonsText={f.lessons} content={content} setContent={setContent} lesson={quizLesson} setLesson={setQuizLesson} />
       <QuizEditor lessonsText={f.lessons} quizText={quizText} setQuizText={setQuizText} lesson={quizLesson} setLesson={setQuizLesson} />
-      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} setLesson={setQuizLesson} ask={ask} />
+      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} ask={ask} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={f.featured} onChange={(e) => set("featured", e.target.checked)} />
         Nổi bật (hiển thị ở trang chủ)

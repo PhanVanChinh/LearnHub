@@ -6,9 +6,9 @@ import { AskFn, Field } from "./ui";
 import { clampLesson, lessonTitles } from "./LessonChips";
 
 /** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu. */
-export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, setLesson, ask }: {
+export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, ask }: {
   lessonsText: string; slug: string; attachments: Record<number, Attachment[]>;
-  setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; setLesson: (i: number) => void; ask: AskFn;
+  setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; ask: AskFn;
 }) {
   const titles = lessonTitles(lessonsText);
   const idx = clampLesson(lesson, titles);
