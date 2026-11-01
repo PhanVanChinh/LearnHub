@@ -196,7 +196,8 @@ export default function MusicBar({ tracks }: { tracks: Track[] }) {
   const status = error ? "Không phát được" : playing ? "Đang phát" : resume ? "Tiếp tục nghe" : "Nhạc nền khi học";
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 print:hidden" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+    <div className="fixed bottom-4 right-4 z-40 print:hidden" // Chỉ rê chuột mới giữ mở; trên màn hình cảm ứng, chạm cũng bắn mouseenter và không bao giờ "rời" nên thanh sẽ mở mãi
+      onPointerEnter={(e) => { if (e.pointerType === "mouse") setHover(true); }} onPointerLeave={() => setHover(false)}
       // Chỉ giữ mở khi focus đến từ bàn phím (:focus-visible); bấm chuột / chạm thì dùng peek 4 giây rồi tự thu gọn
       onFocus={(e) => setFocus((e.target as HTMLElement).matches(":focus-visible"))}
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocus(false); }}>
