@@ -19,6 +19,16 @@ test.describe("Đăng nhập", () => {
     await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
     await expect(page.getByRole("link", { name: "Đăng nhập" }).first()).toBeVisible();
   });
+
+  test("?next= trỏ ra web ngoài → bỏ qua, về trang chủ (chống open redirect)", async ({ page }) => {
+    for (const next of ["https://example.com/", "//example.com/", "/\\example.com"]) {
+      await loginUi(page, "admin@example.com", "admin123", next);
+      await expect(page).toHaveURL(/^http:\/\/localhost:3010\/$/);
+      await page.getByRole("button", { name: /Admin/ }).click();
+      await page.getByRole("menuitem", { name: "Đăng xuất" }).click();
+      await expect(page.getByRole("link", { name: "Đăng nhập" }).first()).toBeVisible();
+    }
+  });
 });
 
 test("menu tài khoản: bấm ra ngoài thì đóng, Escape đóng và trả focus về nút", async ({ page }) => {

@@ -1,5 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/safeNext";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { authApi, ApiError, VerificationStatus } from "@/lib/api";
 import { useAuth } from "./AuthProvider";
@@ -8,7 +9,7 @@ import Logo from "./Logo";
 export default function VerifyEmailForm() {
   const { user, loading, setUser } = useAuth();
   const router = useRouter();
-  const next = useSearchParams().get("next") || "/";
+  const next = safeNext(useSearchParams().get("next"));
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<VerificationStatus | null>(null);
   const [cooldown, setCooldown] = useState(0);

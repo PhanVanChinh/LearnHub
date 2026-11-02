@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { safeNext } from "@/lib/safeNext";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Logo from "./Logo";
 import PasswordInput from "./PasswordInput";
@@ -17,7 +18,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     const login = mode === "login";
     const { user, login: doLogin, register: doRegister } = useAuth();
     const router = useRouter();
-    const next = useSearchParams().get("next") || "/";
+    const next = safeNext(useSearchParams().get("next"));
     const [form, setForm] = useState({
         full_name: "",
         email: "",
