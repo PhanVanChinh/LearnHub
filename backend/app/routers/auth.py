@@ -59,12 +59,22 @@ def google_login(payload: schemas.GoogleLoginIn, response: Response, db: Session
     claims = google_auth.verify_id_token(payload.credential)
     email = claims["email"].strip().lower()
     now = datetime.utcnow()
-    user = db.query(User).filter(User.google_sub == claims["sub"]).first() or db.query(User).filter(User.email == email).first()
+    linked = db.query(User).filter(User.google_sub == claims["sub"]).first()
+    user = linked or db.query(User).filter(User.email == email).first()
     if user:
         if not user.is_active:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khóa")
         if user.google_sub and user.google_sub != claims["sub"]:
             raise HTTPException(status.HTTP_409_CONFLICT, "Email này đã liên kết với một tài khoản Google khác")
+        if not linked and not user.email_verified_at and user.has_password:
+            # Khớp theo EMAIL vào tài khoản mật khẩu CHƯA xác thực: có thể do người khác đăng ký trước bằng email
+            # này để chờ chủ email đăng nhập Google rồi vào bằng mật khẩu đó. Bỏ mật khẩu + thu hồi phiên cũ; chủ
+            # email đặt mật khẩu mới ở trang tài khoản nếu muốn. Đã xác thực, hoặc đã tự liên kết Google khi đang
+            # đăng nhập (khớp theo sub), thì giữ nguyên.
+            user.hashed_password = ""
+            user.sessions_revoked_at = now
+            db.query(RefreshToken).filter(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None)).update(
+                {RefreshToken.revoked_at: now}, synchronize_session=False)
         user.google_sub = claims["sub"]  # liên kết (hoặc giữ nguyên)
         user.email_verified_at = user.email_verified_at or now
         user.avatar_url = claims.get("picture") or user.avatar_url
