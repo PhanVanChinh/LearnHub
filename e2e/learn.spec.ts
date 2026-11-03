@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { adminToken, api, FREE_COURSE, registerAndVerify, uniqueEmail } from "./helpers";
+import { adminToken, api, FREE_COURSE, PAID_COURSE, registerAndVerify, uniqueEmail } from "./helpers";
 
 test("đăng ký → xác thực OTP → ghi danh khóa miễn phí → học và đánh dấu hoàn thành", async ({ page }) => {
   const email = uniqueEmail("hocvien");
@@ -42,4 +42,20 @@ test("khóa chưa có bài học → trang học báo rõ, không lỗi", async 
   } finally {
     await api(`/api/admin/courses/${created.id}`, { method: "DELETE" }, token);
   }
+});
+
+test("mũi tên trong trắc nghiệm chọn đáp án, không chuyển bài", async ({ page }) => {
+  // Bài 0 của khóa trắc nghiệm là bài xem thử có 5 câu → không cần đăng nhập
+  await page.goto(`/learn/${PAID_COURSE}/?lesson=0`);
+  const title = await page.getByRole("heading", { level: 1 }).textContent();
+  const options = page.getByRole("radiogroup").first().getByRole("radio");
+  await expect(options.first()).toBeVisible();
+  await options.first().focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(options.nth(1)).toHaveAttribute("aria-checked", "true");
+  // Chuyển bài là router.replace bất đồng bộ → đợi một nhịp rồi mới khẳng định vẫn ở bài cũ
+  await page.waitForTimeout(800);
+  await expect(page).toHaveURL(/lesson=0/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(title!);
+  await expect(options.nth(1)).toHaveAttribute("aria-checked", "true");
 });

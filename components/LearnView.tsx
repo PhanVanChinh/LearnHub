@@ -114,6 +114,8 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
       const t = e.target as HTMLElement | null;
       // Đang gõ trong ô nhập (input, textarea, select, contenteditable) thì mũi tên là di chuyển con trỏ, không chuyển bài
       if (t && (["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName) || t.isContentEditable)) return;
+      // Trong nhóm đáp án trắc nghiệm (role=radio) mũi tên là chọn đáp án — chuyển bài sẽ mất hết câu trả lời
+      if (t?.closest('[role="radiogroup"], [role="radio"]')) return;
       if (e.key === "ArrowLeft") go(index - 1);
       if (e.key === "ArrowRight") go(index + 1);
     };

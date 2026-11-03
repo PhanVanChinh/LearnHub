@@ -95,6 +95,7 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
                     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
                     if (!step || result) return;
                     e.preventDefault();
+                    e.stopPropagation(); // không để phím ← → lọt lên LearnView chuyển bài
                     const next = (oi + step + q.options.length) % q.options.length;
                     setAnswers((a) => a.map((v, i) => (i === qi ? next : v)));
                     (e.currentTarget.parentElement?.children[next] as HTMLElement | undefined)?.focus();
