@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import type { Course } from "@/data/courses";
+import type { Course, Lesson } from "@/data/courses";
 import { ApiError, CourseDetail, coursesApi, Progress } from "@/lib/api";
 import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { useAuth } from "./AuthProvider";
@@ -35,12 +35,16 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
 
   const fromUrl = Number(params.get("lesson"));
   const index = Number.isInteger(fromUrl) && fromUrl >= 0 && fromUrl < lessons.length ? fromUrl : 0;
-  const lesson = lessons[index];
+  const lesson: Lesson | undefined = lessons[index]; // undefined khi khóa chưa có bài nào
+  // Đọc thành giá trị nguyên thủy để làm deps: `course` được merge lại mỗi lần render nên object `lesson` đổi liên tục
+  const lessonFree = lesson?.free ?? false;
+  const lessonVideo = lesson?.video ?? null;
 
   // Video của bài đang xem. Bài free lấy từ dữ liệu tĩnh; bài khác phải hỏi API (kiểm tra ghi danh ở server).
   const [state, setState] = useState<{ access: Access; video: string | null }>({ access: "checking", video: null });
   useEffect(() => {
-    if (lesson.free) return setState({ access: "granted", video: lesson.video ?? null });
+    if (!lessons.length) return; // khóa chưa có bài → màn báo bên dưới, không hỏi video
+    if (lessonFree) return setState({ access: "granted", video: lessonVideo });
     if (loading) return setState({ access: "checking", video: null });
     if (!user) return setState({ access: "login", video: null });
     if (!user.email_verified) return setState({ access: "verify", video: null });
@@ -53,7 +57,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
         setState({ access: e.status === 403 ? "enroll" : e.status === 401 ? "login" : "offline", video: null });
       });
     return () => { cancelled = true; };
-  }, [course.slug, index, lesson.free, lesson.video, user, loading]);
+  }, [course.slug, index, lessons.length, lessonFree, lessonVideo, user, loading]);
   const { access, video } = state;
   const enrolled = detail?.enrolled ?? false;
   const hasVideo = (i: number) => detail?.lessons[i]?.has_video ?? !!lessons[i].video;
@@ -132,6 +136,25 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
       {progress.percent >= 50 && <ReviewPrompt slug={course.slug} completed={progress.percent === 100} />}
     </div>
   );
+
+  // Admin tạo khung khóa học chưa có bài (hoặc vừa xóa hết bài): không có lessons[0] để đọc → báo rõ thay vì lỗi trang
+  if (!lesson) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-slate-100">
+        <div className="container-x grid min-h-[60vh] place-items-center py-10 text-center">
+          <div>
+            <p className="text-5xl" aria-hidden="true">📭</p>
+            <h1 className="mt-3 text-xl font-bold text-white">Khóa học chưa có bài học</h1>
+            <p className="mt-1 text-sm text-slate-300">Nội dung đang được biên soạn. Hãy quay lại sau, hoặc xem các khóa khác.</p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <Link href={`/courses/${course.slug}`} className="btn-primary">Trang khóa học</Link>
+              <Link href="/courses" className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10">Khóa học khác</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-slate-950 text-slate-100">

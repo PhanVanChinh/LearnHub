@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FREE_COURSE, registerAndVerify, uniqueEmail } from "./helpers";
+import { adminToken, api, FREE_COURSE, registerAndVerify, uniqueEmail } from "./helpers";
 
 test("đăng ký → xác thực OTP → ghi danh khóa miễn phí → học và đánh dấu hoàn thành", async ({ page }) => {
   const email = uniqueEmail("hocvien");
@@ -27,4 +27,19 @@ test("đăng ký → xác thực OTP → ghi danh khóa miễn phí → học v�
   // Khóa học của tôi: thẻ khóa với nút học tiếp
   await page.goto("/my-courses/");
   await expect(page.getByRole("link", { name: /Học tiếp bài/ })).toBeVisible();
+});
+
+test("khóa chưa có bài học → trang học báo rõ, không lỗi", async ({ page }) => {
+  const token = await adminToken();
+  const slug = `e2e-rong-${Date.now()}`;
+  const created = await api<{ id: number }>("/api/admin/courses", {
+    method: "POST", body: JSON.stringify({ slug, title: "Khóa rỗng E2E", category: "free", price: 0, lessons: [] }),
+  }, token);
+  try {
+    await page.goto(`/learn/${slug}/`);
+    await expect(page.getByRole("heading", { level: 1, name: "Khóa học chưa có bài học" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Trang khóa học" })).toHaveAttribute("href", new RegExp(`/courses/${slug}`));
+  } finally {
+    await api(`/api/admin/courses/${created.id}`, { method: "DELETE" }, token);
+  }
 });
