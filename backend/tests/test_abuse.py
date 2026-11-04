@@ -76,6 +76,10 @@ def test_rate_limit(client, monkeypatch):
     # endpoint khác không bị ảnh hưởng bởi bucket login
     assert client.get("/api/health").status_code == 200
     ratelimit.reset()
+    # /token (form OAuth2 cho /docs) gọi login() thẳng → phải chung bucket, không thành cửa sau để dò mật khẩu
+    codes = [client.post("/api/auth/token", data={"username": "x@example.com", "password": "whatever1"}).status_code for _ in range(11)]
+    assert codes[:10] == [401] * 10 and codes[10] == 429
+    ratelimit.reset()
 
 
 def test_captcha_required_when_enabled(client, monkeypatch):

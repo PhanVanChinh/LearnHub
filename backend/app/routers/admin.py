@@ -18,7 +18,7 @@ from ..lessons import assign_lesson_ids
 from ..timeutil import to_vn, vn_day_start_utc, vn_today
 from ..config import settings
 from ..database import get_db
-from ..models import AuditLog, ContactMessage, Course, Enrollment, Order, Review, User
+from ..models import AuditLog, ContactMessage, Course, Enrollment, LessonProgress, Order, Review, User
 from ..ratelimit import rate_limit
 from ..security import hash_password, require_admin
 from .orders import CANCELLED, EXPIRED, PAID, PENDING, expire_stale, notify_cancelled, notify_paid, order_out
@@ -497,6 +497,7 @@ def delete_course(course_id: int, request: Request, db: Session = Depends(get_db
         raise HTTPException(status.HTTP_409_CONFLICT,
                             f"Khóa học có {paid} đơn đã thanh toán nên không thể xóa. Hãy ẩn khóa học (người đã mua vẫn học tiếp).")
     summary = f"Xóa khóa học «{course.title}» (/{course.slug}), {len(course.enrollments)} ghi danh"
+    db.query(LessonProgress).filter(LessonProgress.course_id == course.id).delete(synchronize_session=False)  # bảng cũ, không có cascade
     db.delete(course)  # cascade xóa enrollments và đơn chưa thanh toán
     db.commit()
     audit.record(db, request, admin, "course.delete", "course", course_id, summary)
@@ -587,6 +588,11 @@ def delete_user(user_id: int, request: Request, db: Session = Depends(get_db), m
         anonymize_user(db, user)
         summary += " — có đơn đã thanh toán nên ẩn danh hóa, giữ đơn"
     else:
+        # Hai bảng không có relationship cascade từ User → gỡ tay, nếu không Postgres chặn FK (SQLite không kiểm tra nên test thường không thấy):
+        # tin nhắn liên hệ giữ lại nhưng ẩn danh như khi tự xóa tài khoản; lesson_progress cũ chỉ là dữ liệu đã chép sang lesson_completions
+        db.query(ContactMessage).filter(ContactMessage.user_id == user.id).update(
+            {"name": "Người dùng đã xóa", "email": f"deleted-{user.id}@users.deleted", "user_id": None}, synchronize_session=False)
+        db.query(LessonProgress).filter(LessonProgress.user_id == user.id).delete(synchronize_session=False)
         db.delete(user)  # cascade xóa enrollments, đơn chưa thanh toán...
         db.commit()
     audit.record(db, request, me, "user.delete", "user", user_id, summary)

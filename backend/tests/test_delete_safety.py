@@ -1,4 +1,6 @@
 """Xóa khóa học / người dùng không được làm mất đơn đã thanh toán (chứng từ doanh thu)."""
+from app.database import SessionLocal
+from app.models import ContactMessage, Course, LessonProgress
 from tests.test_orders import _buyer, _paid_course
 
 
@@ -58,5 +60,28 @@ def test_delete_user_without_paid_orders_hard_deletes(client):
     admin = _admin(client)
     h = _buyer(client, "del-plain@example.com")
     uid = client.get("/api/auth/me", headers=h).json()["id"]
+    # Tin nhắn liên hệ và tiến độ cũ (lesson_progress) không có cascade từ User → trên Postgres từng làm DELETE vỡ FK (409)
+    assert client.post("/api/contact", json={"name": "Del", "email": "del-plain@example.com", "message": "Tin nhắn trước khi bị xóa"}, headers=h).status_code == 201
+    db = SessionLocal()
+    cid = db.query(Course).first().id
+    db.add(LessonProgress(user_id=uid, course_id=cid, lesson_index=0)); db.commit(); db.close()
+
     assert client.delete(f"/api/admin/users/{uid}", headers=admin).status_code == 204
     assert client.get(f"/api/admin/users/{uid}", headers=admin).status_code == 404
+    db = SessionLocal()
+    msg = db.query(ContactMessage).filter(ContactMessage.message == "Tin nhắn trước khi bị xóa").one()
+    assert msg.user_id is None and msg.email == f"deleted-{uid}@users.deleted"  # giữ tin, ẩn danh
+    assert db.query(LessonProgress).filter_by(user_id=uid).count() == 0
+    db.close()
+
+
+def test_delete_course_with_legacy_progress(client):
+    admin = _admin(client)
+    h = _buyer(client, "del-course-progress@example.com")
+    uid = client.get("/api/auth/me", headers=h).json()["id"]
+    r = client.post("/api/admin/courses", json={"slug": "khoa-xoa-progress", "title": "Khóa xóa", "category": "free", "lessons": [{"title": "Bài 1", "duration": "5 phút"}]}, headers=admin)
+    assert r.status_code == 201, r.text
+    cid = r.json()["id"]
+    db = SessionLocal(); db.add(LessonProgress(user_id=uid, course_id=cid, lesson_index=0)); db.commit(); db.close()
+    assert client.delete(f"/api/admin/courses/{cid}", headers=admin).status_code == 204
+    db = SessionLocal(); assert db.query(LessonProgress).filter_by(course_id=cid).count() == 0; db.close()

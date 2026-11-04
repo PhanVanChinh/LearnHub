@@ -291,9 +291,9 @@ def logout_all(response: Response, user: User = Depends(get_current_user), db: S
     return _issue(user, response, db)
 
 
-@router.post("/token", response_model=schemas.Token, include_in_schema=False)
+@router.post("/token", response_model=schemas.Token, include_in_schema=False, dependencies=[rate_limit("login", 10, 60)])
 def token(response: Response, form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    """OAuth2 form endpoint để nút Authorize trong /docs hoạt động."""
+    """OAuth2 form endpoint để nút Authorize trong /docs hoạt động. Cùng bucket rate limit với /login: gọi login() thẳng nên không tự được bảo vệ."""
     return login(schemas.UserLogin(email=form.username, password=form.password), response, db)
 
 
