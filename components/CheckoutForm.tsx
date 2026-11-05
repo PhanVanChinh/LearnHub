@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { Course } from "@/data/courses";
-import { ApiError, OrderDetail, ordersApi } from "@/lib/api";
-import { fetchCourseDetail } from "@/lib/liveCourse";
+import { ApiError, CourseDetail, OrderDetail, ordersApi } from "@/lib/api";
+import { fetchCourseDetail, mergeCourse } from "@/lib/liveCourse";
 import { formatVND } from "@/lib/site";
 import { useAuth } from "./AuthProvider";
 import PaymentInstructions from "./PaymentInstructions";
@@ -22,18 +22,21 @@ export default function CheckoutForm({ courses }: { courses: Course[] }) {
   const { user, loading } = useAuth();
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [detail, setDetail] = useState<CourseDetail | null>(null);
   const [enrolled, setEnrolled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  const course = courses.find((c) => c.slug === (order?.course_slug ?? slug));
+  // Bản tĩnh có thể cũ (admin vừa đổi giá, chưa Xuất bản) → trộn bản API vào để giá hiện đúng với số tiền đơn sẽ tạo
+  const staticCourse = courses.find((c) => c.slug === (order?.course_slug ?? slug));
+  const course = staticCourse && detail?.slug === staticCourse.slug ? mergeCourse(staticCourse, detail) : staticCourse;
   const self = orderCode ? `/checkout?order=${orderCode}` : slug ? `/checkout?course=${slug}` : "/checkout";
 
-  // Mở lại đơn theo mã, hoặc kiểm tra đã có quyền khóa này chưa
+  // Mở lại đơn theo mã, hoặc lấy bản mới nhất của khóa (giá, tên) và kiểm tra đã có quyền chưa
   useEffect(() => {
     if (loading || !user) return;
     if (orderCode) ordersApi.get(orderCode).then(setOrder).catch((e: ApiError) => setError(e.message));
-    else if (slug) fetchCourseDetail(slug, true).then((d) => setEnrolled(d.enrolled)).catch(() => {});
+    else if (slug) fetchCourseDetail(slug, true).then((d) => { setDetail(d); setEnrolled(d.enrolled); }).catch(() => {});
   }, [user, loading, orderCode, slug]);
 
   // Poll trạng thái khi đơn còn chờ

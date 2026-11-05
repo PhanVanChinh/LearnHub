@@ -23,3 +23,20 @@ test("đặt mua khóa trả phí → nhận mã đơn và QR → admin duyệt 
   await page.getByRole("link", { name: /Vào học ngay/ }).click();
   await expect(page).toHaveURL(new RegExp(`/learn/${PAID_COURSE}`));
 });
+
+// Bản tĩnh (props từ server) có thể cũ hơn DB khi admin đổi giá mà chưa Xuất bản. next dev render lại mỗi request nên không tạo
+// được bản tĩnh cũ; thay vào đó chặn GET /api/courses/{slug} trong trình duyệt và trả giá khác để chắc trang hiện giá API, không phải giá tĩnh.
+test("giá trên trang thanh toán lấy từ API (bản mới nhất), không phải bản tĩnh lúc build", async ({ page }) => {
+  let newPrice = 0;
+  await page.route((u) => u.pathname === `/api/courses/${PAID_COURSE}`, async (route) => {
+    const res = await route.fetch();
+    const body = await res.json();
+    newPrice = body.price + 10_000;
+    await route.fulfill({ response: res, json: { ...body, price: newPrice } });
+  });
+  await registerAndVerify(page, uniqueEmail("price"), `/checkout/?course=${PAID_COURSE}`);
+  await expect.poll(() => newPrice).toBeGreaterThan(0);
+  const label = `${newPrice.toLocaleString("vi-VN")}đ`;
+  await expect(page.getByRole("button", { name: /Xác nhận đặt hàng/ })).toContainText(label);
+  await expect(page.getByText("Tổng").locator("..")).toContainText(label);
+});
