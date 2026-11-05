@@ -1,23 +1,29 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 import CourseCard from "@/components/CourseCard";
 import PageHeader from "@/components/PageHeader";
 import type { Course } from "@/data/courses";
-import { coursesApi, EnrolledCourse } from "@/lib/api";
+import { ApiError, coursesApi, EnrolledCourse } from "@/lib/api";
 
 export default function MyCourses({ courses }: { courses: Course[] }) {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [enrolled, setEnrolled] = useState<EnrolledCourse[] | null>(null);
+  const [error, setError] = useState("");
 
+  // Tải lỗi (mất mạng, backend sập) phải báo rõ và cho thử lại — không được hiện như "chưa ghi danh khóa nào"
+  const load = useCallback(() => {
+    setError(""); setEnrolled(null);
+    coursesApi.mine().then(setEnrolled).catch((e: ApiError) => setError(e.message || "Không tải được danh sách khóa học."));
+  }, []);
   useEffect(() => {
     if (loading) return;
     if (!user) return router.replace("/login?next=/my-courses");
-    coursesApi.mine().then(setEnrolled).catch(() => setEnrolled([]));
-  }, [user, loading, router]);
+    load();
+  }, [user, loading, router, load]);
 
   const byId = new Map(enrolled?.map((e) => [e.slug, e]) ?? []);
   const mine = enrolled ? courses.filter((c) => byId.has(c.slug)) : [];
@@ -31,7 +37,13 @@ export default function MyCourses({ courses }: { courses: Course[] }) {
       <PageHeader eyebrow="Tài khoản" title="Khóa học của tôi"
         subtitle={user ? `Xin chào ${user.full_name}!${mine.length ? ` Bạn đã hoàn thành ${doneCount}/${mine.length} khóa.` : ""}` : undefined} />
       <div className="container-x py-10">
-        {enrolled === null ? (
+        {error ? (
+          <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-8 text-center">
+            <p className="font-medium text-rose-700">Không tải được danh sách khóa học</p>
+            <p className="mt-1 text-sm text-rose-600">{error}</p>
+            <button type="button" onClick={load} className="btn-primary mt-4">Thử lại</button>
+          </div>
+        ) : enrolled === null ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-busy="true" aria-label="Đang tải">
             {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />)}
           </div>

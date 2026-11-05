@@ -59,3 +59,13 @@ test("mũi tên trong trắc nghiệm chọn đáp án, không chuyển bài", a
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(title!);
   await expect(options.nth(1)).toHaveAttribute("aria-checked", "true");
 });
+
+test("Khóa học của tôi: API lỗi → báo lỗi và nút Thử lại, không hiện như chưa ghi danh", async ({ page }) => {
+  await page.route("**/api/courses/me/enrolled", (route) => route.abort("failed"));
+  await registerAndVerify(page, uniqueEmail("mine"), "/my-courses/");
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được danh sách khóa học" })).toBeVisible(); // Next còn route announcer role=alert trống
+  await expect(page.getByText("Bạn chưa ghi danh khóa học nào.")).toHaveCount(0);
+  await page.unroute("**/api/courses/me/enrolled");
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.getByText("Bạn chưa ghi danh khóa học nào.")).toBeVisible();
+});
