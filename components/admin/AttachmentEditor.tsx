@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { adminApi, Attachment, UploadStatus } from "@/lib/api";
 import { fmtSize } from "@/components/LessonAttachments";
 import { AskFn, Field } from "./ui";
@@ -8,7 +8,7 @@ import { clampLesson, lessonTitles } from "./LessonChips";
 /** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu. */
 export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, ask }: {
   lessonsText: string; slug: string; attachments: Record<number, Attachment[]>;
-  setAttachments: (v: Record<number, Attachment[]>) => void; lesson: number; ask: AskFn;
+  setAttachments: Dispatch<SetStateAction<Record<number, Attachment[]>>>; lesson: number; ask: AskFn;
 }) {
   const titles = lessonTitles(lessonsText);
   const idx = clampLesson(lesson, titles);
@@ -21,7 +21,9 @@ export default function AttachmentEditor({ lessonsText, slug, attachments, setAt
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => { adminApi.uploadStatus().then(setStatus).catch(() => setStatus(null)); }, []);
 
-  const update = (next: Attachment[]) => setAttachments({ ...attachments, [idx]: next });
+  // Cập nhật dạng hàm: tải nhiều file là nhiều lần await nối tiếp, nếu spread `attachments` đã chụp lúc bắt đầu thì file sau ghi đè file trước
+  const update = (fn: (cur: Attachment[]) => Attachment[]) =>
+    setAttachments((prev) => ({ ...prev, [idx]: fn(prev[idx] ?? []) }));
 
   const addFiles = async (files: FileList | File[]) => {
     if (!slug) return setError("Nhập slug khóa học trước khi tải file (file được xếp theo slug).");
@@ -30,7 +32,7 @@ export default function AttachmentEditor({ lessonsText, slug, attachments, setAt
       setUploading((u) => [...u, file.name]);
       try {
         const up = await adminApi.upload(file, slug);
-        update([...(attachments[idx] ?? []), { name: up.name, kind: "file", key: up.key, size: up.size, content_type: up.content_type }]);
+        update((cur) => [...cur, { name: up.name, kind: "file", key: up.key, size: up.size, content_type: up.content_type }]);
       } catch (e) { setError(`${file.name}: ${(e as Error).message}`); }
       finally { setUploading((u) => u.filter((n) => n !== file.name)); }
     }
@@ -38,16 +40,16 @@ export default function AttachmentEditor({ lessonsText, slug, attachments, setAt
   const addLink = () => {
     const url = link.url.trim();
     if (!/^https?:\/\//.test(url)) return setError("Link phải bắt đầu bằng http:// hoặc https://");
-    update([...list, { name: link.name.trim() || url.replace(/^https?:\/\//, "").slice(0, 60), kind: "link", url, size: 0, content_type: "" }]);
+    update((cur) => [...cur, { name: link.name.trim() || url.replace(/^https?:\/\//, "").slice(0, 60), kind: "link", url, size: 0, content_type: "" }]);
     setLink({ name: "", url: "" }); setError("");
   };
   const remove = async (i: number) => {
     const a = list[i];
     if (!(await ask({ title: `Gỡ «${a.name}»?`, message: a.kind === "file" ? "File cũng bị xóa khỏi kho lưu trữ, không khôi phục được." : "Chỉ gỡ link khỏi bài.", confirmLabel: "Gỡ", danger: true })).ok) return;
     if (a.kind === "file" && a.key) { try { await adminApi.deleteUpload(a.key); } catch { /* file có thể đã mất; vẫn gỡ khỏi bài */ } }
-    update(list.filter((_, j) => j !== i));
+    update((cur) => cur.filter((_, j) => j !== i));
   };
-  const rename = (i: number, name: string) => update(list.map((a, j) => (j === i ? { ...a, name } : a)));
+  const rename = (i: number, name: string) => update((cur) => cur.map((a, j) => (j === i ? { ...a, name } : a)));
 
   if (titles.length === 0) return null;
   const counts = titles.map((_, i) => attachments[i]?.length ?? 0);
