@@ -344,6 +344,8 @@ def _check_new_password(user: User, new_password: str, current: str | None = Non
 def _set_password(db: Session, user: User, new_password: str) -> None:
     user.hashed_password = hash_password(new_password)
     user.password_changed_at = datetime.utcnow()
+    # Thông báo khóa tạm chỉ người dùng "dùng Quên mật khẩu" → đặt mật khẩu mới xong phải đăng nhập được ngay, không chờ hết giờ khóa
+    user.failed_login_attempts, user.locked_until = 0, None
     db.query(PasswordReset).filter_by(user_id=user.id, used_at=None).update({"used_at": datetime.utcnow()})
     db.commit()
     db.refresh(user)

@@ -1,9 +1,10 @@
 """Chống lạm dụng: rate limit, khóa tạm khi sai mật khẩu, refresh token, đăng xuất mọi thiết bị, captcha."""
+import re
 from datetime import datetime, timedelta
 
 import pytest
 
-from app import captcha, ratelimit
+from app import captcha, mailer, ratelimit
 from app.config import settings
 from app.database import SessionLocal
 from app.models import User
@@ -64,6 +65,26 @@ def test_login_lockout(client, account):
     u = db.query(User).filter_by(email="abuse@example.com").one()
     assert u.failed_login_attempts == 0 and u.locked_until is None and u.last_login_at is not None
     db.close()
+
+
+def test_reset_password_unlocks_account(client, account):
+    """Thông báo khóa tạm gợi ý dùng Quên mật khẩu → đặt lại xong phải đăng nhập được ngay, không chờ hết 15 phút."""
+    for _ in range(settings.login_max_failures):
+        login(client, "sai-mat-khau-2")
+    assert login(client).status_code == 423
+    assert client.post("/api/auth/forgot-password", json={"email": "abuse@example.com"}).status_code == 200
+    token = re.search(r"reset-password\?token=([A-Za-z0-9_-]+)", mailer.console_outbox[-1]["html"]).group(1)
+    new_pw = "MatKhauMoi2025"
+    assert client.post("/api/auth/reset-password", json={"token": token, "new_password": new_pw}).status_code == 204
+    r = login(client, new_pw)
+    assert r.status_code == 200, r.text
+    db = SessionLocal()
+    u = db.query(User).filter_by(email="abuse@example.com").one()
+    assert u.failed_login_attempts == 0 and u.locked_until is None
+    db.close()
+    # trả lại mật khẩu cũ cho các test sau trong module
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.post("/api/auth/change-password", json={"current_password": new_pw, "new_password": PW}, headers=h).status_code in (200, 204)
 
 
 def test_rate_limit(client, monkeypatch):
