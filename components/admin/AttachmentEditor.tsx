@@ -5,10 +5,11 @@ import { fmtSize } from "@/components/LessonAttachments";
 import { AskFn, Field } from "./ui";
 import { clampLesson, lessonTitles } from "./LessonChips";
 
-/** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu. */
-export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, ask }: {
+/** Tài liệu đính kèm theo bài: kéo thả / chọn file (lên S3) hoặc thêm link ngoài. Lưu vào lesson.attachments khi bấm Lưu.
+ *  "Gỡ" chỉ gỡ khỏi danh sách và báo `onRemoveFile(key)`; form xóa file trên S3 sau khi lưu thành công (bấm Hủy thì file còn nguyên). */
+export default function AttachmentEditor({ lessonsText, slug, attachments, setAttachments, lesson, ask, onRemoveFile }: {
   lessonsText: string; slug: string; attachments: Record<number, Attachment[]>;
-  setAttachments: Dispatch<SetStateAction<Record<number, Attachment[]>>>; lesson: number; ask: AskFn;
+  setAttachments: Dispatch<SetStateAction<Record<number, Attachment[]>>>; lesson: number; ask: AskFn; onRemoveFile: (key: string) => void;
 }) {
   const titles = lessonTitles(lessonsText);
   const idx = clampLesson(lesson, titles);
@@ -45,8 +46,8 @@ export default function AttachmentEditor({ lessonsText, slug, attachments, setAt
   };
   const remove = async (i: number) => {
     const a = list[i];
-    if (!(await ask({ title: `Gỡ «${a.name}»?`, message: a.kind === "file" ? "File cũng bị xóa khỏi kho lưu trữ, không khôi phục được." : "Chỉ gỡ link khỏi bài.", confirmLabel: "Gỡ", danger: true })).ok) return;
-    if (a.kind === "file" && a.key) { try { await adminApi.deleteUpload(a.key); } catch { /* file có thể đã mất; vẫn gỡ khỏi bài */ } }
+    if (!(await ask({ title: `Gỡ «${a.name}»?`, message: a.kind === "file" ? "File sẽ bị xóa khỏi kho lưu trữ khi bạn bấm Lưu, không khôi phục được. Bấm Hủy ở cuối form nếu đổi ý." : "Chỉ gỡ link khỏi bài.", confirmLabel: "Gỡ", danger: true })).ok) return;
+    if (a.kind === "file" && a.key) onRemoveFile(a.key);
     update((cur) => cur.filter((_, j) => j !== i));
   };
   const rename = (i: number, name: string) => update((cur) => cur.map((a, j) => (j === i ? { ...a, name } : a)));

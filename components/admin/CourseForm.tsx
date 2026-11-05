@@ -1,8 +1,8 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { categories } from "@/data/courses";
 import { faculties } from "@/lib/faculties";
-import { AdminCourse, Attachment, CourseInput, Lesson } from "@/lib/api";
+import { AdminCourse, adminApi, Attachment, CourseInput, Lesson } from "@/lib/api";
 import { parseQuizText, quizToText } from "@/lib/quizText";
 import { ErrorBox, Field, useDialog } from "./ui";
 import AttachmentEditor from "./AttachmentEditor";
@@ -67,6 +67,8 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
   // Tài liệu đính kèm theo chỉ số bài — giữ nguyên qua các lần lưu (textarea "Bài học" không chứa chúng)
   const [attachments, setAttachments] = useState<Record<number, Attachment[]>>(() =>
     Object.fromEntries((initial?.lessons ?? []).map((l, i) => [i, l.attachments ?? []]).filter(([, a]) => (a as Attachment[]).length)));
+  // Key S3 của file đã bấm "Gỡ": chỉ xóa thật sau khi lưu thành công, để Hủy form hay lưu lỗi không làm mất file đang dùng
+  const pendingDelete = useRef<string[]>([]);
   const [autoSlug, setAutoSlug] = useState(!initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -99,6 +101,8 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
         short: f.short.trim(), description: f.description.trim(), featured: f.featured, cover: f.cover.trim(),
         includes: f.includes.split("\n").map((s) => s.trim()).filter(Boolean), lessons,
       });
+      const keys = pendingDelete.current; pendingDelete.current = [];
+      await Promise.all(keys.map((k) => adminApi.deleteUpload(k).catch(() => { /* file có thể đã mất; khóa học đã lưu xong */ })));
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -161,7 +165,8 @@ export default function CourseForm({ initial, onSubmit, onCancel }: Props) {
       </div>
       <ContentEditor lessonsText={f.lessons} content={content} setContent={setContent} lesson={quizLesson} setLesson={setQuizLesson} />
       <QuizEditor lessonsText={f.lessons} quizText={quizText} setQuizText={setQuizText} lesson={quizLesson} setLesson={setQuizLesson} />
-      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} ask={ask} />
+      <AttachmentEditor lessonsText={f.lessons} slug={f.slug} attachments={attachments} setAttachments={setAttachments} lesson={quizLesson} ask={ask}
+        onRemoveFile={(key) => { if (!pendingDelete.current.includes(key)) pendingDelete.current.push(key); }} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={f.featured} onChange={(e) => set("featured", e.target.checked)} />
         Nổi bật (hiển thị ở trang chủ)
