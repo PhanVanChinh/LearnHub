@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
-import { absUrl } from "@/lib/seo";
+import { absUrl, courseJsonLd } from "@/lib/seo";
 import CourseDetailView from "@/components/CourseDetailView";
 import { getCourse, getCourses, getVisibleCourses } from "@/lib/courses.server";
 
@@ -28,14 +28,7 @@ export default async function CourseDetail({ params }: { params: { slug: string 
   if (!course) notFound();
   const courses = await getVisibleCourses();
   const related = courses.filter((c) => c.category === course.category && c.slug !== course.slug).slice(0, 4);
-  // Dữ liệu có cấu trúc (schema.org/Course) để Google hiện rich result
-  const jsonLd = {
-    "@context": "https://schema.org", "@type": "Course", name: course.title, description: course.short, url: absUrl(`/courses/${course.slug}`),
-    provider: { "@type": "Organization", name: site.name, url: absUrl("/") },
-    inLanguage: "vi", isAccessibleForFree: course.price === 0,
-    offers: { "@type": "Offer", price: course.price, priceCurrency: "VND", availability: "https://schema.org/InStock", url: absUrl(`/courses/${course.slug}`) },
-    hasCourseInstance: { "@type": "CourseInstance", courseMode: "online", courseWorkload: `PT${course.lessons.length}H` },
-  };
+  const jsonLd = courseJsonLd(course); // schema.org/Course để Google hiện rich result
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
