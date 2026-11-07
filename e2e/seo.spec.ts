@@ -26,3 +26,12 @@ test("JSON-LD khóa học: tổng thời lượng thật, offers Free/Paid, cour
   expect(paid.offers.category).toBe("Paid");
   expect(paid.offers.price).toBeGreaterThan(0);
 });
+
+test("robots.txt chỉ chặn /admin; trang riêng tư để crawl được để Google đọc meta noindex", async ({ request, page }) => {
+  const txt = await (await request.get("/robots.txt")).text();
+  expect(txt).toMatch(/Disallow: \/admin$/m);
+  expect(txt).not.toMatch(/Disallow: \/(learn|my-courses|orders|account|checkout|verify|reset-password)/);
+  expect(txt).toMatch(/Sitemap: .*\/sitemap\.xml/);
+  await page.goto("/my-courses/");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+});
