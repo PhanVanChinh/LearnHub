@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { site } from "@/lib/site";
 import Logo from "./Logo";
 import UserMenu from "./UserMenu";
@@ -9,6 +9,8 @@ import UserMenu from "./UserMenu";
 export default function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  // Đổi trang (bấm logo, nút Đăng nhập/Đăng ký, mục trong UserMenu, nút Back…) thì đóng ngăn kéo: không thì trang mới vẫn bị menu che
+  useEffect(() => { setOpen(false); }, [pathname]);
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">Bỏ qua tới nội dung chính</a>

@@ -15,3 +15,15 @@ for (const path of ["/", "/ai-check/", "/courses/", "/free/", "/phenikaa/", "/co
     for (let i = 1; i < ls.length; i++) expect(ls[i] - ls[i - 1], `heading thứ ${i + 1}: h${ls[i - 1]} → h${ls[i]}`).toBeLessThanOrEqual(1);
   });
 }
+
+test("menu di động tự đóng khi đổi trang (bấm Đăng nhập trong ngăn kéo)", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Mở menu" }).click();
+  const drawer = page.locator("#mobile-nav");
+  await expect(drawer).toBeVisible();
+  await drawer.getByRole("link", { name: "Đăng nhập" }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(drawer).toBeHidden();
+  await expect(page.getByRole("button", { name: "Mở menu" })).toHaveAttribute("aria-expanded", "false");
+});
