@@ -19,7 +19,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         {offline ? "Kiểm tra mạng của bạn rồi thử lại. Nếu vẫn lỗi, máy chủ có thể đang bảo trì." : "Chúng tôi đã ghi nhận sự cố. Hãy thử tải lại; nếu lỗi lặp lại, liên hệ hỗ trợ kèm mã bên dưới."}
       </p>
       {(requestId || error.digest) && (
-        <p className="mt-3 font-mono text-xs text-slate-400">Mã tra cứu: {requestId ?? error.digest}</p>
+        <p className="mt-3 font-mono text-xs text-slate-500">Mã tra cứu: {requestId ?? error.digest}</p>
       )}
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         <button onClick={reset} className="btn-primary">Thử lại</button>

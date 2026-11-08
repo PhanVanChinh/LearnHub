@@ -26,7 +26,7 @@ export default function NotFound() {
             </Link>
           ))}
         </div>
-        <p className="mt-8 text-xs text-slate-400">{site.name} · <Link href="/" className="hover:underline">Về trang chủ</Link></p>
+        <p className="mt-8 text-xs text-slate-500">{site.name} · <Link href="/" className="hover:underline">Về trang chủ</Link></p>
       </div>
     </div>
   );

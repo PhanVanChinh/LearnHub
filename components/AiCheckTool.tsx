@@ -119,7 +119,7 @@ function ResultView({ r }: { r: AiCheckResult }) {
                 {r.signals.map((s, i) => <li key={i} className="flex gap-2"><span className="text-slate-400">•</span><span>{s}</span></li>)}
               </ul>
             )}
-            <p className="mt-3 text-xs text-slate-400">{r.words} từ · phân tích bởi {r.model}</p>
+            <p className="mt-3 text-xs text-slate-500">{r.words} từ · phân tích bởi {r.model}</p>
           </div>
         </div>
       </div>

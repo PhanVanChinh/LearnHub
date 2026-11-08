@@ -74,8 +74,8 @@ export default function ReviewsPanel() {
                   <Link href={`/courses/${r.course_slug}#reviews`} target="_blank" className="truncate text-brand-700 hover:underline">{r.course_title}</Link>
                   {r.hidden && <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">Đã ẩn{r.hidden_reason ? `: ${r.hidden_reason}` : ""}</span>}
                 </div>
-                <p className={`mt-1.5 text-sm leading-6 ${r.comment ? "text-slate-700" : "italic text-slate-400"}`}>{r.comment || "(không có nhận xét)"}</p>
-                <p className="mt-1 text-xs text-slate-400">Gửi {fmtDateTime(r.created_at)}{r.updated_at !== r.created_at && <> · sửa {fmtDateTime(r.updated_at)}</>}</p>
+                <p className={`mt-1.5 text-sm leading-6 ${r.comment ? "text-slate-700" : "italic text-slate-500"}`}>{r.comment || "(không có nhận xét)"}</p>
+                <p className="mt-1 text-xs text-slate-500">Gửi {fmtDateTime(r.created_at)}{r.updated_at !== r.created_at && <> · sửa {fmtDateTime(r.updated_at)}</>}</p>
               </div>
               <button onClick={() => toggle(r)} disabled={busyId === r.id}
                 className={`${r.hidden ? "btn-outline-success" : "btn-outline-danger"} shrink-0 btn-sm disabled:opacity-60`}>

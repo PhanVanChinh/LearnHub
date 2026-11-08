@@ -57,7 +57,7 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
                     <span className="font-semibold text-slate-900">{m.name}</span>
                     <span className="text-slate-500">{m.email}</span>
                     {m.user_id && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">thành viên</span>}
-                    <span className="ml-auto text-xs text-slate-400">{fmtDateTime(m.created_at)}</span>
+                    <span className="ml-auto text-xs text-slate-500">{fmtDateTime(m.created_at)}</span>
                   </span>
                   <span className="mt-0.5 block truncate text-sm text-slate-700">
                     {m.subject && <span className="font-medium">{m.subject} · </span>}

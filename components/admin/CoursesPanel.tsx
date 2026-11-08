@@ -100,7 +100,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
             {!data && <tr><td className={tdCls} colSpan={7}>Đang tải…</td></tr>}
             {data?.items.length === 0 && <tr><td className={`${tdCls} text-slate-500`} colSpan={7}>Không có khóa học nào.</td></tr>}
             {data?.items.map((c) => (
-              <tr key={c.id} className={`hover:bg-slate-50/60 ${c.hidden ? "bg-slate-50 text-slate-400" : ""}`}>
+              <tr key={c.id} className={`hover:bg-slate-50/60 ${c.hidden ? "bg-slate-50 text-slate-500" : ""}`}>
                 <td className={tdCls}>
                   <div className="flex items-center gap-3">
                     <span className={`grid h-10 w-14 shrink-0 place-items-center rounded-lg bg-gradient-to-br text-xl ${c.color}`}>{c.emoji}</span>

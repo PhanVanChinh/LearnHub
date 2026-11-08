@@ -82,7 +82,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
                 <p className="text-sm font-semibold text-slate-800">Đánh giá của bạn</p>
                 <Stars value={mine.rating} />
                 {mine.comment && <p className="mt-1 text-sm text-slate-700">{mine.comment}</p>}
-                <p className="mt-1 text-xs text-slate-400">{fmtDate(mine.updated_at)}</p>
+                <p className="mt-1 text-xs text-slate-500">{fmtDate(mine.updated_at)}</p>
               </div>
               <button onClick={() => setEditing(true)} className="btn-outline btn-sm">Sửa</button>
             </div>
@@ -104,7 +104,7 @@ export default function CourseReviews({ slug }: { slug: string }) {
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand-100 text-sm font-bold text-brand-700">{r.user_initial}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-slate-800">{r.user_name}{r.mine && <span className="ml-2 rounded-full bg-slate-100 px-1.5 text-xs font-normal text-slate-500">bạn</span>}</p>
-                  <div className="flex items-center gap-2 text-xs text-slate-400"><Stars value={r.rating} size="text-sm" /><span>{fmtDate(r.created_at)}</span></div>
+                  <div className="flex items-center gap-2 text-xs text-slate-500"><Stars value={r.rating} size="text-sm" /><span>{fmtDate(r.created_at)}</span></div>
                 </div>
               </div>
               {r.comment && <p className="mt-3 text-sm leading-6 text-slate-700">{r.comment}</p>}

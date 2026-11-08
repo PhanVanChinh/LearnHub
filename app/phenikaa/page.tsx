@@ -28,7 +28,7 @@ export default async function PhenikaaPage() {
             <div className="text-2xl" aria-hidden="true">{g.emoji}</div>
             <h2 className="mt-2 font-semibold text-slate-900">{g.label}</h2>
             <p className="mt-1 line-clamp-2 text-xs text-slate-500">{g.subjects}</p>
-            <p className={`mt-3 text-sm font-semibold ${g.courses.length ? "text-brand-700" : "text-slate-400"}`}>
+            <p className={`mt-3 text-sm font-semibold ${g.courses.length ? "text-brand-700" : "text-slate-500"}`}>
               {g.courses.length ? `${g.courses.length} khóa học →` : "Sắp có"}
             </p>
           </Link>

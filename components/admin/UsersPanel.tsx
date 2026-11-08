@@ -62,7 +62,7 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
               return (
                 <tr key={u.id} className="hover:bg-slate-50/60">
                   <td className={tdCls}>
-                    <div className="font-medium text-slate-900">{u.full_name} {self && <span className="text-xs text-slate-400">(bạn)</span>}</div>
+                    <div className="font-medium text-slate-900">{u.full_name} {self && <span className="text-xs text-slate-500">(bạn)</span>}</div>
                     <div className="text-xs text-slate-500">{u.email}</div>
                   </td>
                   <td className={tdCls}><Badge tone={u.role === "admin" ? "amber" : "slate"}>{u.role}</Badge></td>

@@ -46,7 +46,7 @@ export default function SystemStatus() {
           {SERVICES.map((s) => (
             <li key={s.key} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-1.5">
               <span className="text-slate-700">{on(s.key) ? "✅" : "⬜"} {s.label}</span>
-              {!on(s.key) && <code className="text-[11px] text-slate-400">{s.hint}</code>}
+              {!on(s.key) && <code className="text-[11px] text-slate-500">{s.hint}</code>}
             </li>
           ))}
         </ul>

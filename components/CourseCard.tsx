@@ -56,7 +56,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
               : <><Emoji>📎</Emoji> Bài {match.index + 1} · <Hl text={match.name} query={query} /></>}
           </Link>
         )}
-        {match?.where === "description" && <p className="mt-2 text-xs text-slate-400">Khớp trong mô tả chi tiết</p>}
+        {match?.where === "description" && <p className="mt-2 text-xs text-slate-500">Khớp trong mô tả chi tiết</p>}
         <CourseStatsLine slug={course.slug} lessons={course.lessons.length} className="mt-3 text-xs text-slate-500" />
         {progress && (
           <div className="mt-3">

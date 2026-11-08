@@ -109,7 +109,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                             onSuccess={() => router.replace(next)}
                             onError={setError}
                         />
-                        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-slate-400">
+                        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-slate-500">
                             <span className="h-px flex-1 bg-slate-200" />
                             hoặc dùng email
                             <span className="h-px flex-1 bg-slate-200" />

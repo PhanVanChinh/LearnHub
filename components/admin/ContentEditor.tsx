@@ -38,7 +38,7 @@ export default function ContentEditor({ lessonsText, content, setContent, lesson
       </div>
       {preview ? (
         <div className="mt-1 rounded-xl bg-slate-950 p-3">
-          {text.trim() ? <LessonContent markdown={text} /> : <p className="p-4 text-sm text-slate-400">Chưa có nội dung.</p>}
+          {text.trim() ? <LessonContent markdown={text} /> : <p className="p-4 text-sm text-slate-500">Chưa có nội dung.</p>}
         </div>
       ) : (
         <textarea className="input mt-1 font-mono text-xs" rows={10} value={text} placeholder={CONTENT_PLACEHOLDER} maxLength={50_000}
