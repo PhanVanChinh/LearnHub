@@ -40,7 +40,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
           {labels[course.category]}
         </span>
         {course.price === 0 && (
-          <span className="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-1 text-xs font-semibold text-white">Miễn phí</span>
+          <span className="absolute right-3 top-3 rounded-full bg-emerald-700 px-2.5 py-1 text-xs font-semibold text-white">Miễn phí</span>
         )}
         {soon && <span className="absolute right-3 top-3 rounded-full bg-slate-800/80 px-2.5 py-1 text-xs font-semibold text-white">Sắp mở bán</span>}
       </Link>
@@ -68,7 +68,7 @@ export default function CourseCard({ course, action, progress, match, query }: {
           </div>
         )}
         <div className="mt-auto flex items-center justify-between pt-4">
-          <span className={`text-lg font-bold ${course.price === 0 ? "text-emerald-600" : "text-brand-700"}`}>{formatVND(course.price)}</span>
+          <span className={`text-lg font-bold ${course.price === 0 ? "text-emerald-700" : "text-brand-700"}`}>{formatVND(course.price)}</span>
           <Link href={cta.href} className="btn-primary btn-sm">{cta.label}</Link>
         </div>
       </div>
