@@ -35,9 +35,11 @@ export default function CourseDetailView({ course: initial, related }: { course:
 
   return (
     <>
-      <section className={`bg-gradient-to-br ${course.color} text-white`}>
-        <div className="container-x py-14">
-          <nav className="text-sm text-white/75">
+      <section className={`relative bg-gradient-to-br ${course.color} text-white`}>
+        {/* Lớp phủ tối: gradient sáng (amber, sky, emerald) với chữ trắng chỉ đạt ~2:1; phủ 45% đưa mọi màu lên ≥4.5:1 */}
+        <div className="absolute inset-0 bg-slate-900/45" aria-hidden="true" />
+        <div className="container-x relative py-14">
+          <nav className="text-sm text-white/90">
             <Link href="/" className="hover:text-white">Trang chủ</Link> / <Link href="/courses" className="hover:text-white">Khóa học</Link>
           </nav>
           <div className="mt-4 flex items-start gap-5">
@@ -49,8 +51,8 @@ export default function CourseDetailView({ course: initial, related }: { course:
             )}
             <div>
               <h1 className="text-3xl font-bold leading-tight sm:text-4xl">{course.title}</h1>
-              <p className="mt-3 max-w-2xl text-white/85">{course.short}</p>
-              <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/80">
+              <p className="mt-3 max-w-2xl text-white/90">{course.short}</p>
+              <div className="mt-4 flex flex-wrap gap-4 text-sm text-white/90">
                 <CourseStatsLine slug={course.slug} lessons={course.lessons.length} />
                 <span>⏱ {totalDuration(course.lessons)}</span>
               </div>
