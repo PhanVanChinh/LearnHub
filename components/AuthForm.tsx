@@ -184,7 +184,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                         {!login && (touched.password || form.password) && (
                             <ul className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
                                 {rules.map((r) => (
-                                    <li key={r.key} className={r.ok ? "text-emerald-600" : "text-slate-500"}>
+                                    <li key={r.key} className={r.ok ? "text-emerald-700" : "text-slate-500"}>
                                         {r.ok ? <Emoji label="Đạt:">✓</Emoji> : <Emoji label="Chưa đạt:">○</Emoji>} {r.label}
                                     </li>
                                 ))}
