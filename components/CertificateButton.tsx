@@ -22,7 +22,7 @@ export default function CertificateButton({ slug }: { slug: string }) {
   }
   return (
     <div className="mt-3">
-      <button onClick={issue} disabled={busy} className="btn w-full !py-2 bg-emerald-600 text-xs text-white hover:bg-emerald-700 disabled:opacity-60">
+      <button onClick={issue} disabled={busy} className="btn w-full !py-2 bg-emerald-700 text-xs text-white hover:bg-emerald-800 disabled:opacity-60">
         {busy ? "Đang cấp…" : <><Emoji>🎓</Emoji> Nhận chứng nhận hoàn thành</>}
       </button>
       {error && <p role="alert" className="mt-1 text-xs text-rose-300">{error}</p>}
