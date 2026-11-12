@@ -46,7 +46,7 @@ export default function ProfileSection() {
         </div>
         <div className="flex items-center gap-3">
           <button type="submit" disabled={busy || !dirty} className="btn-primary disabled:opacity-50">{busy ? "Đang lưu…" : "Lưu thay đổi"}</button>
-          {saved && <span role="status" className="text-sm text-emerald-600"><Emoji>✓</Emoji> Đã lưu</span>}
+          {saved && <span role="status" className="text-sm text-emerald-700"><Emoji>✓</Emoji> Đã lưu</span>}
         </div>
       </form>
     </Section>

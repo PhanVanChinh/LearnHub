@@ -32,7 +32,7 @@ export default function DataSection() {
         <div className="text-sm text-slate-600">
           <p className="font-medium text-slate-800">Tải toàn bộ dữ liệu của tôi</p>
           <p className="mt-1">Gồm hồ sơ, khóa đã ghi danh, tiến độ học, kết quả trắc nghiệm, đơn hàng, lượt AI Check và tin nhắn liên hệ. Không gồm mật khẩu.</p>
-          {msg && <p role="status" className={`mt-2 text-sm ${msg.ok ? "text-emerald-600" : "text-rose-600"}`}>{msg.text}</p>}
+          {msg && <p role="status" className={`mt-2 text-sm ${msg.ok ? "text-emerald-700" : "text-rose-600"}`}>{msg.text}</p>}
         </div>
         <button onClick={download} disabled={busy} className="btn-outline shrink-0 disabled:opacity-60">{busy ? "Đang tạo file…" : "⬇ Tải JSON"}</button>
       </div>
