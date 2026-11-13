@@ -111,7 +111,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
                   </div>
                 </td>
                 <td className={tdCls}><div className="flex flex-wrap gap-1">{c.tags.map((t) => <Badge key={t} tone={t === "free" ? "green" : "slate"}>{t}</Badge>)}</div></td>
-                <td className={`${tdCls} whitespace-nowrap font-semibold ${c.price === 0 ? "text-emerald-600" : "text-slate-900"}`}>{formatVND(c.price)}</td>
+                <td className={`${tdCls} whitespace-nowrap font-semibold ${c.price === 0 ? "text-emerald-700" : "text-slate-900"}`}>{formatVND(c.price)}</td>
                 <td className={`${tdCls} whitespace-nowrap text-slate-600`}>{c.views.toLocaleString("vi-VN")}</td>
                 <td className={`${tdCls} text-slate-600`}>{c.enrollment_count}</td>
                 <td className={tdCls}>

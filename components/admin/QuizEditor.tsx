@@ -35,7 +35,7 @@ export default function QuizEditor({ lessonsText, quizText, setQuizText, lesson,
       <LessonChips titles={titles} current={idx} onSelect={setLesson} suffix={(i) => (counts[i] ? ` · ${counts[i]} câu` : "")} />
       <textarea className={`input mt-2 font-mono text-xs ${bad ? "!border-rose-400" : ""}`} rows={8} value={text} placeholder={QUIZ_PLACEHOLDER}
         onChange={(e) => setQuizText({ ...quizText, [idx]: e.target.value })} />
-      {status && <p className={`mt-1 text-xs ${bad ? "text-rose-600" : "text-emerald-600"}`}>{status}</p>}
+      {status && <p className={`mt-1 text-xs ${bad ? "text-rose-600" : "text-emerald-700"}`}>{status}</p>}
     </Field>
   );
 }
