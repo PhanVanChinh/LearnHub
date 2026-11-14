@@ -10,7 +10,7 @@ const CONF: Record<AiCheckResult["confidence"], { label: string; cls: string }> 
   medium: { label: "Độ tin cậy trung bình", cls: "bg-amber-50 text-amber-700" },
   high: { label: "Độ tin cậy cao", cls: "bg-emerald-50 text-emerald-700" },
 };
-const scoreTone = (s: number) => (s >= 70 ? "text-rose-600" : s >= 40 ? "text-amber-600" : "text-emerald-600");
+const scoreTone = (s: number) => (s >= 70 ? "text-rose-600" : s >= 40 ? "text-amber-700" : "text-emerald-700"); // amber-600 trên nền trắng chỉ 3:1, emerald-600 3,8:1
 const barTone = (s: number) => (s >= 70 ? "bg-rose-500" : s >= 40 ? "bg-amber-500" : "bg-emerald-500");
 
 /** AI Check thật: gửi văn bản lên backend → Claude phân tích → điểm, dấu hiệu, đoạn đáng chú ý, gợi ý sửa. */
