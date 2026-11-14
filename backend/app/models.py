@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -117,6 +117,12 @@ class Order(Base):
     hoặc cancelled (người mua / admin hủy) / expired (quá hạn chưa thanh toán)."""
 
     __tablename__ = "orders"
+    __table_args__ = (
+        # Mỗi người chỉ một đơn chờ cho mỗi khóa, chốt ở DB: hai request "Đặt hàng" cùng lúc (bấm đúp, hai tab) không tạo hai đơn.
+        # DB cũ: database.migrate() tạo index này (create_all không thêm index cho bảng đã tồn tại).
+        Index("ux_orders_pending_user_course", "user_id", "course_id", unique=True,
+              sqlite_where=text("status = 'pending'"), postgresql_where=text("status = 'pending'")),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     code: Mapped[str] = mapped_column(String(20), unique=True, index=True)  # mã đơn = nội dung chuyển khoản, vd LH7K3M9P

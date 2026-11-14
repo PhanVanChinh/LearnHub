@@ -40,6 +40,12 @@ def migrate() -> None:
             if "faculty" not in cols:
                 conn.execute(text("ALTER TABLE courses ADD COLUMN faculty VARCHAR(30) NOT NULL DEFAULT ''"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_courses_faculty ON courses (faculty)"))
+    if "orders" in insp.get_table_names():
+        with engine.begin() as conn:
+            # Trước khi chốt unique: nếu DB cũ lỡ có 2+ đơn chờ cùng người cùng khóa thì giữ đơn mới nhất, hủy các đơn kia
+            conn.execute(text("UPDATE orders SET status = 'cancelled', note = 'Trùng đơn chờ, hệ thống tự gộp' WHERE status = 'pending' "
+                              "AND id NOT IN (SELECT MAX(id) FROM orders WHERE status = 'pending' GROUP BY user_id, course_id)"))
+            conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_pending_user_course ON orders (user_id, course_id) WHERE status = 'pending'"))
     if "enrollments" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("enrollments")}
         with engine.begin() as conn:

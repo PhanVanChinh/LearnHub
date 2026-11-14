@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .. import mailer, schemas
@@ -118,7 +119,15 @@ def create_order(payload: schemas.OrderCreate, db: Session = Depends(get_db), us
     order = Order(code=new_code(db), user_id=user.id, course_id=course.id, amount=course.price,
                   expires_at=datetime.utcnow() + timedelta(hours=settings.order_expire_hours))
     db.add(order)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Request khác vừa tạo đơn chờ cho cùng khóa (bấm đúp / hai tab) và thắng unique index → trả đơn đó, không 500, không gửi mail lần hai
+        db.rollback()
+        existing = db.query(Order).filter_by(user_id=user.id, course_id=course.id, status=PENDING).first()
+        if existing:
+            return order_out(existing, detail=True)
+        raise
     db.refresh(order)
     notify_created(order)
     return order_out(order, detail=True)
