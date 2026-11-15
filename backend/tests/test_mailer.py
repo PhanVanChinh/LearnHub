@@ -53,3 +53,21 @@ def test_admin_cancel_sends_email(client):
     mail = mailer.console_outbox[-1]
     assert len(mailer.console_outbox) == n + 1 and mail["to"] == "cancelmail@example.com"
     assert o["code"] in mail["subject"] and "hủy" in mail["subject"] and "Không nhận được tiền" in mail["html"]
+
+
+def test_register_sends_otp_in_background(client, monkeypatch):
+    """Đăng ký không chờ Resend: mail OTP được đẩy vào luồng nền, request không gọi httpx đồng bộ."""
+    monkeypatch.setattr(mailer, "provider", lambda: "resend")
+    submitted = []
+    monkeypatch.setattr(mailer._pool, "submit", lambda fn, *a: submitted.append((fn, a)))
+    def no_sync_send(*_a, **_kw):
+        raise RuntimeError("register phải không gửi mail đồng bộ")
+    monkeypatch.setattr(httpx, "post", no_sync_send)
+    r = client.post("/api/auth/register", json={"email": "bg-otp@example.com", "full_name": "Nen", "password": "MatKhau2024"})
+    assert r.status_code == 201, r.text
+    assert len(submitted) == 1 and submitted[0][0] is mailer._send_resend and submitted[0][1][0] == "bg-otp@example.com"
+    # "Gửi lại mã" vẫn gửi đồng bộ để báo 502 khi Resend lỗi (người dùng đang chờ kết quả)
+    monkeypatch.setattr(mailer, "_send_resend", lambda *a: False)
+    monkeypatch.setattr(settings, "otp_resend_cooldown_seconds", 0)
+    h = {"Authorization": f"Bearer {r.json()['access_token']}"}
+    assert client.post("/api/auth/verification/resend", headers=h).status_code == 502

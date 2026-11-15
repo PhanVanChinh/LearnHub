@@ -132,7 +132,8 @@ def register(payload: schemas.UserCreate, request: Request, response: Response, 
     db.add(user)
     db.commit()
     db.refresh(user)
-    _send_verification(db, user)
+    # Gửi OTP ở nền: đăng ký không phải chờ Resend (10s timeout x 3 lần thử); trang /verify có nút "Gửi lại mã" nếu mail chưa tới
+    _send_verification(db, user, background=True)
     return _issue(user, response, db)
 
 
@@ -153,14 +154,18 @@ def _cooldown_left(db: Session, user: User) -> int:
     return max(0, left)
 
 
-def _send_verification(db: Session, user: User) -> bool:
-    """Tạo mã 6 số mới (vô hiệu mã cũ), gửi email. Trả về True nếu gửi thành công."""
+def _send_verification(db: Session, user: User, background: bool = False) -> bool:
+    """Tạo mã 6 số mới (vô hiệu mã cũ), gửi email. Trả về True nếu gửi thành công.
+    background=True: gửi ở luồng nền (có thử lại), luôn trả True — dùng khi phản hồi không cần chờ kết quả gửi."""
     db.query(EmailVerification).filter_by(user_id=user.id).delete()
     code = f"{secrets.randbelow(10**6):06d}"
     db.add(EmailVerification(user_id=user.id, code_hash=_hash_code(code),
                              expires_at=datetime.utcnow() + timedelta(minutes=settings.otp_expire_minutes)))
     db.commit()
     subject, html = mailer.verification_email(user.full_name, code, settings.otp_expire_minutes)
+    if background:
+        mailer.send_email_background(user.email, subject, html)
+        return True
     return mailer.send_email(user.email, subject, html)
 
 
