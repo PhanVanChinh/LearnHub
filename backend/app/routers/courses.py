@@ -1,6 +1,7 @@
+import hashlib
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy import String, Text, cast, or_
 from sqlalchemy.orm import Session, joinedload
 
@@ -17,15 +18,30 @@ router = APIRouter(prefix="/api/courses", tags=["courses"])
 media_router = APIRouter(prefix="/api/media", tags=["courses"])
 
 
-@media_router.get("/{key:path}", include_in_schema=False)
-def media(key: str):
-    """Phục vụ ảnh bìa từ S3 qua backend (bucket không cần public). Chỉ thư mục covers/, cache 1 ngày."""
-    from fastapi import Response
+# Cache ảnh bìa trong tiến trình: key có uuid (storage.make_key) nên nội dung một key không bao giờ đổi → giữ bao lâu cũng đúng.
+# Mỗi lần hiện danh sách khóa học là hàng chục ảnh; không cache thì mỗi lượt xem là bấy nhiêu GET lên S3 (tiền + độ trễ).
+_MEDIA_CACHE: dict[str, tuple[bytes, str, str]] = {}  # key → (data, content-type, etag)
+_MEDIA_CACHE_MAX = 300  # ảnh bìa đã resize ~100 KB → tối đa vài chục MB
 
+
+@media_router.get("/{key:path}", include_in_schema=False, dependencies=[rate_limit("media", 300, 60)])
+def media(key: str, request: Request):
+    """Phục vụ ảnh bìa từ S3 qua backend (bucket không cần public). Chỉ thư mục covers/; cache 1 ngày ở trình duyệt,
+    ETag/304 khi tải lại, cache trong tiến trình để không gọi S3 lặp lại; giới hạn 300 ảnh/phút mỗi IP chống quét kho."""
     if not key.startswith("covers/") or ".." in key:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy ảnh")
-    data, ctype = storage.get(key)
-    return Response(data, media_type=ctype, headers={"Cache-Control": "public, max-age=86400, immutable"})
+    hit = _MEDIA_CACHE.get(key)
+    if hit is None:
+        data, ctype = storage.get(key)
+        hit = (data, ctype, f'"{hashlib.sha1(data).hexdigest()[:16]}"')
+        if len(_MEDIA_CACHE) >= _MEDIA_CACHE_MAX:
+            _MEDIA_CACHE.pop(next(iter(_MEDIA_CACHE)))  # bỏ ảnh cũ nhất (dict giữ thứ tự chèn)
+        _MEDIA_CACHE[key] = hit
+    data, ctype, etag = hit
+    headers = {"Cache-Control": "public, max-age=86400, immutable", "ETag": etag}
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+    return Response(data, media_type=ctype, headers=headers)
 
 CATEGORY_LABELS = {
     "all": "Tất cả", "ai-check": "AI Check", "pdf": "PDF", "quiz": "Trắc nghiệm",

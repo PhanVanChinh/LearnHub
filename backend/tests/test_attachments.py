@@ -116,5 +116,29 @@ def test_course_cover(client, monkeypatch):
     assert client.get("/api/courses/att-test").json()["cover"] == key  # public thấy key để dựng URL
     r = client.get(f"/api/media/{key}")
     assert r.status_code == 200 and r.content == b"\x89PNG fake" and "max-age=86400" in r.headers["cache-control"]
+    # Lần sau không gọi S3 nữa (cache trong tiến trình); trình duyệt gửi If-None-Match → 304 không kèm body
+    etag = r.headers["etag"]
+    monkeypatch.setattr(storage, "get", lambda key: (_ for _ in ()).throw(AssertionError("không được gọi S3 lại cho key đã cache")))
+    assert client.get(f"/api/media/{key}").content == b"\x89PNG fake"
+    r304 = client.get(f"/api/media/{key}", headers={"If-None-Match": etag})
+    assert r304.status_code == 304 and r304.content == b"" and r304.headers["etag"] == etag
     assert client.get("/api/media/courses/att-test/secret.pdf").status_code == 404  # chỉ phục vụ covers/
     assert client.get("/api/media/covers/../../etc/passwd").status_code == 404
+
+
+def test_media_rate_limited(client, monkeypatch):
+    """Quét kho ảnh: quá 300 lượt/phút mỗi IP → 429 (ảnh đã cache nên không tốn S3, nhưng vẫn tốn băng thông)."""
+    from app import ratelimit
+    from app.routers import courses as courses_router
+
+    monkeypatch.setattr(settings, "rate_limit_enabled", True)
+    ratelimit.reset()
+    courses_router._MEDIA_CACHE["covers/rl/x.png"] = (b"png", "image/png", '"abc"')
+    try:
+        codes = {client.get("/api/media/covers/rl/x.png").status_code for _ in range(300)}
+        assert codes == {200}
+        r = client.get("/api/media/covers/rl/x.png")
+        assert r.status_code == 429 and "Retry-After" in r.headers
+    finally:
+        courses_router._MEDIA_CACHE.pop("covers/rl/x.png", None)
+        ratelimit.reset()
