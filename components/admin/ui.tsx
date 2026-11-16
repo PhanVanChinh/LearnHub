@@ -1,7 +1,17 @@
 "use client";
+import { useCallback, useRef } from "react";
 
 export { Modal, useDialog } from "@/components/Dialog";
 export type { AskFn, DialogOptions, DialogResult } from "@/components/Dialog";
+
+/** Chỉ nhận kết quả của lần gọi mới nhất: gõ tìm kiếm nhanh thì phản hồi cũ về muộn không đè lên danh sách mới. */
+export function useLatest() {
+  const seq = useRef(0);
+  return useCallback(<T,>(p: Promise<T>, ok: (v: T) => void, fail: (e: Error) => void) => {
+    const id = ++seq.current;
+    p.then((v) => { if (id === seq.current) ok(v); }, (e: Error) => { if (id === seq.current) fail(e); });
+  }, []);
+}
 
 export function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
   return (

@@ -2,7 +2,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { AdminUser, adminApi } from "@/lib/api";
-import { Badge, ErrorBox, Field, Modal, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { Badge, ErrorBox, Field, Modal, Pager, tableCls, tdCls, thCls, useDialog, useLatest } from "./ui";
 import { fmtDate } from "@/lib/date";
 
 const LIMIT = 20;
@@ -15,9 +15,10 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
   const [modal, setModal] = useState<null | "create" | AdminUser>(null);
   const [error, setError] = useState("");
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.users({ q, role: role || undefined, limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [q, role, offset]);
+    latest(adminApi.users({ q, role: role || undefined, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [q, role, offset, latest]);
   useEffect(() => { const t = setTimeout(load, q ? 300 : 0); return () => clearTimeout(t); }, [load, q]);
 
   const done = () => { setModal(null); load(); onChanged(); };

@@ -31,3 +31,18 @@ test("admin: tab nằm trên URL, tải lại vẫn mở đúng tab", async ({ p
   await page.getByRole("tab", { name: /Đơn hàng/ }).click();
   await expect(page).not.toHaveURL(/tab=/);
 });
+
+test("admin: gõ tìm kiếm nhanh, phản hồi cũ về muộn không đè lên kết quả mới", async ({ page }) => {
+  // lần tải đầu (không có q) bị giữ 1,5 giây; tìm kiếm có q trả về ngay
+  await page.route((u) => u.pathname.endsWith("/api/admin/users") && !u.searchParams.get("q"), async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  await loginUi(page, "admin@example.com", "admin123", "/admin/?tab=users");
+  await expect(page.getByRole("tab", { name: "Người dùng" })).toHaveAttribute("aria-selected", "true");
+  await page.getByPlaceholder("Tìm email / họ tên…").fill("khong-co-ai-ten-nay");
+  await expect(page.getByText("Không có người dùng nào.")).toBeVisible();
+  await page.waitForTimeout(2000); // chờ phản hồi cũ về
+  await expect(page.getByText("Không có người dùng nào.")).toBeVisible();
+  await expect(page.getByRole("table").getByText("admin@example.com")).toHaveCount(0);
+});
