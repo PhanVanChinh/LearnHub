@@ -5,7 +5,7 @@ import { AdminCourse, adminApi, CourseInput } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { categories } from "@/data/courses";
 import CourseForm from "./CourseForm";
-import { Badge, ErrorBox, Modal, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { Badge, ErrorBox, Modal, Pager, tableCls, tdCls, thCls, useDialog, useLatest } from "./ui";
 
 const LIMIT = 20;
 
@@ -17,9 +17,10 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.courses({ q, category, hidden, limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [q, category, hidden, offset]);
+    latest(adminApi.courses({ q, category, hidden, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [q, category, hidden, offset, latest]);
   useEffect(() => { const t = setTimeout(load, q ? 300 : 0); return () => clearTimeout(t); }, [load, q]);
 
   const done = () => { setModal(null); load(); onChanged(); };

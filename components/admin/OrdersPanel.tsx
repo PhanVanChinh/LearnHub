@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminOrder, adminApi, OrderStatus } from "@/lib/api";
 import { formatVND } from "@/lib/site";
 import { ORDER_STATUS } from "@/components/MyOrders";
-import { ErrorBox, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { ErrorBox, Pager, tableCls, tdCls, thCls, useDialog, useLatest } from "./ui";
 import { fmtShort } from "@/lib/date";
 
 const LIMIT = 20;
@@ -16,9 +16,10 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.orders({ status, q: q.trim() || undefined, limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [status, q, offset]);
+    latest(adminApi.orders({ status, q: q.trim() || undefined, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [status, q, offset, latest]);
   useEffect(load, [load]);
 
   const { ask, dialog } = useDialog();
