@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Stars from "@/components/Stars";
 import { AdminCourse, AdminReview, adminApi } from "@/lib/api";
-import { ErrorBox, Pager, useDialog } from "./ui";
+import { ErrorBox, Pager, useDialog, useLatest } from "./ui";
 import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
@@ -20,9 +20,10 @@ export default function ReviewsPanel() {
   const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.reviews({ hidden, rating, course_id: courseId, q: q.trim() || undefined, limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [hidden, rating, courseId, q, offset]);
+    latest(adminApi.reviews({ hidden, rating, course_id: courseId, q: q.trim() || undefined, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [hidden, rating, courseId, q, offset, latest]);
   useEffect(load, [load]);
   useEffect(() => { adminApi.courses({ limit: 200 }).then((r) => setCourses(r.items)).catch(() => {}); }, []);
 

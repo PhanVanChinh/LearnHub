@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { adminApi, AuditLog } from "@/lib/api";
-import { ErrorBox, Pager } from "./ui";
+import { ErrorBox, Pager, useLatest } from "./ui";
 import { fmtDateTimeSec } from "@/lib/date";
 
 const LIMIT = 30;
@@ -27,10 +27,10 @@ export default function AuditPanel() {
   const [open, setOpen] = useState<number | null>(null);
   const [error, setError] = useState("");
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.audit({ action: group || undefined, actor: actor.trim() || undefined, q: q.trim() || undefined, limit: LIMIT, offset })
-      .then(setData).catch((e) => setError(e.message));
-  }, [group, actor, q, offset]);
+    latest(adminApi.audit({ action: group || undefined, actor: actor.trim() || undefined, q: q.trim() || undefined, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [group, actor, q, offset, latest]);
   useEffect(load, [load]);
 
   return (
