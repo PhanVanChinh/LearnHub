@@ -1,7 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { AdminCourse, AdminEnrollment, AdminUser, adminApi } from "@/lib/api";
-import { ErrorBox, Field, Pager, tableCls, tdCls, thCls, useDialog } from "./ui";
+import { ErrorBox, Field, Pager, tableCls, tdCls, thCls, useDialog, useLatest } from "./ui";
 import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
@@ -13,9 +13,10 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
   const [form, setForm] = useState({ user_id: "", course_id: "" });
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.enrollments({ limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [offset]);
+    latest(adminApi.enrollments({ limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [offset, latest]);
   useEffect(load, [load]);
   useEffect(() => {
     adminApi.users({ limit: 200 }).then((r) => setUsers(r.items)).catch(() => {});

@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { AdminContact, adminApi } from "@/lib/api";
-import { ErrorBox, Pager, useDialog } from "./ui";
+import { ErrorBox, Pager, useDialog, useLatest } from "./ui";
 import { fmtDateTime } from "@/lib/date";
 
 const LIMIT = 20;
@@ -14,9 +14,10 @@ export default function ContactsPanel({ onChanged }: { onChanged: () => void }) 
   const [open, setOpen] = useState<number | null>(null);
   const [error, setError] = useState("");
 
+  const latest = useLatest();
   const load = useCallback(() => {
-    adminApi.contacts({ status, q: q.trim() || undefined, limit: LIMIT, offset }).then(setData).catch((e) => setError(e.message));
-  }, [status, q, offset]);
+    latest(adminApi.contacts({ status, q: q.trim() || undefined, limit: LIMIT, offset }), setData, (e) => setError(e.message));
+  }, [status, q, offset, latest]);
   useEffect(load, [load]);
 
   const toggle = async (m: AdminContact) => {
