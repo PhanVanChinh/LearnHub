@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from app import captcha, mailer, ratelimit
+from app.routers import auth as auth_router
 from app.config import settings
 from app.database import SessionLocal
 from app.models import User
@@ -85,6 +86,24 @@ def test_reset_password_unlocks_account(client, account):
     # trả lại mật khẩu cũ cho các test sau trong module
     h = {"Authorization": f"Bearer {r.json()['access_token']}"}
     assert client.post("/api/auth/change-password", json={"current_password": new_pw, "new_password": PW}, headers=h).status_code in (200, 204)
+
+
+def test_login_does_not_reveal_accounts(client, account, monkeypatch):
+    """Email lạ, tài khoản chỉ có Google và sai mật khẩu lần đầu phải trả cùng một thông báo, và email lạ vẫn so bcrypt để không dò được qua thời gian."""
+    db = SessionLocal()
+    db.add(User(email="gg-only@example.com", full_name="GG", hashed_password="", google_sub="gg-only-sub"))
+    db.commit(); db.close()
+    checked: list[str] = []
+    real = auth_router.verify_password
+    monkeypatch.setattr(auth_router, "verify_password", lambda plain, hashed: checked.append(hashed) or real(plain, hashed))
+
+    unknown = client.post("/api/auth/login", json={"email": "khong-ton-tai@example.com", "password": "whatever1"})
+    google = client.post("/api/auth/login", json={"email": "gg-only@example.com", "password": "whatever1"})
+    wrong = login(client, "sai-mat-khau-3")
+    assert unknown.status_code == google.status_code == wrong.status_code == 401
+    assert unknown.json()["detail"] == google.json()["detail"] == wrong.json()["detail"]
+    # cả ba lượt đều chạy bcrypt (email lạ / Google dùng hash giả)
+    assert len(checked) == 3 and checked[0] == checked[1] == auth_router._DUMMY_HASH
 
 
 def test_rate_limit(client, monkeypatch):

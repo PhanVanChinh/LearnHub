@@ -210,18 +210,22 @@ def confirm_verification(payload: schemas.VerifyEmailIn, user: User = Depends(ge
     return user
 
 
+GENERIC_LOGIN_MSG = "Email hoặc mật khẩu không đúng. Nếu bạn đăng ký bằng Google, hãy dùng nút Google hoặc đặt mật khẩu qua Quên mật khẩu"
+# Hash giả để lượt đăng nhập với email không tồn tại cũng tốn thời gian so bcrypt như email thật → không dò được email qua thời gian phản hồi
+_DUMMY_HASH = hash_password(secrets.token_urlsafe(16))
+
+
 @router.post("/login", response_model=schemas.Token, dependencies=[rate_limit("login", 10, 60)])
 def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
-    if not user:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Email hoặc mật khẩu không đúng")
+    if not user or not user.has_password:
+        # Cùng một thông báo cho email lạ và tài khoản chỉ có Google: không để lộ email nào đã đăng ký hay đăng ký bằng gì
+        verify_password(payload.password, _DUMMY_HASH)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, GENERIC_LOGIN_MSG)
     now = datetime.utcnow()
     if user.locked_until and user.locked_until > now:
         left = int((user.locked_until - now).total_seconds() // 60) + 1
         raise HTTPException(status.HTTP_423_LOCKED, f"Tài khoản tạm khóa do đăng nhập sai nhiều lần. Thử lại sau {left} phút hoặc dùng Quên mật khẩu")
-    if not user.has_password:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
-                            "Tài khoản này đăng nhập bằng Google. Hãy dùng nút Google, hoặc đặt mật khẩu qua Quên mật khẩu")
     if not verify_password(payload.password, user.hashed_password):
         user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
         left = settings.login_max_failures - user.failed_login_attempts
@@ -232,7 +236,7 @@ def login(payload: schemas.UserLogin, response: Response, db: Session = Depends(
             raise HTTPException(status.HTTP_423_LOCKED, f"Sai mật khẩu {settings.login_max_failures} lần, tài khoản tạm khóa {settings.login_lockout_minutes} phút")
         db.commit()
         hint = f" (còn {left} lần thử)" if left <= 2 else ""
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"Email hoặc mật khẩu không đúng{hint}")
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"{GENERIC_LOGIN_MSG}{hint}")
     if not user.is_active:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Tài khoản đã bị khóa")
     user.failed_login_attempts = 0
