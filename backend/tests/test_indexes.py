@@ -15,6 +15,17 @@ def test_quiz_attempts_composite_index(client):
     assert idx.get("ix_quiz_attempts_user_course_lesson") == ["user_id", "course_id", "lesson_id"]
 
 
+def test_filter_columns_indexed(client):
+    """Cột lọc hay dùng ngoài khóa chính / unique: đếm ghi danh theo khóa, doanh thu theo paid_at, dữ liệu liên hệ của một tài khoản."""
+    with engine.begin() as conn:  # giả DB cũ chưa có index → migrate phải tự thêm
+        for name in ("ix_enrollments_course_id", "ix_orders_paid_at", "ix_contact_messages_user_id"):
+            conn.execute(text(f"DROP INDEX IF EXISTS {name}"))
+    migrate()
+    insp = inspect(engine)
+    for table, column in (("enrollments", "course_id"), ("orders", "paid_at"), ("contact_messages", "user_id")):
+        assert [column] in [i["column_names"] for i in insp.get_indexes(table)], f"{table}.{column} chưa có index"
+
+
 def test_orders_pending_unique_index(client):
     migrate()
     idx = {i["name"]: i for i in inspect(engine).get_indexes("orders")}

@@ -100,8 +100,8 @@ class Enrollment(Base):
     __table_args__ = (UniqueConstraint("user_id", "course_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))  # đã nằm đầu unique (user_id, course_id) → không cần index riêng
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id"), index=True)  # đếm ghi danh theo khóa (admin, stats)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     # Vị trí xem gần nhất để "Học tiếp" mở đúng bài, đúng giây (lesson_id = mã bài cố định, app/lessons.py)
     last_lesson_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
@@ -134,7 +134,7 @@ class Order(Base):
     note: Mapped[str | None] = mapped_column(Text, nullable=True)  # ghi chú của admin khi duyệt/hủy
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
-    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True, index=True)  # doanh thu theo khoảng ngày
     confirmed_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     user: Mapped[User] = relationship(foreign_keys=[user_id], back_populates="orders")
@@ -246,7 +246,7 @@ class ContactMessage(Base):
     email: Mapped[str] = mapped_column(String(255), index=True)
     subject: Mapped[str] = mapped_column(String(255), default="")
     message: Mapped[str] = mapped_column(Text)
-    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)  # nếu gửi khi đang đăng nhập
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)  # nếu gửi khi đang đăng nhập (xuất / ẩn danh dữ liệu tài khoản)
     status: Mapped[str] = mapped_column(String(20), default="new", index=True)  # new | replied
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

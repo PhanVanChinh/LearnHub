@@ -46,9 +46,14 @@ def migrate() -> None:
             conn.execute(text("UPDATE orders SET status = 'cancelled', note = 'Trùng đơn chờ, hệ thống tự gộp' WHERE status = 'pending' "
                               "AND id NOT IN (SELECT MAX(id) FROM orders WHERE status = 'pending' GROUP BY user_id, course_id)"))
             conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_orders_pending_user_course ON orders (user_id, course_id) WHERE status = 'pending'"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_orders_paid_at ON orders (paid_at)"))
+    if "contact_messages" in insp.get_table_names():
+        with engine.begin() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_contact_messages_user_id ON contact_messages (user_id)"))
     if "enrollments" in insp.get_table_names():
         cols = {c["name"] for c in insp.get_columns("enrollments")}
         with engine.begin() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS ix_enrollments_course_id ON enrollments (course_id)"))
             if "last_lesson_id" not in cols:
                 conn.execute(text("ALTER TABLE enrollments ADD COLUMN last_lesson_id VARCHAR(32)"))
             if "last_seconds" not in cols:
