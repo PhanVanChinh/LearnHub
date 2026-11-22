@@ -3,6 +3,7 @@ import { useDialog } from "@/components/Dialog";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, coursesApi, QuizAttempts, QuizPublic, QuizResult } from "@/lib/api";
 import Emoji from "@/components/Emoji";
+import { scrollBehavior } from "@/lib/motion";
 
 type Props = {
   slug: string;
@@ -48,9 +49,12 @@ export default function QuizPlayer({ slug, index, loggedIn, onCompleted }: Props
       setResult(r);
       loadAttempts();
       if (r.lesson_completed) onCompleted?.();
-      document.getElementById("quiz-result")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (e) { setError((e as ApiError).message); } finally { setBusy(false); }
   };
+  // Cuộn tới khối kết quả sau khi nó đã render (gọi ngay sau setResult thì phần tử chưa có trong DOM)
+  useEffect(() => {
+    if (result) document.getElementById("quiz-result")?.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+  }, [result]);
   const retry = () => { setResult(null); setAnswers(Array(quiz?.total ?? 0).fill(null)); };
 
   if (error && !quiz) return <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">{error}</div>;

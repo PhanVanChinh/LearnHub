@@ -69,3 +69,24 @@ test("Khóa học của tôi: API lỗi → báo lỗi và nút Thử lại, kh�
   await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByText("Bạn chưa ghi danh khóa học nào.")).toBeVisible();
 });
+
+test("bật giảm chuyển động → nộp trắc nghiệm cuộn tới kết quả không hiệu ứng mượt", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    (window as unknown as { __scrolls: unknown[] }).__scrolls = [];
+    const orig = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = function (arg) {
+      (window as unknown as { __scrolls: unknown[] }).__scrolls.push(arg);
+      return orig.call(this, arg);
+    };
+  });
+  await page.goto(`/learn/${PAID_COURSE}/?lesson=0`);
+  await page.getByRole("radiogroup").first().getByRole("radio").first().click();
+  await page.getByRole("button", { name: "Nộp bài" }).first().click();
+  const dialogSubmit = page.getByRole("dialog").getByRole("button", { name: "Nộp bài" });
+  if (await dialogSubmit.isVisible().catch(() => false)) await dialogSubmit.click();
+  await expect(page.locator("#quiz-result")).toBeVisible();
+  const scrolls = await page.evaluate(() => (window as unknown as { __scrolls: { behavior?: string }[] }).__scrolls);
+  expect(scrolls.length).toBeGreaterThan(0);
+  expect(scrolls.at(-1)?.behavior).toBe("auto");
+});
