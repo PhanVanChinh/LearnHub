@@ -17,6 +17,7 @@ import ProgressBar from "@/components/ProgressBar";
 import LessonList from "@/components/learn/LessonList";
 import CourseSummary from "@/components/learn/CourseSummary";
 import LessonStage, { type Access } from "@/components/learn/LessonStage";
+import { scrollBehavior } from "@/lib/motion";
 
 export default function LearnView({ course: staticCourse, related = [] }: { course: Course; related?: Course[] }) {
   const { user, loading } = useAuth();
@@ -192,7 +193,7 @@ export default function LearnView({ course: staticCourse, related = [] }: { cour
               )}
               <button onClick={() => go(index - 1)} disabled={index === 0} className="btn border border-white/15 bg-white/5 text-white hover:bg-white/10 disabled:opacity-40">← Bài trước</button>
               {isLast && enrolled ? (
-                <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-success">
+                <button onClick={() => { setSummary(true); window.scrollTo({ top: 0, behavior: scrollBehavior() }); }} className="btn-success">
                   {progress?.percent === 100 ? <><Emoji>🎉</Emoji> Hoàn tất khóa học</> : "Tổng kết khóa học"}
                 </button>
               ) : (
