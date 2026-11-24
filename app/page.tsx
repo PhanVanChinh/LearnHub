@@ -43,8 +43,8 @@ export default async function Home() {
             </h1>
             <p className="mt-5 max-w-xl text-lg text-white/85">{site.tagline}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/courses" className="btn bg-white text-brand-700 hover:bg-brand-50">Xem tất cả khóa học</Link>
-              <Link href="/free" className="btn border border-white/40 text-white hover:bg-white/10">Tài liệu miễn phí →</Link>
+              <Link href="/courses" className="btn bg-white text-brand-700 hover:bg-brand-50 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700">Xem tất cả khóa học</Link>
+              <Link href="/free" className="btn border border-white/40 text-white hover:bg-white/10 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-700">Tài liệu miễn phí →</Link>
             </div>
             <HeroStats courses={courses.length} lessons={courses.reduce((s, c) => s + c.lessons.length, 0)} free={courses.filter((c) => c.price === 0).length} />
           </div>
