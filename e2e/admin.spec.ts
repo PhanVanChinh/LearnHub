@@ -46,3 +46,16 @@ test("admin: gõ tìm kiếm nhanh, phản hồi cũ về muộn không đè lê
   await expect(page.getByText("Không có người dùng nào.")).toBeVisible();
   await expect(page.getByRole("table").getByText("admin@example.com")).toHaveCount(0);
 });
+
+test("admin: bảng người dùng có caption, mọi cột có scope và cột thao tác có tên cho trình đọc màn hình", async ({ page }) => {
+  await loginUi(page, "admin@example.com", "admin123", "/admin/?tab=users");
+  const table = page.getByRole("table", { name: "Danh sách người dùng" });
+  await expect(table).toBeVisible();
+  const headers = table.locator("thead th");
+  expect(await headers.count()).toBeGreaterThan(0);
+  for (const th of await headers.all()) {
+    await expect(th).toHaveAttribute("scope", "col");
+    expect((await th.textContent())?.trim()).not.toBe("");
+  }
+  await expect(table.getByRole("columnheader", { name: "Thao tác" })).toBeAttached();
+});

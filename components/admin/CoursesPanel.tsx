@@ -93,9 +93,10 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className={tableCls}>
+          <caption className="sr-only">Danh sách khóa học</caption>
           <thead><tr>
-            <th className={thCls}>Khóa học</th><th className={thCls}>Danh mục</th><th className={thCls}>Giá</th>
-            <th className={thCls}>Lượt xem</th><th className={thCls}>Ghi danh</th><th className={thCls}>Nổi bật</th><th className={thCls}>Hiện</th><th className={thCls}></th>
+            <th scope="col" className={thCls}>Khóa học</th><th scope="col" className={thCls}>Danh mục</th><th scope="col" className={thCls}>Giá</th>
+            <th scope="col" className={thCls}>Lượt xem</th><th scope="col" className={thCls}>Ghi danh</th><th scope="col" className={thCls}>Nổi bật</th><th scope="col" className={thCls}>Hiện</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={7}>Đang tải…</td></tr>}
