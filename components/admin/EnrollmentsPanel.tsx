@@ -58,8 +58,9 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className={tableCls}>
+          <caption className="sr-only">Danh sách ghi danh</caption>
           <thead><tr>
-            <th className={thCls}>Người dùng</th><th className={thCls}>Khóa học</th><th className={thCls}>Ngày</th><th className={thCls}></th>
+            <th scope="col" className={thCls}>Người dùng</th><th scope="col" className={thCls}>Khóa học</th><th scope="col" className={thCls}>Ngày</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={4}>Đang tải…</td></tr>}

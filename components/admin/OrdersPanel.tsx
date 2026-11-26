@@ -63,9 +63,10 @@ export default function OrdersPanel({ onChanged }: { onChanged: () => void }) {
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className={tableCls}>
+          <caption className="sr-only">Danh sách đơn hàng</caption>
           <thead><tr>
-            <th className={thCls}>Mã đơn</th><th className={thCls}>Người mua</th><th className={thCls}>Khóa học</th>
-            <th className={thCls}>Số tiền</th><th className={thCls}>Trạng thái</th><th className={thCls}>Thời gian</th><th className={thCls}></th>
+            <th scope="col" className={thCls}>Mã đơn</th><th scope="col" className={thCls}>Người mua</th><th scope="col" className={thCls}>Khóa học</th>
+            <th scope="col" className={thCls}>Số tiền</th><th scope="col" className={thCls}>Trạng thái</th><th scope="col" className={thCls}>Thời gian</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={7}>Đang tải…</td></tr>}
