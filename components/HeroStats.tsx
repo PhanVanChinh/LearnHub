@@ -26,9 +26,9 @@ export default function HeroStats(STATIC: Props) {
   return (
     <dl className="mt-10 grid grid-cols-3 gap-6 border-t border-white/20 pt-8">
       {tiles.map((s) => (
-        <div key={s.l}>
-          <dt className={`text-2xl font-bold sm:text-3xl ${stats === undefined ? "opacity-80" : ""}`}>{s.v}</dt>
-          <dd className="mt-1 text-sm text-white/75">{s.l}</dd>
+        <div key={s.l} className="flex flex-col-reverse">{/* dt = nhãn, dd = số (đúng ngữ nghĩa dl); đảo chiều để số vẫn nằm trên */}
+          <dt className="mt-1 text-sm text-white/75">{s.l}</dt>
+          <dd className={`text-2xl font-bold sm:text-3xl ${stats === undefined ? "opacity-80" : ""}`}>{s.v}</dd>
         </div>
       ))}
     </dl>

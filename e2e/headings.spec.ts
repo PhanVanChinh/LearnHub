@@ -27,3 +27,12 @@ test("menu di động tự đóng khi đổi trang (bấm Đăng nhập trong ng
   await expect(drawer).toBeHidden();
   await expect(page.getByRole("button", { name: "Mở menu" })).toHaveAttribute("aria-expanded", "false");
 });
+
+test("số liệu hero: dl đúng ngữ nghĩa (dt là nhãn, dd là số) nhưng số vẫn hiển thị phía trên nhãn", async ({ page }) => {
+  await page.goto("/");
+  const dl = page.locator("section dl").first();
+  await expect(dl.locator("dt").first()).toHaveText(/Khóa học/);
+  await expect(dl.locator("dd").first()).toHaveText(/^\d/);
+  const [dt, dd] = await Promise.all([dl.locator("dt").first().boundingBox(), dl.locator("dd").first().boundingBox()]);
+  expect(dd!.y).toBeLessThan(dt!.y);
+});
