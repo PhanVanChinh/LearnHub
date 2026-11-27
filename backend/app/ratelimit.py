@@ -3,13 +3,27 @@
 Dùng: `dependencies=[Depends(rate_limit("login", 10, 60))]` → tối đa 10 request / 60 giây / IP cho khóa "login".
 """
 import time
-from collections import defaultdict, deque
+from collections import deque
 
 from fastapi import Depends, HTTPException, Request, status
 
 from .config import settings
 
-_buckets: dict[str, deque[float]] = defaultdict(deque)
+_buckets: dict[str, deque[float]] = {}
+_expires: dict[str, float] = {}  # key → thời điểm bucket chắc chắn rỗng (lần gọi cuối + window)
+_SWEEP_EVERY = 60.0
+_next_sweep = 0.0
+
+
+def _sweep(now: float) -> None:
+    """Mỗi phút dọn bucket đã hết hạn: quét từ nhiều IP (mỗi IP vài request rồi thôi) không để dict phình vô hạn."""
+    global _next_sweep
+    if now < _next_sweep:
+        return
+    _next_sweep = now + _SWEEP_EVERY
+    for key in [k for k, exp in _expires.items() if exp <= now]:
+        _buckets.pop(key, None)
+        _expires.pop(key, None)
 
 
 def client_ip(request: Request) -> str:
@@ -30,12 +44,16 @@ def client_ip(request: Request) -> str:
 def hit(key: str, limit: int, window: int) -> int:
     """Ghi nhận 1 lần gọi. Trả về 0 nếu còn hạn, ngược lại trả số giây phải chờ."""
     now = time.monotonic()
-    q = _buckets[key]
+    _sweep(now)
+    q = _buckets.get(key)
+    if q is None:
+        q = _buckets[key] = deque()
     while q and now - q[0] >= window:
         q.popleft()
     if len(q) >= limit:
         return int(window - (now - q[0])) + 1
     q.append(now)
+    _expires[key] = now + window
     return 0
 
 
@@ -55,4 +73,7 @@ def rate_limit(name: str, limit: int, window_seconds: int):
 
 def reset() -> None:
     """Dùng trong test."""
+    global _next_sweep
     _buckets.clear()
+    _expires.clear()
+    _next_sweep = 0.0

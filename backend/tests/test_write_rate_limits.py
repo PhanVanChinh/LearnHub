@@ -31,3 +31,27 @@ def test_note_save_is_rate_limited(client, monkeypatch):
         assert codes[:120] == [200] * 120 and codes[120] == 429
     finally:
         ratelimit.reset()
+
+
+def test_expired_buckets_are_swept(monkeypatch):
+    """Bucket của IP không quay lại phải được dọn sau khi hết window, bucket còn hạn thì giữ."""
+    clock = [1000.0]
+    monkeypatch.setattr(ratelimit.time, "monotonic", lambda: clock[0])
+    ratelimit.reset()
+    try:
+        for i in range(1000):
+            assert ratelimit.hit(f"login:10.0.{i // 256}.{i % 256}", 10, 60) == 0
+        assert ratelimit.hit("register:9.9.9.9", 5, 3600) == 0  # window dài, chưa hết hạn lúc dọn
+        assert len(ratelimit._buckets) == 1001
+        clock[0] += 30
+        ratelimit.hit("login:1.1.1.1", 10, 60)  # chưa tới lượt dọn (mỗi 60 giây)
+        assert len(ratelimit._buckets) == 1002
+        clock[0] += 31  # 61 giây sau lần dọn đầu: 1000 bucket login đã quá window 60 giây
+        ratelimit.hit("login:2.2.2.2", 10, 60)
+        assert set(ratelimit._buckets) == {"register:9.9.9.9", "login:1.1.1.1", "login:2.2.2.2"}
+        # bucket giữ lại vẫn đếm đúng
+        for _ in range(4):
+            assert ratelimit.hit("register:9.9.9.9", 5, 3600) == 0
+        assert ratelimit.hit("register:9.9.9.9", 5, 3600) > 0
+    finally:
+        ratelimit.reset()
