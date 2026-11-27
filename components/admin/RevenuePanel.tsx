@@ -77,7 +77,8 @@ export default function RevenuePanel() {
         {!data ? <div className="mt-4 h-44 animate-pulse rounded-lg bg-slate-100" /> : table ? (
           <div className="mt-4 max-h-80 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-white text-left text-xs uppercase tracking-wider text-slate-500"><tr><th className="py-2">Ngày</th><th className="py-2 text-right">Đơn</th><th className="py-2 text-right">Doanh thu</th></tr></thead>
+              <caption className="sr-only">Doanh thu theo ngày</caption>
+              <thead className="sticky top-0 bg-white text-left text-xs uppercase tracking-wider text-slate-500"><tr><th scope="col" className="py-2">Ngày</th><th scope="col" className="py-2 text-right">Đơn</th><th scope="col" className="py-2 text-right">Doanh thu</th></tr></thead>
               <tbody>{data.by_day.map((d) => (
                 <tr key={d.date} className="border-t border-slate-100"><td className="py-1.5">{fmtDay(d.date)}</td><td className="py-1.5 text-right">{d.orders}</td><td className="py-1.5 text-right font-medium">{formatVND(d.revenue)}</td></tr>
               ))}</tbody>
@@ -93,7 +94,8 @@ export default function RevenuePanel() {
           <p className="mt-3 text-sm text-slate-500">Chưa có đơn thanh toán trong kỳ.</p>
         ) : (
           <table className="mt-3 w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-slate-500"><tr><th className="py-2">Khóa học</th><th className="py-2 text-right">Đơn</th><th className="py-2 text-right">Doanh thu</th><th className="py-2 text-right">Tỷ trọng</th></tr></thead>
+            <caption className="sr-only">Doanh thu theo khóa học</caption>
+            <thead className="text-left text-xs uppercase tracking-wider text-slate-500"><tr><th scope="col" className="py-2">Khóa học</th><th scope="col" className="py-2 text-right">Đơn</th><th scope="col" className="py-2 text-right">Doanh thu</th><th scope="col" className="py-2 text-right">Tỷ trọng</th></tr></thead>
             <tbody>{data.by_course.map((c) => {
               const share = data.total ? Math.round((c.revenue * 100) / data.total) : 0;
               return (

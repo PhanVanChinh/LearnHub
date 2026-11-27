@@ -54,7 +54,7 @@ export default function UsersPanel({ onChanged }: { onChanged: () => void }) {
           <caption className="sr-only">Danh sách người dùng</caption>
           <thead><tr>
             <th scope="col" className={thCls}>Người dùng</th><th scope="col" className={thCls}>Vai trò</th><th scope="col" className={thCls}>Trạng thái</th>
-            <th scope="col" className={thCls}>Ghi danh</th><th scope="col" className={thCls}>Ngày tạo</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
+            <th scope="col" className={thCls}>Ghi danh</th><th scope="col" className={thCls}>Ngày tạo</th><th scope="col" className={`${thCls} relative`}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={6}>Đang tải…</td></tr>}

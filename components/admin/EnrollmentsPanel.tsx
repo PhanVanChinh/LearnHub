@@ -60,7 +60,7 @@ export default function EnrollmentsPanel({ onChanged }: { onChanged: () => void 
         <table className={tableCls}>
           <caption className="sr-only">Danh sách ghi danh</caption>
           <thead><tr>
-            <th scope="col" className={thCls}>Người dùng</th><th scope="col" className={thCls}>Khóa học</th><th scope="col" className={thCls}>Ngày</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
+            <th scope="col" className={thCls}>Người dùng</th><th scope="col" className={thCls}>Khóa học</th><th scope="col" className={thCls}>Ngày</th><th scope="col" className={`${thCls} relative`}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={4}>Đang tải…</td></tr>}

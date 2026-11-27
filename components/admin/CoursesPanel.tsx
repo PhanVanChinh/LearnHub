@@ -96,7 +96,7 @@ export default function CoursesPanel({ onChanged }: { onChanged: () => void }) {
           <caption className="sr-only">Danh sách khóa học</caption>
           <thead><tr>
             <th scope="col" className={thCls}>Khóa học</th><th scope="col" className={thCls}>Danh mục</th><th scope="col" className={thCls}>Giá</th>
-            <th scope="col" className={thCls}>Lượt xem</th><th scope="col" className={thCls}>Ghi danh</th><th scope="col" className={thCls}>Nổi bật</th><th scope="col" className={thCls}>Hiện</th><th scope="col" className={thCls}><span className="sr-only">Thao tác</span></th>
+            <th scope="col" className={thCls}>Lượt xem</th><th scope="col" className={thCls}>Ghi danh</th><th scope="col" className={thCls}>Nổi bật</th><th scope="col" className={thCls}>Hiện</th><th scope="col" className={`${thCls} relative`}><span className="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody>
             {!data && <tr><td className={tdCls} colSpan={7}>Đang tải…</td></tr>}

@@ -48,9 +48,12 @@ test("admin: gõ tìm kiếm nhanh, phản hồi cũ về muộn không đè lê
 });
 
 test("admin: bảng người dùng có caption, mọi cột có scope và cột thao tác có tên cho trình đọc màn hình", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
   await loginUi(page, "admin@example.com", "admin123", "/admin/?tab=users");
   const table = page.getByRole("table", { name: "Danh sách người dùng" });
   await expect(table).toBeVisible();
+  // nhãn sr-only là position:absolute → phải neo trong ô, không được đẩy trang tràn ngang
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
   const headers = table.locator("thead th");
   expect(await headers.count()).toBeGreaterThan(0);
   for (const th of await headers.all()) {
