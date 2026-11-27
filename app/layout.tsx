@@ -26,6 +26,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body className="flex min-h-screen flex-col">
+        {/* Chạy trước khi vẽ: tài khoản chưa xác thực lần trước → giữ sẵn chỗ cho dải nhắc, tránh nội dung nhảy xuống khi dải hiện.
+            Key phải khớp VERIFY_BANNER_KEY trong VerifyBanner.tsx (không import được từ module "use client" vào server component). */}
+        <script dangerouslySetInnerHTML={{ __html: 'try{var h=localStorage.getItem("learnhub_verify_banner_h");if(h)document.documentElement.style.setProperty("--verify-banner-h",h+"px")}catch(e){}' }} />
         <ErrorReporter />
         <AuthProvider>
           <Header />

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginUi } from "./helpers";
+import { api, loginUi, PASSWORD, uniqueEmail } from "./helpers";
 
 test.describe("Đăng nhập", () => {
   test("sai mật khẩu → báo lỗi, không chuyển trang", async ({ page }) => {
@@ -77,4 +77,20 @@ test("sau khi xóa tài khoản, trang chủ báo đã xóa và bỏ tham số k
   await expect(page).toHaveURL(/\/$/);
   await page.reload();
   await expect(page.getByText("Tài khoản của bạn đã được xóa")).toHaveCount(0);
+});
+
+test("tài khoản chưa xác thực: dải nhắc hiện ra không đẩy nội dung trang xuống (lần tải sau)", async ({ page }) => {
+  const email = uniqueEmail("chuaxacthuc");
+  await api("/api/auth/register", { method: "POST", body: JSON.stringify({ email, full_name: "Chưa XT", password: PASSWORD, accept_terms: true }) });
+  await loginUi(page, email, PASSWORD);
+  await expect(page.getByText("Bạn chưa xác thực email")).toBeVisible(); // lần này đã ghi nhớ chiều cao dải
+  // lần tải sau: /api/auth/me về chậm → trang vẽ trước khi biết user
+  await page.route((u) => u.pathname.endsWith("/api/auth/me"), async (route) => { await new Promise((r) => setTimeout(r, 1200)); await route.continue(); });
+  await page.goto("/");
+  await expect(page.getByTestId("verify-banner-placeholder")).toBeAttached();
+  const before = (await page.locator("main").boundingBox())!.y;
+  await expect(page.getByText("Bạn chưa xác thực email")).toBeVisible();
+  const after = (await page.locator("main").boundingBox())!.y;
+  expect(after).toBe(before);
+  expect(before).toBeGreaterThan(0);
 });
