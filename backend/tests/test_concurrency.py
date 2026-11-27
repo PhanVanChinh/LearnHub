@@ -109,3 +109,31 @@ def test_create_order_race_returns_existing(client, monkeypatch):
     assert r.json()["code"] == "LHRACE01"
     mine = client.get("/api/orders/me", headers=h).json()
     assert [o["code"] for o in mine] == ["LHRACE01"]
+
+
+def test_delete_enrollment_decrements_sold_atomically(client, monkeypatch):
+    """Admin thu hồi ghi danh đúng lúc có người khác ghi danh: sold phải giảm bằng biểu thức SQL, không ghi đè số vừa cộng."""
+    from sqlalchemy.orm import Session
+
+    admin = _admin(client)
+    h = _buyer(client, "atomic-sold@example.com")
+    uid = client.get("/api/auth/me", headers=h).json()["id"]
+    course = _paid_course(client)
+    cid = client.get("/api/admin/courses", params={"q": course["slug"]}, headers=admin).json()["items"][0]["id"]
+    eid = client.post("/api/admin/enrollments", json={"user_id": uid, "course_id": cid}, headers=admin).json()["id"]
+    sold = client.get(f"/api/admin/courses/{cid}", headers=admin).json()["sold"]
+
+    original = Session.delete
+    def delete_with_interleaved_sale(self, obj, *a, **k):
+        if isinstance(obj, Enrollment):  # request khác cộng sold ngay trước khi request này ghi
+            other = SessionLocal()
+            try:
+                other.query(Course).filter(Course.id == cid).update({Course.sold: Course.sold + 1}, synchronize_session=False)
+                other.commit()
+            finally:
+                other.close()
+        return original(self, obj, *a, **k)
+    monkeypatch.setattr(Session, "delete", delete_with_interleaved_sale)
+
+    assert client.delete(f"/api/admin/enrollments/{eid}", headers=admin).status_code == 204
+    assert client.get(f"/api/admin/courses/{cid}", headers=admin).json()["sold"] == sold  # +1 chen vào, −1 thu hồi

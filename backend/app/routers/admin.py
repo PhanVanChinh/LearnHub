@@ -638,9 +638,9 @@ def delete_enrollment(enrollment_id: int, request: Request, db: Session = Depend
     if not e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Không tìm thấy ghi danh")
     summary = f"Thu hồi quyền «{e.course.title}» của {e.user.email}"
-    if e.course.sold > 0:
-        e.course.sold -= 1
     db.delete(e)
+    # Giảm bằng biểu thức SQL (như ensure_enrollment cộng): đọc-sửa-ghi qua ORM sẽ ghi đè lượt ghi danh chen vào giữa chừng
+    db.query(Course).filter(Course.id == e.course_id, Course.sold > 0).update({Course.sold: Course.sold - 1}, synchronize_session=False)
     db.commit()
     audit.record(db, request, admin, "enrollment.delete", "enrollment", enrollment_id, summary)
 
