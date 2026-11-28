@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { adminToken, api, FREE_COURSE, PAID_COURSE, registerAndVerify, uniqueEmail } from "./helpers";
+import { adminToken, api, FREE_COURSE, PAID_COURSE, PASSWORD, registerAndVerify, uniqueEmail } from "./helpers";
 
 test("đăng ký → xác thực OTP → ghi danh khóa miễn phí → học và đánh dấu hoàn thành", async ({ page }) => {
   const email = uniqueEmail("hocvien");
@@ -89,4 +89,25 @@ test("bật giảm chuyển động → nộp trắc nghiệm cuộn tới kết
   const scrolls = await page.evaluate(() => (window as unknown as { __scrolls: { behavior?: string }[] }).__scrolls);
   expect(scrolls.length).toBeGreaterThan(0);
   expect(scrolls.at(-1)?.behavior).toBe("auto");
+});
+
+test("ghi chú: tải lỗi → không cho gõ (tránh ghi đè bản trên server), Thử lại thì hiện đúng ghi chú cũ", async ({ page }) => {
+  const email = uniqueEmail("ghichu");
+  await registerAndVerify(page, email, `/courses/${FREE_COURSE}/`);
+  await page.getByRole("button", { name: /Ghi danh|Bắt đầu học/ }).click();
+  await expect(page.getByRole("link", { name: /Vào học ngay/ })).toBeVisible();
+  // lưu sẵn một ghi chú trên server
+  const { access_token } = await api<{ access_token: string }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password: PASSWORD }) });
+  await api(`/api/courses/${FREE_COURSE}/lessons/0/note`, { method: "PUT", body: JSON.stringify({ text: "Ghi chú cũ quan trọng" }) }, access_token);
+
+  const noteUrl = `**/api/courses/${FREE_COURSE}/lessons/0/note`;
+  await page.route(noteUrl, (route) => (route.request().method() === "GET" ? route.abort("failed") : route.continue()));
+  await page.goto(`/learn/${FREE_COURSE}/?lesson=0`);
+  await expect(page.getByRole("alert").filter({ hasText: "Không tải được ghi chú" })).toBeVisible();
+  await expect(page.getByLabel("Nội dung ghi chú")).toHaveCount(0);
+  await page.unroute(noteUrl);
+  await page.getByRole("button", { name: "Thử lại" }).click();
+  await expect(page.getByLabel("Nội dung ghi chú")).toHaveValue("Ghi chú cũ quan trọng");
+  const server = await api<{ text: string }>(`/api/courses/${FREE_COURSE}/lessons/0/note`, {}, access_token);
+  expect(server.text).toBe("Ghi chú cũ quan trọng");
 });

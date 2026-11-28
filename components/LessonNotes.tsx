@@ -16,15 +16,18 @@ export default function LessonNotes({ slug, index }: { slug: string; index: numb
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const latest = useRef("");          // bản mới nhất, cho handler rời trang đọc được ngoài closure
   latest.current = text;
+  const loaded = useRef(false);       // chỉ cho sửa/lưu sau khi tải được ghi chú: tải lỗi mà gõ sẽ ghi đè bản trên server bằng ô trống
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
+    loaded.current = false;
     setStatus("loading");
     coursesApi.note(slug, index)
-      .then((n) => { if (!alive) return; saved.current = n.text; setText(n.text); setOpen(!!n.text); setStatus("idle"); })
+      .then((n) => { if (!alive) return; loaded.current = true; saved.current = n.text; setText(n.text); setOpen(!!n.text); setStatus("idle"); })
       .catch(() => alive && setStatus("error"));
     return () => { alive = false; clearTimeout(timer.current); };
-  }, [slug, index]);
+  }, [slug, index, attempt]);
 
   const save = async (value: string) => {
     if (value.trim() === saved.current.trim()) { setStatus("idle"); return; }
@@ -49,7 +52,7 @@ export default function LessonNotes({ slug, index }: { slug: string; index: numb
   // (state lúc đó đã thuộc bài mới; saved.current sẽ được nạp lại bởi effect tải ghi chú)
   useEffect(() => {
     const flush = () => {
-      if (latest.current.trim() === saved.current.trim()) return;
+      if (!loaded.current || latest.current.trim() === saved.current.trim()) return;
       clearTimeout(timer.current);
       saved.current = latest.current;
       coursesApi.saveNote(slug, index, latest.current).catch(() => {});
@@ -59,6 +62,14 @@ export default function LessonNotes({ slug, index }: { slug: string; index: numb
   }, [slug, index]);
 
   if (status === "loading") return null;
+  if (!loaded.current) {
+    return (
+      <section aria-label="Ghi chú của tôi" className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+        <span role="alert"><Emoji>📝</Emoji> Không tải được ghi chú của bạn.</span>
+        <button type="button" onClick={() => setAttempt((a) => a + 1)} className="font-semibold text-white underline hover:no-underline">Thử lại</button>
+      </section>
+    );
+  }
 
   const label = { idle: "", typing: "Đang gõ…", saving: "Đang lưu…", saved: "Đã lưu", error: "Không lưu được, sẽ thử lại khi bạn gõ tiếp", loading: "" }[status];
 
